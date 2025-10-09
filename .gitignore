@@ -15,12 +15,12 @@ build/
 *.log
 
 # ==== Spring Boot ====
-application-*.local.yml
 *.env
 *.env.*
 backend/.gradle/
 backend/build/
 backend/out/
+application-local.yml
 
 # ==== React ====
 node_modules/
