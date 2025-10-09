@@ -1,37 +1,49 @@
-HELP.md
-.gradle
-build/
-!gradle/wrapper/gradle-wrapper.jar
-!**/src/main/**/build/
-!**/src/test/**/build/
-
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
-
-### IntelliJ IDEA ###
-.idea
-*.iws
+# ==== OS / Editor ====
+.DS_Store
+Thumbs.db
+.idea/
 *.iml
-*.ipr
-out/
-!**/src/main/**/out/
-!**/src/test/**/out/
-
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-
-### VS Code ###
 .vscode/
+
+# ==== Java / Gradle ====
+*.class
+target/
+out/
+build/
+.gradle/
+!**/src/**/build/
+*.log
+
+# ==== Spring Boot ====
+application-*.local.yml
+*.env
+*.env.*
+backend/.gradle/
+backend/build/
+backend/out/
+
+# ==== React ====
+node_modules/
+dist/
+build-frontend/
+frontend/.vite/
+.npmrc
+.pnpm-store/
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+.next/
+.turbo/
+.parcel-cache/
+coverage/
+
+# ==== Tools ====
+.eslintcache
+*.coverage
+*.swp
+
+# ==== AI ====
+agents/
