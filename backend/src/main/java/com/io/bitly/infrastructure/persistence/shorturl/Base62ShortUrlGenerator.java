@@ -1,4 +1,4 @@
-package com.io.bitly.infrastructure.shorturl;
+package com.io.bitly.infrastructure.persistence.shorturl;
 
 import com.io.bitly.domain.shorturl.ShortUrlGenerator;
 import org.springframework.stereotype.Component;
@@ -16,8 +16,9 @@ public class Base62ShortUrlGenerator implements ShortUrlGenerator {
 
     @Override
     public String generate(String seed) {
+        String saltedSeed = seed + ":" + System.nanoTime();
         MessageDigest digest = getMessageDigest();
-        byte[] hash = digest.digest(seed.getBytes());
+        byte[] hash = digest.digest(saltedSeed.getBytes());
 
         StringBuilder shortCode = new StringBuilder();
         Random random = new Random(bytesToLong(hash));

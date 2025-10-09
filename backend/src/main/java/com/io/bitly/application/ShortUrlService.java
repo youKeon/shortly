@@ -30,17 +30,15 @@ public class ShortUrlService {
         String originalUrl = command.originalUrl();
 
         for (int attempt = 0; attempt < MAX_GENERATION_ATTEMPTS; attempt++) {
-            String url = shortUrlGenerator.generate(
-                attempt == 0 ? originalUrl : originalUrl + System.nanoTime()
-            );
+            String shortCode = shortUrlGenerator.generate(originalUrl);
 
-            if (shortUrlRepository.existsByShortUrl(url)) {
+            if (shortUrlRepository.existsByShortUrl(shortCode)) {
                 continue;
             }
 
-            ShortUrl shortUrl = shortUrlRepository.save(ShortUrl.of(url, originalUrl));
+            ShortUrl shortUrl = shortUrlRepository.save(ShortUrl.of(shortCode, originalUrl));
 
-            log.info("URL shortened: {} -> {}", originalUrl, url);
+            log.info("URL shortened: {} -> {}", originalUrl, shortCode);
             return CreateShortUrlResult.of(shortUrl.getShortUrl(), shortUrl.getOriginalUrl());
         }
 
