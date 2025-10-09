@@ -21,8 +21,8 @@ public class ShortUrl {
         this.createdAt = createdAt;
     }
 
-    public static ShortUrl of(String shortCode, String originalUrl) {
-        return new ShortUrl(null, shortCode, originalUrl, LocalDateTime.now());
+    public static ShortUrl of(String shortUrl, String originalUrl) {
+        return new ShortUrl(null, shortUrl, originalUrl, LocalDateTime.now());
     }
 
     public static ShortUrl restore(Long id, String shortUrl, String originalUrl) {
