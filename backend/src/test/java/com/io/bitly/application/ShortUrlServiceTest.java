@@ -30,7 +30,8 @@ class ShortUrlServiceTest {
         SequenceShortUrlGenerator generator = new SequenceShortUrlGenerator("abc123");
         InMemoryShortUrlRepository shortUrlRepository = new InMemoryShortUrlRepository();
         RecordingUrlClickRepository clickRepository = new RecordingUrlClickRepository();
-        ShortUrlService service = new ShortUrlService(shortUrlRepository, clickRepository, generator);
+        UrlCacheService urlCacheService = new UrlCacheService(shortUrlRepository);
+        ShortUrlService service = new ShortUrlService(shortUrlRepository, clickRepository, generator, urlCacheService);
 
         CreateShortUrlResult result = service.shortenUrl(CreateShortUrlCommand.of("https://example.com"));
 
@@ -48,7 +49,8 @@ class ShortUrlServiceTest {
         InMemoryShortUrlRepository shortUrlRepository = new InMemoryShortUrlRepository();
         shortUrlRepository.presetExisting("dup");
         RecordingUrlClickRepository clickRepository = new RecordingUrlClickRepository();
-        ShortUrlService service = new ShortUrlService(shortUrlRepository, clickRepository, generator);
+        UrlCacheService urlCacheService = new UrlCacheService(shortUrlRepository);
+        ShortUrlService service = new ShortUrlService(shortUrlRepository, clickRepository, generator, urlCacheService);
 
         CreateShortUrlResult result = service.shortenUrl(CreateShortUrlCommand.of("https://retry.com"));
 
@@ -65,7 +67,8 @@ class ShortUrlServiceTest {
         SequenceShortUrlGenerator generator = new SequenceShortUrlGenerator("code1", "code2");
         InMemoryShortUrlRepository shortUrlRepository = new InMemoryShortUrlRepository();
         RecordingUrlClickRepository clickRepository = new RecordingUrlClickRepository();
-        ShortUrlService service = new ShortUrlService(shortUrlRepository, clickRepository, generator);
+        UrlCacheService urlCacheService = new UrlCacheService(shortUrlRepository);
+        ShortUrlService service = new ShortUrlService(shortUrlRepository, clickRepository, generator, urlCacheService);
 
         CreateShortUrlResult first = service.shortenUrl(CreateShortUrlCommand.of("https://dup.com"));
         CreateShortUrlResult second = service.shortenUrl(CreateShortUrlCommand.of("https://dup.com"));
@@ -85,7 +88,8 @@ class ShortUrlServiceTest {
         InMemoryShortUrlRepository shortUrlRepository = new InMemoryShortUrlRepository();
         shortUrlRepository.presetExisting("dup");
         RecordingUrlClickRepository clickRepository = new RecordingUrlClickRepository();
-        ShortUrlService service = new ShortUrlService(shortUrlRepository, clickRepository, generator);
+        UrlCacheService urlCacheService = new UrlCacheService(shortUrlRepository);
+        ShortUrlService service = new ShortUrlService(shortUrlRepository, clickRepository, generator, urlCacheService);
 
         IllegalStateException exception = assertThrows(IllegalStateException.class,
                 () -> service.shortenUrl(CreateShortUrlCommand.of("https://overflow.com")));
@@ -100,7 +104,8 @@ class ShortUrlServiceTest {
         InMemoryShortUrlRepository shortUrlRepository = new InMemoryShortUrlRepository();
         ShortUrl persisted = shortUrlRepository.save(ShortUrl.of("abc123", "https://example.com"));
         RecordingUrlClickRepository clickRepository = new RecordingUrlClickRepository();
-        ShortUrlService service = new ShortUrlService(shortUrlRepository, clickRepository, new SequenceShortUrlGenerator());
+        UrlCacheService urlCacheService = new UrlCacheService(shortUrlRepository);
+        ShortUrlService service = new ShortUrlService(shortUrlRepository, clickRepository, new SequenceShortUrlGenerator(), urlCacheService);
 
         ShortUrlLookupResult result = service.findOriginalUrl(ShortUrlLookupCommand.of("abc123"));
 
@@ -117,7 +122,8 @@ class ShortUrlServiceTest {
     void findOriginalUrl_throwsWhenShortCodeMissing() {
         InMemoryShortUrlRepository shortUrlRepository = new InMemoryShortUrlRepository();
         RecordingUrlClickRepository clickRepository = new RecordingUrlClickRepository();
-        ShortUrlService service = new ShortUrlService(shortUrlRepository, clickRepository, new SequenceShortUrlGenerator());
+        UrlCacheService urlCacheService = new UrlCacheService(shortUrlRepository);
+        ShortUrlService service = new ShortUrlService(shortUrlRepository, clickRepository, new SequenceShortUrlGenerator(), urlCacheService);
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                 () -> service.findOriginalUrl(ShortUrlLookupCommand.of("missing")));

@@ -24,6 +24,7 @@ public class ShortUrlService {
     private final ShortUrlRepository shortUrlRepository;
     private final UrlClickRepository urlClickRepository;
     private final ShortUrlGenerator shortUrlGenerator;
+    private final UrlCacheService urlCacheService;
 
     @Transactional
     public CreateShortUrlResult shortenUrl(CreateShortUrlCommand command) {
@@ -54,14 +55,13 @@ public class ShortUrlService {
     public ShortUrlLookupResult findOriginalUrl(ShortUrlLookupCommand command) {
         String shortCode = command.shortCode();
 
-        ShortUrl shortUrl = shortUrlRepository.findByShortUrl(shortCode)
-                .orElseThrow(() -> new IllegalArgumentException("Short code not found: " + shortCode));
+        ShortUrlLookupResult result = urlCacheService.findByShortCode(shortCode);
 
-        UrlClick click = UrlClick.of(shortUrl.getId());
+        UrlClick click = UrlClick.of(result.urlId());
         urlClickRepository.save(click);
 
-        log.info("URL accessed: {} -> {}", shortCode, shortUrl.getOriginalUrl());
+        log.info("URL accessed: {} -> {}", shortCode, result.originalUrl());
 
-        return ShortUrlLookupResult.of(shortUrl.getId(), shortUrl.getOriginalUrl(), shortUrl.getShortUrl());
+        return result;
     }
 }
