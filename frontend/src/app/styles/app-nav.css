@@ -1,0 +1,43 @@
+/* App Navigation */
+.app-nav {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 100;
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.app-nav__link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  border-radius: 0.5rem;
+  background: transparent;
+  border: none;
+  color: var(--gray-600);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.app-nav__link:hover {
+  background: var(--gray-100);
+  color: var(--gray-900);
+}
+
+.app-nav__link--active {
+  background: var(--primary);
+  color: white;
+}
+
+.app-nav__link--active:hover {
+  background: var(--accent);
+}
+
