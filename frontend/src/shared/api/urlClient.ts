@@ -1,6 +1,6 @@
 import type { ShortLink } from '@shared/types/shortLink';
 
-const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:8081';
+const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:8080';
 const SHORT_BASE = import.meta.env.VITE_SHORT_BASE ?? window.location.origin;
 
 interface ShortenResponse {

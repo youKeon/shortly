@@ -13,13 +13,14 @@
     "strict": true,
     "skipLibCheck": true,
     "baseUrl": "./src",
+    "noEmit": true,
     "paths": {
+      "@app": ["app/index.ts"],
       "@app/*": ["app/*"],
       "@features/*": ["features/*"],
       "@widgets/*": ["widgets/*"],
       "@shared/*": ["shared/*"]
     }
   },
-  "include": ["src"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "include": ["src"]
 }

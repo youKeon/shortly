@@ -1,13 +1,43 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { Moon, Sparkles, SunMedium } from 'lucide-react';
 import { ShortenUrlForm } from '@features/shorten-url';
 import { ShortLinkList } from '@widgets/short-link-list';
 import { createShortLink } from '@shared/api/urlClient';
 import type { ShortLink } from '@shared/types/shortLink';
+import { toast } from 'sonner';
 
 export function App() {
   const [links, setLinks] = useState<ShortLink[]>([]);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [theme, setTheme] = useState<Theme>(() => detectInitialTheme());
+  const [isManualTheme, setIsManualTheme] = useState<boolean>(() => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+    return Boolean(localStorage.getItem('bitly-theme'));
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+
+  useEffect(() => {
+    if (isManualTheme) {
+      localStorage.setItem('bitly-theme', theme);
+      return () => undefined;
+    }
+
+    localStorage.removeItem('bitly-theme');
+
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    const listener = (event: MediaQueryListEvent) => {
+      setTheme(event.matches ? 'dark' : 'light');
+    };
+
+    media.addEventListener('change', listener);
+    return () => media.removeEventListener('change', listener);
+  }, [isManualTheme, theme]);
 
   const handleShorten = useCallback(async (url: string) => {
     setPending(true);
@@ -15,22 +45,38 @@ export function App() {
 
     try {
       const result = await createShortLink(url);
-      setLinks((prev) => [result, ...prev].slice(0, 5));
+      setLinks((prev) => [result, ...prev].slice(0, 8));
+      toast.success('Short link ready', {
+        description: result.shortUrl
+      });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to shorten URL.');
+      const message = err instanceof Error ? err.message : 'Unable to shorten URL.';
+      setError(message);
+      toast.error('Could not shorten URL', { description: message });
     } finally {
       setPending(false);
     }
   }, []);
 
+  const toggleTheme = useCallback(() => {
+    setIsManualTheme(true);
+    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+  }, []);
+
   return (
     <div className="app-shell">
       <header className="hero">
-        <div className="hero__pill">Fast and reliable</div>
-        <h1 className="hero__title">Shorten URLs in seconds</h1>
-        <p className="hero__subtitle">
-          Transform long links into short, shareable URLs with a modern and minimal interface.
-        </p>
+        <div className="hero__top">
+          <div className="hero__pill">
+            <Sparkles size={16} aria-hidden />
+            Fast and reliable
+          </div>
+          <button type="button" className="theme-toggle" onClick={toggleTheme} aria-label="Toggle dark mode">
+            {theme === 'dark' ? <SunMedium size={18} aria-hidden /> : <Moon size={18} aria-hidden />}
+          </button>
+        </div>
+        <h1 className="hero__title">Shorten URLs</h1>
+        <p className="hero__subtitle">Create reliable share-ready links with instant feedback and a polished workspace.</p>
       </header>
       <main className="workspace" aria-live="polite">
         <section className="panel">
@@ -39,10 +85,22 @@ export function App() {
           <ShortLinkList items={links} />
         </section>
       </main>
-      <footer className="footer">
-        <span className="footer__brand">bitly</span>
-        <span className="footer__note">Built with React, TypeScript, and Spring Boot APIs.</span>
-      </footer>
     </div>
   );
+}
+
+type Theme = 'light' | 'dark';
+
+function detectInitialTheme(): Theme {
+  if (typeof window === 'undefined') {
+    return 'light';
+  }
+
+  const stored = localStorage.getItem('bitly-theme') as Theme | null;
+  if (stored === 'light' || stored === 'dark') {
+    return stored;
+  }
+
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  return prefersDark ? 'dark' : 'light';
 }

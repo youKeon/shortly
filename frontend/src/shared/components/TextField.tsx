@@ -10,7 +10,10 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
   ({ label, hint, error, id, className, ...props }, ref) => {
     const generatedId = useId();
     const inputId = id ?? props.name ?? generatedId;
-    const fieldClassName = ['textfield', className ?? ''].filter(Boolean).join(' ');
+    const invalid = Boolean(error);
+    const fieldClassName = ['textfield', invalid ? 'textfield--error' : '', className ?? '']
+      .filter(Boolean)
+      .join(' ');
     const messageId = `${inputId}-message`;
     const describedBy = error || hint ? messageId : undefined;
 
@@ -21,7 +24,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
           id={inputId}
           ref={ref}
           className="textfield__input"
-          aria-invalid={Boolean(error)}
+          aria-invalid={invalid}
           aria-describedby={describedBy}
           {...props}
         />
