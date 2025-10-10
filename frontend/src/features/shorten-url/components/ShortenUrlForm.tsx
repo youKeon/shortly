@@ -1,4 +1,12 @@
-import { useCallback, useMemo, useState, type FormEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+  type KeyboardEvent
+} from 'react';
 import { TextField } from '@shared/components/TextField';
 import { Button } from '@shared/components/Button';
 import { isValidUrl } from '@shared/utils/url';
@@ -12,6 +20,17 @@ interface ShortenUrlFormProps {
 export function ShortenUrlForm({ onSubmit, pending = false, error = null }: ShortenUrlFormProps) {
   const [value, setValue] = useState('');
   const [touched, setTouched] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const modifierHint = useMemo(() => {
+    if (typeof navigator !== 'undefined' && /mac/i.test(navigator.platform)) {
+      return '⌘';
+    }
+    return 'Ctrl';
+  }, []);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
 
   const validationMessage = useMemo(() => {
     if (!touched && !error) return null;
@@ -38,9 +57,17 @@ export function ShortenUrlForm({ onSubmit, pending = false, error = null }: Shor
       await onSubmit(value.trim());
       setValue('');
       setTouched(false);
+      inputRef.current?.focus();
     },
     [onSubmit, pending, value]
   );
+
+  const handleShortcut = useCallback((event: KeyboardEvent<HTMLInputElement>) => {
+    if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+      event.preventDefault();
+      event.currentTarget.form?.requestSubmit();
+    }
+  }, []);
 
   return (
     <form className="shorten-form" onSubmit={handleSubmit}>
@@ -56,11 +83,16 @@ export function ShortenUrlForm({ onSubmit, pending = false, error = null }: Shor
         autoComplete="off"
         autoCorrect="off"
         spellCheck={false}
+        onKeyDown={handleShortcut}
+        ref={inputRef}
         required
       />
       <Button type="submit" block disabled={pending} aria-busy={pending}>
         {pending ? 'Shortening...' : 'Shorten URL'}
       </Button>
+      <p className="shorten-form__hint" aria-live="polite">
+        Tip: Press {modifierHint} + Enter to submit instantly.
+      </p>
     </form>
   );
 }

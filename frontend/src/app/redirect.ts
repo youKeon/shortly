@@ -13,6 +13,8 @@ export function attemptShortCodeRedirect(): boolean {
 
   const target = `${API_BASE}/api/v1/urls/${firstSegment}`;
 
+  console.log('target ::: ', target);
+
   window.location.replace(target);
   return true;
 }
