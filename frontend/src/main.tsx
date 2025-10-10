@@ -1,6 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { App } from '@app';
+import { AppRouter } from './app/AppRouter';
 import { attemptShortCodeRedirect } from '@app/redirect';
 import { Toaster } from 'sonner';
 import '@app/styles/global.css';
@@ -16,7 +16,7 @@ if (!attemptShortCodeRedirect()) {
     <StrictMode>
       <>
         <Toaster richColors position="top-center" closeButton expand />
-        <App />
+        <AppRouter />
       </>
     </StrictMode>
   );
