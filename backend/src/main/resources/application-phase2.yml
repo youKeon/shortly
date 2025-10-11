@@ -4,7 +4,6 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
-    # HikariCP는 기본 설정 사용 (auto-configuration)
 
   jpa:
     hibernate:
