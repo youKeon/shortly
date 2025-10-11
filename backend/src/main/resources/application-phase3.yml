@@ -1,0 +1,56 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/bitly?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:d4594283!}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 50          # 최대 연결 수
+      minimum-idle: 10               # 최소 유지 연결
+      connection-timeout: 5000       # 연결 타임아웃
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000  # 10분
+
+  # Kafka
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: 1
+    consumer:
+      group-id: url-click-consumer-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.io.bitly.application.event
+      max-poll-records: 5000  # Batch 처리
+
+server:
+  port: 8080
+  tomcat:
+    threads:
+      max: 800            # 2,500 VUs 처리
+    accept-count: 2000    # 대기 큐 (2,500 - 800 + ⍺)
+    max-connections: 3000 # Keep-Alive 연결 (2,500 + ⍺)
+
+logging:
+  level:
+    com.io.bitly: INFO
