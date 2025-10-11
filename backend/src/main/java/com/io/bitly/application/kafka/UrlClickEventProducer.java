@@ -4,10 +4,11 @@ import com.io.bitly.application.event.UrlClickedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 /**
- * Click Event Producer
+ * Click Event Producer (비동기)
  */
 @Slf4j
 @Component
@@ -18,6 +19,7 @@ public class UrlClickEventProducer {
 
     private final KafkaTemplate<String, UrlClickedEvent> kafkaTemplate;
 
+    @Async
     public void sendClickEvent(UrlClickedEvent event) {
         try {
             kafkaTemplate.send(TOPIC, event.shortCode(), event);
