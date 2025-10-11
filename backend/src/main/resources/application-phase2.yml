@@ -4,7 +4,11 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
-    # HikariCP는 기본 설정 사용 (auto-configuration)
+
+    hikari:
+      maximum-pool-size: 50         # Phase 1과 동일 (캐싱으로 DB 부하 감소)
+      minimum-idle: 10
+      connection-timeout: 3000
 
   jpa:
     hibernate:
@@ -23,10 +27,13 @@ spring:
   cache:
     type: redis
     redis:
-      time-to-live: 600000  # 10분
+      time-to-live: 600000          # 10분
 
 server:
   port: 8080
+  tomcat:
+    threads:
+      max: 500                      # 500 VU 처리 필수
 
 logging:
   level:
