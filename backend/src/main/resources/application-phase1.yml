@@ -1,6 +1,3 @@
-# Phase 1: DB 최적화 설정
-# 목표: 1,000 TPS, 200 VUs, P95 < 100ms
-
 spring:
   datasource:
     url: jdbc:mysql://localhost:3306/bitly?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
@@ -9,24 +6,18 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
 
     hikari:
-      # 200 VUs 동시 처리를 위한 커넥션 풀 크기
       maximum-pool-size: 50
+      minimum-idle: 10
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: create-drop
     show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
-        # 배치 처리로 DB 왕복 횟수 감소
-        jdbc.batch_size: 50
-        order_inserts: true
-        order_updates: true
 
 server:
-  # Tomcat 스레드 풀 튜닝
   tomcat:
     threads:
-      # 200 VUs 동시 처리
-      max: 200
+      max: 500                      # 500 VU 처리
