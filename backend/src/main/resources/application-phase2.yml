@@ -6,13 +6,13 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
 
     hikari:
-      maximum-pool-size: 50         # Phase 1과 동일 (캐싱으로 DB 부하 감소)
+      maximum-pool-size: 50
       minimum-idle: 10
       connection-timeout: 3000
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: create-drop
     show-sql: false
     properties:
       hibernate:
