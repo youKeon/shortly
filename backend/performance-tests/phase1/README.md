@@ -1,60 +1,52 @@
-# Phase 1: DB 최적화
+# Phase 1: 기본 구현 (Baseline)
 
 ## 목표
-- **TPS**: 1,000 (현재 대비 18.5배)
-- **동시 사용자**: 200명
-- **P95 응답시간**: < 100ms
-- **실패율**: < 5%
 
-## 최적화 내용
+**Spring Boot + MySQL 성능 측정**
 
-### 1. 데이터베이스 인덱스 추가
+- 최소한의 설정
+- 표준 테스트 스크립트 수행 가능한 기본 구성
+- Phase 2, 3의 기준선(Baseline) 확립
 
-#### 문제점
-- `url_clicks` 테이블의 `url_id` 컬럼에 인덱스 없음
-- 매 리디렉션마다 레코드 전체 스캔 (type: ALL)
-- `url_clicks` 테이블의 `url_id` 컬럼에 인덱스 추가
+## 구현 내용
 
-### 2. HikariCP Connection Pool 튜닝
+### 1. 기본 아키텍처
 
-#### 최적화 설정
+```
+사용자 요청
+    ↓
+Spring Boot (Tomcat)
+    ↓
+JPA (Hibernate)
+    ↓
+MySQL
+```
+### 2. 설정
+
+#### HikariCP Connection Pool
+
 ```yaml
 spring:
   datasource:
     hikari:
-      maximum-pool-size: 50        # 200 VUs 동시 처리
+      maximum-pool-size: 50
+      minimum-idle: 10
+      connection-timeout: 3000
 ```
 
-#### 선정 이유
-- 200 VUs 처리를 위한 충분한 커넥션 수
-- MySQL 기본 max_connections(151) 범위 내
-- 나머지 설정은 HikariCP 기본값 사용 (검증된 값)
+**선정 이유**:
+- 500 VU 테스트에 필요한 최소 연결 수
+- 리디렉션 90%는 단순 조회
 
-### 3. Tomcat 서버 튜닝
+#### Tomcat Thread Pool
 
-#### 최적화 설정
 ```yaml
 server:
   tomcat:
     threads:
-      max: 200              # 200 VUs 동시 처리
+      max: 500
 ```
 
-#### 선정 이유
-- 200 VUs 처리를 위한 충분한 스레드 수
-- 나머지 설정은 Tomcat 기본값 사용 (검증된 값)
-
-### 4. JPA 배치 처리 최적화
-
-```yaml
-spring:
-  jpa:
-    hibernate:
-      ddl-auto: validate          # 스키마 변경 방지
-    show-sql: false               # 로그 최소화
-    properties:
-      hibernate:
-        jdbc.batch_size: 50       # DB 왕복 횟수 감소
-        order_inserts: true       # 배치 효율 향상
-        order_updates: true       # 배치 효율 향상
-```
+**선정 이유**:
+- 표준 테스트: 최대 500 VU
+- 1 VU당 1 스레드 필요

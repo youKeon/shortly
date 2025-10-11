@@ -1,82 +1,134 @@
 # Phase 2: Redis 캐싱
 
-## 목표
-- **TPS**: 3,000 (Phase 1 대비 ~3배)
-- **동시 사용자**: 500명
-- **P95 응답시간**: < 50ms
-- **실패율**: < 1%
-- **캐시 히트율**: > 70%
+## 🎯 목표
 
-## 최적화 내용
+**Redis 캐싱 추가로 성능 개선 측정**
 
-### 1. Redis 캐싱 도입
+- Phase 1 대비 개선율 측정
+- 캐시 히트율에 따른 TPS 증가 확인
 
-#### 캐싱 전략
-- **캐시 대상**: ShortUrl 조회 결과
-- **TTL**: 10분
-- **캐시 키**: `bitly:shortUrls::${shortCode}`
-- **직렬화**: JSON (Jackson)
+## 📋 구현 내용
 
-#### 구현 방식
+### 1. 아키텍처
+
+```
+사용자 요청
+    ↓
+Spring Boot (Tomcat)
+    ↓
+Redis 캐시 확인
+    ↓ (캐시 미스)
+JPA (Hibernate)
+    ↓
+MySQL
+```
+
+**추가된 기능**:
+- ✅ Redis 캐싱 (`@Cacheable`)
+- ✅ ShortUrl 조회 결과 캐싱
+- ❌ 비동기 처리 없음 (여전히)
+
+### 2. 캐싱 전략
+
 ```java
 @Cacheable(value = "shortUrls", key = "#shortCode")
-@Transactional(readOnly = true)
 public ShortUrlLookupResult findByShortCode(String shortCode) {
-    // DB 조회 (캐시 미스 시에만 실행)
-    ShortUrl shortUrl = shortUrlRepository.findByShortUrl(shortCode)
-            .orElseThrow(() -> new IllegalArgumentException("Short code not found: " + shortCode));
-
-    return ShortUrlLookupResult.of(shortUrl.getId(), shortUrl.getOriginalUrl(), shortUrl.getShortUrl());
+    // 캐시 미스 시에만 DB 조회
 }
 ```
 
-#### 클릭 기록 처리
-- 클릭 기록은 캐시와 독립적으로 항상 수행
-- 캐시 히트 시에도 클릭 이벤트 누락 방지
+**설정**:
+- TTL: 10분
+- 캐시 키: `bitly:shortUrls::${shortCode}`
+- 직렬화: JSON
 
-### 2. HikariCP Connection Pool 확장
-
-```yaml
-spring:
-  datasource:
-    hikari:
-      maximum-pool-size: 100        # Phase 1: 50 → Phase 2: 100
-      minimum-idle: 20
-      connection-timeout: 3000ms
-      max-lifetime: 1800000ms       # 30분
-```
-
-#### 설정 근거
-- 500 VUs 처리를 위한 충분한 커넥션 수
-- 캐시 도입으로 DB 부하 감소 예상 (~70%)
-- 실제 DB 접근은 ~150 VUs 수준
-
-### 3. Tomcat 서버 확장
+### 3. 설정
 
 ```yaml
-server:
-  tomcat:
-    threads:
-      max: 400                      # Phase 1: 200 → Phase 2: 400
-      min-spare: 50
-    max-connections: 10000
-    accept-count: 200
+hikari:
+  maximum-pool-size: 50         # Phase 1과 동일
+  minimum-idle: 10
+
+tomcat:
+  threads:
+    max: 500                    # Phase 1과 동일
+
+redis:
+  host: localhost
+  port: 6379
+  cache.ttl: 10분
 ```
 
-#### 설정 근거
-- 500 VUs 동시 처리 보장
-- 캐시 히트 시 빠른 응답으로 스레드 재사용률 증가
+**핵심**: Phase 1 설정 유지, Redis만 추가
 
-### 4. Redis Connection Pool
+---
 
-```yaml
-spring:
-  data:
-    redis:
-      lettuce:
-        pool:
-          max-active: 50            # 최대 커넥션
-          max-idle: 20              # 유휴 커넥션
-          min-idle: 5               # 최소 커넥션
-          max-wait: 3000ms          # 대기 시간
+## 🚀 테스트 실행
+
+### 사전 준비
+
+```bash
+# Redis 실행 확인
+redis-cli ping
+# PONG 응답 확인
 ```
+
+### 1. 서버 시작
+
+```bash
+cd backend
+
+# 기존 서버 종료
+lsof -ti:8080 | xargs kill -9
+
+# Phase 2 서버 시작
+./gradlew bootRun --args='--spring.profiles.active=phase2'
+```
+
+### 2. 표준 테스트 실행 (다른 터미널)
+
+```bash
+cd /Users/okestro/Desktop/dev/bitly
+
+# 테스트 실행
+k6 run backend/performance-tests/standard-load-test.js
+```
+
+### 3. 예상 결과
+
+```
+Phase 1 (기본 구현): 5,280 TPS
+
+Phase 2 (Redis 캐싱): 예상
+- TPS: 7,000-8,500 (30-60% 개선)
+- P95: ~100-150ms (30% 개선)
+- 캐시 히트율: ~90% (리디렉션 중심)
+
+개선 근거:
+- 리디렉션 90%가 Redis에서 처리
+- DB 조회 대폭 감소
+- 응답 시간 단축
+```
+
+---
+
+## 💡 Phase 2의 의미
+
+### Phase 1과의 차이
+
+```
+Phase 1: 모든 요청이 DB 조회
+→ TPS: 5,280
+→ P95: 177ms
+
+Phase 2: 리디렉션 90%는 Redis에서
+→ TPS: ?
+→ P95: ?
+
+핵심: Redis 캐싱의 실제 효과 측정
+```
+
+---
+
+**작성일**: 2025-10-11  
+**테스트**: standard-load-test.js (500 VU, 7분)
