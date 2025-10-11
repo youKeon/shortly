@@ -4,6 +4,10 @@ import com.io.bitly.domain.click.UrlClick;
 import com.io.bitly.domain.click.UrlClickRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 @Repository
 public class UrlClickRepositoryImpl implements UrlClickRepository {
 
@@ -14,9 +18,15 @@ public class UrlClickRepositoryImpl implements UrlClickRepository {
     }
 
     @Override
-    public UrlClick save(UrlClick urlClick) {
-        UrlClickJpaEntity entity = UrlClickJpaEntity.fromDomain(urlClick);
-        UrlClickJpaEntity savedEntity = jpaRepository.save(entity);
-        return savedEntity.toDomain();
+    public List<UrlClick> saveAll(List<UrlClick> urlClicks) {
+        List<UrlClickJpaEntity> entities = urlClicks.stream()
+            .map(UrlClickJpaEntity::fromDomain)
+            .toList();
+
+        List<UrlClickJpaEntity> savedEntities = jpaRepository.saveAll(entities);
+
+        return savedEntities.stream()
+            .map(UrlClickJpaEntity::toDomain)
+            .toList();
     }
 }

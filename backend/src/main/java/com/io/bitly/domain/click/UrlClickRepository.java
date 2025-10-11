@@ -1,6 +1,7 @@
 package com.io.bitly.domain.click;
 
-public interface UrlClickRepository {
+import java.util.List;
 
-    UrlClick save(UrlClick urlClick);
+public interface UrlClickRepository {
+    List<UrlClick> saveAll(List<UrlClick> urlClicks);
 }
