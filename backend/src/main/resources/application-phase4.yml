@@ -6,9 +6,9 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
 
     hikari:
-      maximum-pool-size: 50         # Phase 3과 동일 (서버당)
-      minimum-idle: 10
-      connection-timeout: 3000
+      maximum-pool-size: 150        # Docker 환경 + 2대 서버 고려 (50 → 150)
+      minimum-idle: 30
+      connection-timeout: 5000      # 타임아웃 증가 (3s → 5s)
       idle-timeout: 600000
       max-lifetime: 1800000
 
