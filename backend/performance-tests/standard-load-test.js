@@ -25,10 +25,6 @@ const BASE_URL = __ENV.BASE_URL || 'http://localhost:8080';
 let shortCodes = [];
 
 export function setup() {
-  console.log('=========================================================');
-  console.log('부하 테스트 시작');
-  console.log('=========================================================');
-
   const warmupCodes = [];
   for (let i = 0; i < 100; i++) {
     const payload = JSON.stringify({
@@ -42,10 +38,6 @@ export function setup() {
     if (res.status === 200) {
       const data = JSON.parse(res.body);
       warmupCodes.push(data.shortCode);
-    }
-
-    if ((i + 1) % 25 === 0) {
-      console.log(`  진행: ${i + 1}/100`);
     }
   }
   return {shortCodes: warmupCodes};
