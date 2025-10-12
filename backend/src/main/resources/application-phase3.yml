@@ -29,20 +29,6 @@ spring:
     redis:
       time-to-live: 600000          # 10분
 
-  kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      acks: 1
-    consumer:
-      group-id: url-click-consumer-group
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      properties:
-        spring.json.trusted.packages: com.io.bitly.application.event
-      max-poll-records: 500         # Batch 처리 (5000 → 500)
-
 server:
   port: 8080
   tomcat:

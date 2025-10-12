@@ -4,8 +4,6 @@ import com.io.bitly.application.dto.ShortenUrlCommand.CreateShortUrlCommand;
 import com.io.bitly.application.dto.ShortenUrlCommand.ShortUrlLookupCommand;
 import com.io.bitly.application.dto.ShortenUrlResult.CreateShortUrlResult;
 import com.io.bitly.application.dto.ShortenUrlResult.ShortUrlLookupResult;
-import com.io.bitly.application.event.UrlClickedEvent;
-import com.io.bitly.application.kafka.UrlClickEventProducer;
 import com.io.bitly.domain.shorturl.ShortUrl;
 import com.io.bitly.domain.shorturl.ShortUrlRepository;
 import com.io.bitly.domain.shorturl.ShortUrlGenerator;
@@ -25,7 +23,7 @@ public class ShortUrlService {
     private final ShortUrlRepository shortUrlRepository;
     private final ShortUrlGenerator shortUrlGenerator;
     private final UrlCacheService urlCacheService;
-    private final UrlClickEventProducer urlClickEventProducer;
+    private final UrlClickService urlClickService;
 
     @Transactional
     public CreateShortUrlResult shortenUrl(CreateShortUrlCommand command) {
@@ -54,7 +52,7 @@ public class ShortUrlService {
 
         ShortUrlLookupResult result = urlCacheService.findByShortCode(shortCode);
 
-        urlClickEventProducer.sendClickEvent(UrlClickedEvent.of(result.urlId(), shortCode));
+        urlClickService.incrementClickCount(result.urlId());
 
         log.info("URL accessed: {} -> {}", shortCode, result.originalUrl());
 
