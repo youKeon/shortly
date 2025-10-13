@@ -19,21 +19,11 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.time.Duration;
 
-/**
- * Redis 캐시 설정
- * Phase 2: URL 조회 성능 개선을 위한 캐싱 전략
- */
 @Configuration
-@EnableCaching
 public class RedisConfig {
 
-    /**
-     * Redis 캐시 매니저 설정
-     * - TTL: 10분 (자주 접근하는 URL은 캐시 유지)
-     * - Key prefix: "bitly:" (네임스페이스 관리)
-     */
-    @Bean
-    public CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
+    @Bean(name = "redisCacheManager")
+    public CacheManager redisCacheManager(RedisConnectionFactory connectionFactory) {
         // Jackson ObjectMapper 설정 (타입 정보 포함 직렬화)
         GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer(redisObjectMapper());
 

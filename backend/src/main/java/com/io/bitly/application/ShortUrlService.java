@@ -9,7 +9,6 @@ import com.io.bitly.domain.shorturl.ShortUrlRepository;
 import com.io.bitly.domain.shorturl.ShortUrlGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-@Profile("!phase4")
 public class ShortUrlService {
 
     private static final int MAX_GENERATION_ATTEMPTS = 5;
@@ -39,6 +37,13 @@ public class ShortUrlService {
             }
 
             ShortUrl shortUrl = shortUrlRepository.save(ShortUrl.of(shortCode, originalUrl));
+
+            ShortUrlLookupResult lookupResult = ShortUrlLookupResult.of(
+                    shortUrl.getId(),
+                    shortUrl.getOriginalUrl(),
+                    shortUrl.getShortUrl()
+            );
+            urlCacheService.saveCacheData(lookupResult);
 
             log.info("URL shortened: {} -> {}", originalUrl, shortCode);
             return CreateShortUrlResult.of(shortUrl.getShortUrl(), shortUrl.getOriginalUrl());

@@ -8,20 +8,19 @@ import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.springframework.context.annotation.Profile;
 
 @Configuration
 @EnableCaching
-@Profile("phase4")
 public class CacheConfig {
 
-    @Bean
+    @Bean(name = "caffeineCacheManager")
     @Primary
     public CacheManager caffeineCacheManager() {
         CaffeineCacheManager cacheManager = new CaffeineCacheManager("shortUrls", "urlStats");
         cacheManager.setCaffeine(Caffeine.newBuilder()
                 .maximumSize(10_000)
                 .expireAfterWrite(10, TimeUnit.MINUTES)
+                .recordStats()
             );
 
         return cacheManager;
