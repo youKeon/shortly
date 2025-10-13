@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-@Profile("!phase4")  // Phase 4가 아닐 때만 활성화 (MVC)
+@Profile("!phase4")
 public class ShortUrlService {
 
     private static final int MAX_GENERATION_ATTEMPTS = 5;
