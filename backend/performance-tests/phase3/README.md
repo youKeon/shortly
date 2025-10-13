@@ -1,105 +1,94 @@
-# Phase 3: Redis 버퍼링
+# Phase 3: 비동기 이벤트 처리
 
-## 🎯 목표
+## 목표
 
 **클릭 기록 병목 제거로 성능 개선**
 
 - Phase 2 대비 TPS 증가
-- Redis 버퍼링으로 클릭 기록 최적화
-- 점진적 개선 경험 습득
+- Redis 버퍼링 + Kafka 이벤트로 비동기 처리
+- DB 쓰기 부하 분산
 
 ---
 
-## 📋 구현 내용
+## 구현 내용
 
-### 1. 아키텍처
+### 아키텍처
 
 ```
 사용자 요청
     ↓
-Controller
+Spring Boot (Tomcat)
     ↓
-┌─────────────────────┬──────────────────┐
-│ 리디렉션 (90%)      │ 단축 (10%)       │
-├─────────────────────┼──────────────────┤
-│ Redis 캐시 조회     │ MySQL INSERT     │
-│ Redis INCR (클릭)   │ Redis 저장       │
-└─────────────────────┴──────────────────┘
+Redis Cache (L1)
+    ↓ (Cache Miss)
+JPA → MySQL
     ↓
-Scheduler (5분마다)
+Kafka (클릭 이벤트 비동기 처리)
     ↓
-Redis → MySQL Batch INSERT
+Consumer → MySQL Batch INSERT
 ```
 
-**추가된 기능**:
-- ✅ Redis 클릭 카운터 (INCR)
-- ✅ 스케줄러 배치 저장
-- ✅ 클릭 기록 병목 제거
+**개선 사항**:
+- Kafka 이벤트 스트리밍
+- Redis 클릭 버퍼링
+- 스케줄러 배치 저장 (5분마다)
 
 ---
 
-### 2. Redis 클릭 버퍼링
+### 핵심 구현
 
-#### UrlClickService
-
+#### 1. Redis 클릭 버퍼링
 ```java
 @Service
 public class UrlClickService {
     
     private static final String CLICK_COUNT_PREFIX = "url:click:";
     
-    /**
-     * 클릭 카운트 증가 (0.5-1ms)
-     */
     public void incrementClickCount(Long urlId) {
         String key = CLICK_COUNT_PREFIX + urlId;
         redisTemplate.opsForValue().increment(key);
+        // 즉시 반환 (비동기)
     }
 }
 ```
 
-**특징**:
-- Redis INCR 명령 (O(1), 0.5-1ms)
-- 네트워크 오버헤드 최소
-- API 응답에 영향 거의 없음
-
-#### ClickCountFlushScheduler
-
+#### 2. 스케줄러 배치 저장
 ```java
 @Component
-public class ClickCountFlushScheduler {
+public class ClickCountScheduler {
     
-    /**
-     * 5분마다 Redis → MySQL 배치 저장
-     */
-    @Scheduled(fixedDelay = 300000)
+    @Scheduled(fixedDelay = 300000)  // 5분마다
     @Transactional
     public void flushClickCountsToDatabase() {
         // Redis SCAN으로 url:click:* 키 조회
+        Set<String> keys = scanClickCountKeys();
+        
         // 클릭 수만큼 UrlClick 엔티티 생성
+        List<UrlClick> clicks = createClickEntities(keys);
+        
         // MySQL Batch INSERT (1000개씩)
+        urlClickRepository.saveAll(clicks);
+        
+        // Redis 키 삭제
+        redisTemplate.delete(keys);
     }
 }
 ```
 
 **특징**:
 - 5분마다 자동 실행
-- SCAN으로 메모리 안전하게 조회
 - 1000개씩 배치 INSERT
-- API 성능에 영향 없음
+- API 응답에 영향 없음
 
 ---
 
-### 3. 설정
-
-#### application-phase3.yml
+### 설정 (application-phase3.yml)
 
 ```yaml
 spring:
   datasource:
     hikari:
-      maximum-pool-size: 50      # Phase 1, 2와 동일
-      minimum-idle: 10
+      maximum-pool-size: 50
 
   data:
     redis:
@@ -109,248 +98,24 @@ spring:
   cache:
     type: redis
     redis:
-      time-to-live: 600000       # 10분
+      time-to-live: 600000  # 10분
 
 server:
   tomcat:
     threads:
-      max: 500                   # 500 VU 처리
+      max: 500
 ```
-
-**핵심**: Phase 2 설정 유지, Redis 버퍼링만 추가
 
 ---
 
-## 🚀 테스트 실행
-
-### 사전 준비
+## 테스트 실행
 
 ```bash
-# MySQL 실행 확인
-mysql -u root -p -e "SELECT 1"
-
-# Redis 실행 확인
-redis-cli ping
-# PONG 응답 확인
-```
-
-### 1. 서버 시작
-
-```bash
-cd /Users/okestro/Desktop/dev/bitly/backend
-
-# 기존 서버 종료
-lsof -ti:8080 | xargs kill -9
-
 # Phase 3 서버 시작
-./gradlew bootRun --args='--spring.profiles.active=phase3'
+cd backend
+DB_USERNAME=root DB_PASSWORD=<password> ./gradlew bootRun --args='--spring.profiles.active=phase3'
+
+# 10K TPS 테스트
+cd ..
+k6 run backend/performance-tests/phase3/target-10k-test.js
 ```
-
-### 2. 표준 테스트 실행 (다른 터미널)
-
-```bash
-cd /Users/okestro/Desktop/dev/bitly
-
-# Redis 캐시 통계 초기화
-redis-cli CONFIG RESETSTAT
-
-# 테스트 실행
-k6 run backend/performance-tests/standard-load-test.js
-```
-
-### 3. 캐시 히트율 확인 (테스트 후)
-
-```bash
-# Redis 통계 확인
-redis-cli INFO stats | grep -E "keyspace_hits|keyspace_misses"
-
-# 히트율 계산
-# 히트율 = hits / (hits + misses) × 100
-```
-
-### 4. 스케줄러 동작 확인
-
-```bash
-# 서버 로그에서 확인
-# [SCHEDULER] Flushed 123 click records to DB in 45ms
-```
-
----
-
-## 📊 예상 결과
-
-### 성능 지표
-
-```
-Phase 2 (기준):
-- TPS: 5,447
-- P95: 143.14ms
-- 평균: 56.89ms
-
-Phase 3 (예상):
-- TPS: 6,000-6,500 (+10-20%)
-- P95: ~140ms
-- 평균: ~54ms
-
-실제 결과:
-- TPS: 6,302 (+15.7%) ✅
-- P95: 140.58ms (-1.8%) ✅
-- 평균: 54.3ms (-4.6%) ✅
-```
-
-### 개선 근거
-
-```
-Phase 2 (클릭 기록 병목):
-- Redis 조회: 0.5ms
-- MySQL INSERT: 10-15ms  ← 병목!
-- 총: 56.89ms
-
-Phase 3 (병목 제거):
-- Redis 조회: 0.5ms
-- Redis INCR: 0.5-1ms   ← 해결!
-- 총: 54.3ms
-
-개선: 10-14ms 단축 (25%)
-```
-
----
-
-## 💡 Phase 3의 의미
-
-### Phase 2와의 차이
-
-```
-Phase 2: Redis 캐싱
-→ 리디렉션 90%를 Redis로 처리
-→ 클릭 기록은 여전히 MySQL INSERT
-→ TPS: 5,447
-
-Phase 3: Redis 버퍼링
-→ 클릭 기록도 Redis로 처리
-→ MySQL 부하 완전 제거
-→ TPS: 6,302 (+15.7%)
-
-핵심: "클릭 기록"이 병목이었음을 발견!
-```
-
-### 기술적 선택
-
-```
-왜 Kafka가 아닌 Redis?
-
-테스트 결과:
-- Redis: 6,302 TPS
-- Kafka (최적화): 5,125 TPS
-
-이유:
-1. 단일 서버 환경
-   - Redis가 가장 빠름
-   - Kafka는 오버헤드 존재
-
-2. 단순성
-   - Redis: 코드 10줄
-   - Kafka: 코드 100줄+
-
-3. 성능 우선
-   - Phase 2 대비 명확한 개선
-   - 학습 목표 달성
-
-4. Kafka는 Phase 4에서
-   - 수평 확장 시 활용
-   - 분산 환경에서 진가 발휘
-```
-
----
-
-## 🎓 학습 포인트
-
-### 1. 병목 식별의 중요성
-
-```
-Phase 2 개선 +3.2%:
-→ "왜 이렇게 적지?"
-→ 클릭 기록 측정
-→ 10-15ms 발견!
-
-Phase 3 개선 +15.7%:
-→ 클릭 기록 최적화
-→ 목표 달성!
-
-교훈: 측정 없이는 최적화 없다
-```
-
-### 2. 환경에 맞는 최적화
-
-```
-단일 서버:
-✅ Redis (최고 성능)
-✅ MySQL (안정성)
-△ Kafka (오버헤드)
-
-분산 환경:
-✅ Kafka (확장 가능)
-✅ Redis Cluster
-△ MySQL (복제 필요)
-
-→ 같은 기술도 환경에 따라 다름!
-```
-
-### 3. 점진적 개선
-
-```
-Phase 1: 기본 구현 (5,280 TPS)
-    ↓ "리디렉션이 느리다"
-Phase 2: Redis 캐싱 (5,447 TPS)
-    ↓ "클릭 기록이 느리다"
-Phase 3: Redis 버퍼링 (6,302 TPS)
-    ↓ 병목 제거 완료!
-
-→ 한 번에 모든 것을 최적화하지 말고,
-   측정하고 개선하기를 반복!
-```
-
----
-
-## 🚀 다음 단계
-
-### Phase 4: 수평 확장
-
-```
-목표:
-- API 서버 2대 (Docker Compose)
-- Nginx Load Balancer
-- 목표 TPS: 12,000+ (2배)
-
-아키텍처:
-- 선형 확장 검증
-- Load Balancing 경험
-- 분산 환경 학습
-
-기대:
-- Phase 3 × 2 = 12,600 TPS
-```
-
----
-
-## 📝 핵심 요약
-
-### Phase 3 = "클릭 기록 병목 제거"
-
-```
-문제: 클릭 기록 INSERT가 10-15ms
-해결: Redis INCR로 0.5-1ms 단축
-결과: TPS 15.7% 개선
-
-학습:
-✅ 병목 식별 → 측정의 중요성
-✅ Redis vs Kafka → 환경에 맞는 선택
-✅ 점진적 개선 → Phase별 의미 있는 개선
-```
-
----
-
-**작성일**: 2025-10-12  
-**테스트**: standard-load-test.js (500 VU, 7분)  
-**환경**: M3 MacBook, 16GB RAM
-

@@ -1,16 +1,18 @@
-# Phase 1: 기본 구현 (Baseline)
+# Phase 1: 기본 구현
 
 ## 목표
 
-**Spring Boot + MySQL 성능 측정**
+**Spring Boot + MySQL 기본 성능 측정**
 
-- 최소한의 설정
-- 표준 테스트 스크립트 수행 가능한 기본 구성
-- Phase 2, 3의 기준선(Baseline) 확립
+- 최소한의 설정으로 기준선 확립
+- 캐시 없는 순수 DB 조회 성능 측정
+- Phase 2, 3, 4의 비교 기준 제공
+
+---
 
 ## 구현 내용
 
-### 1. 기본 아키텍처
+### 아키텍처
 
 ```
 사용자 요청
@@ -21,32 +23,64 @@ JPA (Hibernate)
     ↓
 MySQL
 ```
-### 2. 설정
 
-#### HikariCP Connection Pool
+**특징**:
+- 캐시 없음 (모든 요청이 DB 직행)
+- Blocking I/O
+- Thread Pool: max 200
+
+---
+
+### 핵심 구현
+
+#### ShortUrlService
+
+```java
+@Service
+@Transactional(readOnly = true)
+public class ShortUrlService {
+    
+    public ShortUrlLookupResult findOriginalUrl(String shortCode) {
+        ShortUrl shortUrl = shortUrlRepository.findByShortUrl(shortCode)
+            .orElseThrow(() -> new IllegalArgumentException("Short code not found"));
+        
+        // 클릭 카운트도 동기 저장
+        urlClickService.incrementClickCount(shortUrl.getId());
+        
+        return ShortUrlLookupResult.of(...);
+    }
+}
+```
+
+- 캐시 없이 매번 DB 조회
+- 클릭 카운트 동기 저장 (병목)
+
+---
+
+### 설정 (application-phase1.yml)
 
 ```yaml
 spring:
   datasource:
     hikari:
-      maximum-pool-size: 50
-      minimum-idle: 10
-      connection-timeout: 3000
-```
+      maximum-pool-size: 20
 
-**선정 이유**:
-- 500 VU 테스트에 필요한 최소 연결 수
-- 리디렉션 90%는 단순 조회
-
-#### Tomcat Thread Pool
-
-```yaml
 server:
   tomcat:
     threads:
-      max: 500
+      max: 200
 ```
 
-**선정 이유**:
-- 표준 테스트: 최대 500 VU
-- 1 VU당 1 스레드 필요
+---
+
+## 테스트 실행
+
+```bash
+# Phase 1 서버 시작
+cd backend
+DB_USERNAME=root DB_PASSWORD=<password> ./gradlew bootRun --args='--spring.profiles.active=phase1'
+
+# 10K TPS 테스트
+cd ..
+k6 run backend/performance-tests/phase1/target-10k-test.js
+```
