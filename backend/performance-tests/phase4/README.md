@@ -1,54 +1,114 @@
-# Phase 4: WebFlux + 2-Level Caching (Caffeine + Redis)
+# Phase 4: Reactive 아키텍처 + 2-Level Caching
 
-## 🎯 목표
+## 목표
 
-**Reactive Programming + 로컬/글로벌 캐시를 통한 성능 개선**
+**Reactive Programming + 로컬/글로벌 캐시로 10K TPS 달성**
 
-- Spring WebFlux 도입
+- Spring WebFlux 도입 (Non-blocking I/O)
 - Caffeine (L1 로컬 캐시) + Redis (L2 글로벌 캐시)
-- Non-blocking I/O로 높은 동시성 처리
+- Event Loop 기반 높은 동시성 처리
 
 ---
 
-## 아키텍처
+## 구현 내용
+
+### 아키텍처
 
 ```
 사용자 요청
     ↓
-Netty (WebFlux)
+Netty (WebFlux, Non-blocking)
     ↓
-ReactiveShortUrlService
+Reactive Controller
     ↓
-Caffeine L1 캐시 (로컬 메모리, ~1μs)
+[L1] Caffeine Cache (로컬) → 즉시 응답 (~1μs)
     ↓ (Cache Miss)
-Reactive Redis L2 캐시 (글로벌, ~1ms)
+[L2] Redis (글로벌) → 빠른 응답 (~1-2ms)
     ↓ (Cache Miss)
-MySQL
+MySQL (Blocking → boundedElastic)
 ```
 
-### 캐시 전략
-
-#### 조회 플로우
-1. **Caffeine L1 캐시** 확인 (히트 → 즉시 반환)
-2. **Redis L2 캐시** 확인 (히트 → L1에 저장 후 반환)
-3. **MySQL DB** 조회 (미스 → L1, L2에 모두 저장)
-
-#### 저장 플로우
-- DB 저장 → Redis 저장 → Caffeine 저장
+**개선 사항**:
+- Tomcat → Netty
+- Blocking I/O → Non-blocking I/O
+- 2-Level Caching (Caffeine + Redis)
+- Reactive Redis
 
 ---
 
-## 설정 (application-phase4.yml)
+### 핵심 구현
+
+#### 1. WebFlux Controller
+```java
+@RestController
+@RequestMapping("/api/v1/urls")
+@Profile("phase4")
+public class ReactiveShortUrlController {
+    
+    @GetMapping("/{shortCode}")
+    public Mono<ResponseEntity<Void>> redirect(@PathVariable String shortCode) {
+        return shortUrlService.findOriginalUrl(ShortUrlLookupCommand.of(shortCode))
+            .map(result -> ResponseEntity.status(HttpStatus.FOUND)
+                .location(URI.create(result.originalUrl()))
+                .<Void>build())
+            .onErrorResume(error -> {
+                return Mono.just(ResponseEntity.notFound().build());
+            });
+    }
+}
+```
+
+#### 2. 2-Level Caching
+```java
+@Service
+@Profile("phase4")
+public class ReactiveShortUrlService {
+    
+    public Mono<ShortUrlLookupResult> findOriginalUrl(ShortUrlLookupCommand command) {
+        String shortCode = command.shortCode();
+        Cache caffeineCache = caffeineCacheManager.getCache("shortUrls");
+        
+        // L1: Caffeine (로컬 메모리 캐시)
+        ShortUrlLookupResult cached = caffeineCache.get(shortCode, ...class);
+        if (cached != null) {
+            return Mono.just(cached); // 초고속 응답 (~1μs)
+        }
+        
+        // L2: Reactive Redis
+        return reactiveRedisTemplate.opsForValue()
+            .get("shortUrls::" + shortCode)
+            .flatMap(redisResult -> {
+                caffeineCache.put(shortCode, redisResult); // L1 채움
+                return Mono.just(redisResult);
+            })
+            // L3: DB 조회 (Cache Miss)
+            .switchIfEmpty(Mono.fromCallable(() -> 
+                shortUrlRepository.findByShortUrl(shortCode)
+                    .orElseThrow(...)
+            ).subscribeOn(Schedulers.boundedElastic()));
+    }
+}
+```
+
+#### 3. 비동기 클릭 카운트
+```java
+public Mono<Long> incrementClickCount(Long urlId) {
+    return reactiveStringRedisTemplate.opsForValue()
+        .increment("url:click:" + urlId)
+        .onErrorResume(error -> Mono.empty()); // 실패해도 무시
+}
+```
+
+---
+
+### 설정 (application-phase4.yml)
 
 ```yaml
 spring:
-  # Blocking JPA (Reactive로 감싸서 사용)
   datasource:
-    url: jdbc:mysql://localhost:3306/bitly
     hikari:
       maximum-pool-size: 50
 
-  # Reactive Redis (L2 Cache)
   data:
     redis:
       host: localhost
@@ -57,16 +117,28 @@ spring:
         pool:
           max-active: 20
 
-  # Caffeine Cache (L1 Cache)
   cache:
     type: caffeine
     caffeine:
-      spec: maximumSize=10000,expireAfterWrite=10m,recordStats
+      spec: maximumSize=10000,expireAfterWrite=10m
 
-# WebFlux (Netty)
 server:
   port: 8080
   netty:
     connection-timeout: 5s
     idle-timeout: 60s
+```
+
+---
+
+## 테스트 실행
+
+```bash
+# Phase 4 서버 시작
+cd backend
+DB_USERNAME=root DB_PASSWORD=<password> ./gradlew bootRun --args='--spring.profiles.active=phase4'
+
+# 10K TPS 테스트
+cd ..
+k6 run backend/performance-tests/target-10k-test.js
 ```
