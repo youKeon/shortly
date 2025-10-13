@@ -9,6 +9,7 @@ import com.io.bitly.domain.shorturl.ShortUrlRepository;
 import com.io.bitly.domain.shorturl.ShortUrlGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Profile("!phase4")  // Phase 4가 아닐 때만 활성화 (MVC)
 public class ShortUrlService {
 
     private static final int MAX_GENERATION_ATTEMPTS = 5;
