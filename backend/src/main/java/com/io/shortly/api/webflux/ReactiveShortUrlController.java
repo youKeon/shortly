@@ -2,7 +2,6 @@ package com.io.shortly.api.webflux;
 
 import com.io.shortly.api.dto.ShortenRequest.CreateShortUrlRequest;
 import com.io.shortly.api.dto.ShortenResponse.CreateShortUrlResponse;
-import com.io.shortly.application.click.service.ReactiveClickService;
 import com.io.shortly.application.facade.ReactiveShortUrlFacade;
 import jakarta.validation.Valid;
 import java.net.URI;
@@ -24,7 +23,6 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class ReactiveShortUrlController {
     private final ReactiveShortUrlFacade shortUrlFacade;
-    private final ReactiveClickService urlClickService;
 
     @PostMapping("/shorten")
     public Mono<CreateShortUrlResponse> shortenUrl(
@@ -37,16 +35,10 @@ public class ReactiveShortUrlController {
     @GetMapping("/{shortCode}")
     public Mono<Void> redirect(@PathVariable String shortCode, ServerWebExchange exchange) {
         return shortUrlFacade.getOriginalUrl(shortCode)
-                .flatMap(result -> {
-                    Mono<Void> clickIncrement = result.urlId() != null
-                        ? urlClickService.incrementClickCount(result.urlId())
-                        : Mono.empty();
-
-                    return clickIncrement.then(Mono.defer(() -> {
-                        exchange.getResponse().setStatusCode(HttpStatus.FOUND);
-                        exchange.getResponse().getHeaders().setLocation(URI.create(result.originalUrl()));
-                        return exchange.getResponse().setComplete();
-                    }));
-                });
+                .flatMap(result -> Mono.defer(() -> {
+                    exchange.getResponse().setStatusCode(HttpStatus.FOUND);
+                    exchange.getResponse().getHeaders().setLocation(URI.create(result.originalUrl()));
+                    return exchange.getResponse().setComplete();
+                }));
     }
 }
