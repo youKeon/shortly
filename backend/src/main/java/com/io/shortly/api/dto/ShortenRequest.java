@@ -1,4 +1,4 @@
-package com.io.bitly.api.dto;
+package com.io.shortly.api.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -13,3 +13,4 @@ public class ShortenRequest {
     ) {
     }
 }
+
