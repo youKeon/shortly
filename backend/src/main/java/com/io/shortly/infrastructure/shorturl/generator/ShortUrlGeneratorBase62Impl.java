@@ -1,4 +1,4 @@
-package com.io.shortly.infrastructure.shorturl;
+package com.io.shortly.infrastructure.shorturl.generator;
 
 import com.io.shortly.domain.shorturl.ShortUrlGenerator;
 import java.security.MessageDigest;
@@ -7,7 +7,7 @@ import java.util.Random;
 import org.springframework.stereotype.Component;
 
 @Component
-public class Base62ShortUrlGenerator implements ShortUrlGenerator {
+public class ShortUrlGeneratorBase62Impl implements ShortUrlGenerator {
 
     private static final String BASE62_CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
     private static final String HASH_ALGORITHM = "SHA-256";

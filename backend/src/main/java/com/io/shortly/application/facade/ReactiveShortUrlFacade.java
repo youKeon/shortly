@@ -2,9 +2,9 @@ package com.io.shortly.application.facade;
 
 import com.io.shortly.application.dto.ShortenUrlResult.CreateShortUrlResult;
 import com.io.shortly.application.dto.ShortenUrlResult.ShortUrlLookupResult;
-import com.io.shortly.domain.click.ReactiveUrlClickService;
-import com.io.shortly.domain.shorturl.ReactiveShortUrlCache;
+import com.io.shortly.domain.click.ClickService;
 import com.io.shortly.domain.shorturl.ShortUrl;
+import com.io.shortly.domain.shorturl.ShortUrlCache;
 import com.io.shortly.domain.shorturl.ShortUrlGenerator;
 import com.io.shortly.domain.shorturl.ShortUrlRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,8 +25,8 @@ public class ReactiveShortUrlFacade {
 
     private final ShortUrlRepository shortUrlRepository;
     private final ShortUrlGenerator shortUrlGenerator;
-    private final ReactiveShortUrlCache reactiveShortUrlCache;
-    private final ReactiveUrlClickService reactiveUrlClickService;
+    private final ShortUrlCache shortUrlCache;
+    private final ClickService clickService;
 
     @Transactional
     public Mono<CreateShortUrlResult> shortenUrl(String originalUrl) {
@@ -38,7 +38,9 @@ public class ReactiveShortUrlFacade {
                         continue;
                     }
 
-                    return shortUrlRepository.save(ShortUrl.of(shortCode, originalUrl));
+                    ShortUrl created = shortUrlRepository.save(ShortUrl.of(shortCode, originalUrl));
+                    shortUrlCache.put(created);
+                    return created;
                 }
 
                 throw new IllegalStateException(
@@ -47,30 +49,33 @@ public class ReactiveShortUrlFacade {
                 );
             })
             .subscribeOn(Schedulers.boundedElastic())
-            .flatMap(shortUrl -> reactiveShortUrlCache.put(shortUrl)
-                .thenReturn(CreateShortUrlResult.of(shortUrl.getShortUrl(), shortUrl.getOriginalUrl()))
-            )
+            .map(shortUrl -> CreateShortUrlResult.of(shortUrl.getShortUrl(), shortUrl.getOriginalUrl()))
             .doOnSuccess(result ->
                 log.info("URL shortened (reactive): {} -> {}", result.originalUrl(), result.shortCode())
             );
     }
 
     public Mono<ShortUrlLookupResult> getOriginalUrl(String shortCode) {
-        Mono<ShortUrl> cached = reactiveShortUrlCache.get(shortCode);
+        Mono<ShortUrl> cached = Mono.fromCallable(() -> shortUrlCache.get(shortCode))
+            .subscribeOn(Schedulers.boundedElastic())
+            .flatMap(optional -> optional.map(Mono::just).orElseGet(Mono::empty));
+
         Mono<ShortUrl> loaded = Mono.fromCallable(() -> shortUrlRepository.findByShortUrl(shortCode)
                 .orElseThrow(() -> new IllegalArgumentException("Short code not found: " + shortCode)))
             .subscribeOn(Schedulers.boundedElastic())
-            .flatMap(shortUrl -> reactiveShortUrlCache.put(shortUrl).thenReturn(shortUrl));
+            .doOnNext(shortUrlCache::put);
 
         return cached.switchIfEmpty(Mono.defer(() -> loaded))
             .flatMap(shortUrl -> {
-                Mono<Void> clickIncrement = shortUrl.getId() == null
-                    ? Mono.empty()
-                    : reactiveUrlClickService.incrementClickCount(shortUrl.getId())
-                        .doOnError(ex -> log.warn("Failed to increment click count for urlId={}", shortUrl.getId(), ex))
-                        .onErrorResume(ex -> Mono.empty());
+                if (shortUrl.getId() == null) {
+                    return Mono.just(shortUrl);
+                }
 
-                return clickIncrement.thenReturn(shortUrl);
+                return Mono.fromRunnable(() -> clickService.incrementClickCount(shortUrl.getId()))
+                    .subscribeOn(Schedulers.boundedElastic())
+                    .doOnError(ex -> log.warn("Failed to increment click count for urlId={}", shortUrl.getId(), ex))
+                    .onErrorResume(ex -> Mono.empty())
+                    .thenReturn(shortUrl);
             })
             .map(shortUrl -> {
                 log.info("URL accessed (reactive): {} -> {}", shortCode, shortUrl.getOriginalUrl());

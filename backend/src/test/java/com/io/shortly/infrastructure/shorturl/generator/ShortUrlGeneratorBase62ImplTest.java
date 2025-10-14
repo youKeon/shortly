@@ -2,18 +2,17 @@ package com.io.shortly.infrastructure.shorturl.generator;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.io.shortly.infrastructure.shorturl.Base62ShortUrlGenerator;
 import java.util.HashSet;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
-class Base62ShortUrlGeneratorTest {
+class ShortUrlGeneratorBase62ImplTest {
 
     private static final String ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
     @Test
     void generateProducesBase62StringWithFixedLength() {
-        Base62ShortUrlGenerator generator = new Base62ShortUrlGenerator();
+        ShortUrlGeneratorBase62Impl generator = new ShortUrlGeneratorBase62Impl();
 
         String code = generator.generate("https://example.com");
 
@@ -23,7 +22,7 @@ class Base62ShortUrlGeneratorTest {
 
     @Test
     void generateProducesDiverseCodesForSameSeed() {
-        Base62ShortUrlGenerator generator = new Base62ShortUrlGenerator();
+        ShortUrlGeneratorBase62Impl generator = new ShortUrlGeneratorBase62Impl();
 
         Set<String> codes = new HashSet<>();
         for (int i = 0; i < 10; i++) {

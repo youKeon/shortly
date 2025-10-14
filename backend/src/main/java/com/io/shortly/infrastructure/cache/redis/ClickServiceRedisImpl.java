@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 @Profile("!phase5")
 @Service
 @RequiredArgsConstructor
-public class RedisClickService implements ClickService {
+public class ClickServiceRedisImpl implements ClickService {
 
     private static final String CLICK_COUNT_PREFIX = "url:click:";
 

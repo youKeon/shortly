@@ -3,7 +3,7 @@ package com.io.shortly.infrastructure.shorturl.cache;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.io.shortly.domain.shorturl.ShortUrl;
-import com.io.shortly.infrastructure.shorturl.ShortUrlCacheImpl;
+import com.io.shortly.infrastructure.cache.ShortUrlCacheImpl;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
