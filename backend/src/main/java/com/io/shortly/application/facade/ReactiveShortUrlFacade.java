@@ -5,6 +5,7 @@ import com.io.shortly.application.dto.ShortenUrlResult.ShortUrlLookupResult;
 import com.io.shortly.domain.shorturl.ShortUrl;
 import com.io.shortly.domain.shorturl.ShortUrlGenerator;
 import com.io.shortly.domain.shorturl.ShortUrlRepository;
+import java.time.Duration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.CacheManager;
@@ -14,8 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
-
-import java.time.Duration;
 
 @Slf4j
 @Profile("phase5")

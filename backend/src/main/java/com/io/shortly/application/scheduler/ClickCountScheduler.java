@@ -2,6 +2,8 @@ package com.io.shortly.application.scheduler;
 
 import com.io.shortly.domain.click.UrlClick;
 import com.io.shortly.domain.click.UrlClickRepository;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
@@ -11,9 +13,6 @@ import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Slf4j
 @Profile("!phase5")

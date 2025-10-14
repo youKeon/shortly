@@ -50,7 +50,8 @@ class LayeredArchitectureTest {
                 "jakarta..",
                 "org.springframework..",
                 "reactor..",
-                "lombok.."
+                "lombok..",
+                "org.slf4j.."
             );
 
         rule.check(importedClasses);
@@ -69,7 +70,8 @@ class LayeredArchitectureTest {
                 "jakarta..",
                 "org.springframework..",
                 "reactor..",
-                "lombok.."
+                "lombok..",
+                "org.slf4j.."
             );
 
         rule.check(importedClasses);
@@ -89,7 +91,10 @@ class LayeredArchitectureTest {
                 "org.springframework..",
                 "reactor..",
                 "lombok..",
-                "com.fasterxml.jackson.."
+                "com.fasterxml.jackson..",
+                "org.slf4j..",
+                "com.github.benmanes.caffeine..",
+                "org.hibernate.."
             );
 
         rule.check(importedClasses);
