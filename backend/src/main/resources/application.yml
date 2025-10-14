@@ -1,6 +1,6 @@
 spring:
   application:
-    name: bitly
+    name: shortly
 
   profiles:
     active: local

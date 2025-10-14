@@ -183,7 +183,7 @@ java \
   -XX:+ParallelRefProcEnabled \             # 참조 처리 병렬화
   -Xss256k \                                # 스레드 스택 크기
   -XX:+AlwaysPreTouch \                     # 힙 메모리 사전 할당
-  -jar bitly.jar
+  -jar shortly.jar
 ```
 
 ---

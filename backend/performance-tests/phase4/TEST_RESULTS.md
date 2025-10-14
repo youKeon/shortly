@@ -277,7 +277,7 @@ java \
   -XX:+ParallelRefProcEnabled \
   -Xss256k \                                # 스레드 스택 최소화
   -XX:+AlwaysPreTouch \
-  -jar bitly.jar
+  -jar shortly.jar
 ```
 
 ---
