@@ -1,4 +1,4 @@
-package com.io.bitly.api.dto;
+package com.io.shortly.api.dto;
 
 import lombok.experimental.UtilityClass;
 
@@ -12,3 +12,4 @@ public final class ShortenResponse {
         }
     }
 }
+
