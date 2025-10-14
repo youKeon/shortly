@@ -1,4 +1,4 @@
-package com.io.bitly.domain.click;
+package com.io.shortly.domain.click;
 
 import java.time.LocalDateTime;
 
@@ -38,3 +38,4 @@ public class UrlClick {
         return createdAt;
     }
 }
+

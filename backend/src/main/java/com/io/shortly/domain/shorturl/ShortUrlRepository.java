@@ -1,4 +1,4 @@
-package com.io.bitly.domain.shorturl;
+package com.io.shortly.domain.shorturl;
 
 import java.util.Optional;
 
@@ -10,3 +10,4 @@ public interface ShortUrlRepository {
 
     boolean existsByShortUrl(String shortCode);
 }
+

@@ -1,4 +1,4 @@
-package com.io.bitly.domain.shorturl;
+package com.io.shortly.domain.shorturl;
 
 import java.time.LocalDateTime;
 
@@ -45,3 +45,4 @@ public class ShortUrl {
         return createdAt;
     }
 }
+
