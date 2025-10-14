@@ -15,7 +15,7 @@ export function App() {
     if (typeof window === 'undefined') {
       return false;
     }
-    return Boolean(localStorage.getItem('bitly-theme'));
+    return Boolean(localStorage.getItem('shortly-theme'));
   });
 
   useEffect(() => {
@@ -24,11 +24,11 @@ export function App() {
 
   useEffect(() => {
     if (isManualTheme) {
-      localStorage.setItem('bitly-theme', theme);
+      localStorage.setItem('shortly-theme', theme);
       return () => undefined;
     }
 
-    localStorage.removeItem('bitly-theme');
+    localStorage.removeItem('shortly-theme');
 
     const media = window.matchMedia('(prefers-color-scheme: dark)');
     const listener = (event: MediaQueryListEvent) => {
@@ -96,7 +96,7 @@ function detectInitialTheme(): Theme {
     return 'light';
   }
 
-  const stored = localStorage.getItem('bitly-theme') as Theme | null;
+  const stored = localStorage.getItem('shortly-theme') as Theme | null;
   if (stored === 'light' || stored === 'dark') {
     return stored;
   }
