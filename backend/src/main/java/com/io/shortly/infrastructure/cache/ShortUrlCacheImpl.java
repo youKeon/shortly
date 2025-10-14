@@ -1,4 +1,4 @@
-package com.io.shortly.infrastructure.shorturl;
+package com.io.shortly.infrastructure.cache;
 
 import com.io.shortly.domain.shorturl.ShortUrl;
 import com.io.shortly.domain.shorturl.ShortUrlCache;
