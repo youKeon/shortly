@@ -1,9 +1,10 @@
-package com.io.bitly.application.scheduler;
+package com.io.shortly.application.scheduler;
 
-import com.io.bitly.domain.click.UrlClick;
-import com.io.bitly.domain.click.UrlClickRepository;
+import com.io.shortly.domain.click.UrlClick;
+import com.io.shortly.domain.click.UrlClickRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
@@ -14,10 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Redis 클릭 카운트를 DB에 저장하는 스케줄러 - 5분마다 실행 - Redis의 클릭 카운트를 읽어 DB에 저장 후 삭제
- */
 @Slf4j
+@Profile("!phase5")
 @Component
 @RequiredArgsConstructor
 public class ClickCountScheduler {
@@ -28,10 +27,7 @@ public class ClickCountScheduler {
     private final RedisTemplate<String, String> redisTemplate;
     private final UrlClickRepository urlClickRepository;
 
-    /**
-     * 5분마다 Redis 클릭 카운트를 DB에 플러시
-     */
-    @Scheduled(fixedDelay = 300000)
+    @Scheduled(fixedDelay = 300000) // 5분
     @Transactional
     public void saveCount() {
 
@@ -86,3 +82,4 @@ public class ClickCountScheduler {
         return Long.parseLong(urlIdStr);
     }
 }
+

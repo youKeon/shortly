@@ -1,4 +1,4 @@
-package com.io.bitly.application.dto;
+package com.io.shortly.application.dto;
 
 import lombok.experimental.UtilityClass;
 
@@ -19,3 +19,4 @@ public class ShortenUrlCommand {
         }
     }
 }
+
