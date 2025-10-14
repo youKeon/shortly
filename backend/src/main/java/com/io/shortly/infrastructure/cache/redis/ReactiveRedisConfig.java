@@ -1,6 +1,6 @@
 package com.io.shortly.infrastructure.cache.redis;
 
-import com.io.shortly.application.dto.ShortenUrlResult.ShortUrlLookupResult;
+import com.io.shortly.domain.shorturl.ShortUrl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -15,16 +15,16 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 public class ReactiveRedisConfig {
 
     @Bean
-    public ReactiveRedisTemplate<String, ShortUrlLookupResult> reactiveRedisTemplate(
+    public ReactiveRedisTemplate<String, ShortUrl> reactiveRedisTemplate(
             ReactiveRedisConnectionFactory connectionFactory
     ) {
 
         StringRedisSerializer stringSerializer = new StringRedisSerializer();
-        Jackson2JsonRedisSerializer<ShortUrlLookupResult> jsonSerializer =
-                new Jackson2JsonRedisSerializer<>(ShortUrlLookupResult.class);
+        Jackson2JsonRedisSerializer<ShortUrl> jsonSerializer =
+                new Jackson2JsonRedisSerializer<>(ShortUrl.class);
 
-        RedisSerializationContext<String, ShortUrlLookupResult> serializationContext =
-                RedisSerializationContext.<String, ShortUrlLookupResult>newSerializationContext()
+        RedisSerializationContext<String, ShortUrl> serializationContext =
+                RedisSerializationContext.<String, ShortUrl>newSerializationContext()
                         .key(stringSerializer)
                         .value(jsonSerializer)
                         .hashKey(stringSerializer)

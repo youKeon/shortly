@@ -9,10 +9,8 @@ import com.io.shortly.domain.shorturl.ShortUrl;
 import com.io.shortly.domain.shorturl.ShortUrlCache;
 import com.io.shortly.domain.shorturl.ShortUrlGenerator;
 import com.io.shortly.domain.shorturl.ShortUrlRepository;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,20 +31,18 @@ public class ShortUrlFacade {
 
     @Transactional
     public CreateShortUrlResult shortenUrl(CreateShortUrlCommand command) {
-
         for (int attempt = 0; attempt < MAX_GENERATION_ATTEMPTS; attempt++) {
+            String candidate = shortUrlGenerator.generate(command.originalUrl());
 
-            String shortUrl = shortUrlGenerator.generate(command.originalUrl());
-
-            if (shortUrlRepository.existsByShortUrl(shortUrl)) {
+            if (shortUrlRepository.existsByShortUrl(candidate)) {
                 continue;
             }
 
-            ShortUrl model = shortUrlRepository.save(ShortUrl.of(shortUrl, command.originalUrl()));
+            ShortUrl created = shortUrlRepository.save(ShortUrl.of(candidate, command.originalUrl()));
+            shortUrlCache.put(created);
 
-            shortUrlCache.put(model);
-
-            return CreateShortUrlResult.of(model.getShortUrl(), model.getOriginalUrl());
+            log.info("URL shortened: {} -> {}", created.getOriginalUrl(), created.getShortUrl());
+            return CreateShortUrlResult.of(created.getShortUrl(), created.getOriginalUrl());
         }
 
         throw new IllegalStateException(
@@ -56,25 +52,25 @@ public class ShortUrlFacade {
     }
 
     public ShortUrlLookupResult findOriginalUrl(ShortUrlLookupCommand command) {
-        ShortUrlLookupResult result = shortUrlCache.get(command.shortCode())
+        ShortUrl shortUrl = shortUrlCache.get(command.shortCode())
             .orElseGet(() -> {
-                ShortUrl shortUrl = shortUrlRepository.findByShortUrl(command.shortCode())
+                ShortUrl loaded = shortUrlRepository.findByShortUrl(command.shortCode())
                     .orElseThrow(() -> new IllegalArgumentException(
-                        "Short code not found: " + command.shortCode())
-                    );
+                        "Short code not found: " + command.shortCode()
+                    ));
 
-                shortUrlCache.put(shortUrl);
-
-                return ShortUrlLookupResult.of(
-                    shortUrl.getId(),
-                    shortUrl.getOriginalUrl(),
-                    shortUrl.getShortUrl()
-                );
+                shortUrlCache.put(loaded);
+                return loaded;
             });
 
-        clickService.incrementClickCount(result.urlId());
+        clickService.incrementClickCount(shortUrl.getId());
 
-        return result;
+        log.info("URL accessed: {} -> {}", command.shortCode(), shortUrl.getOriginalUrl());
+        return ShortUrlLookupResult.of(
+            shortUrl.getId(),
+            shortUrl.getOriginalUrl(),
+            shortUrl.getShortUrl()
+        );
     }
 
 }
