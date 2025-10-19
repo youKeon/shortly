@@ -1,0 +1,26 @@
+plugins {
+    id 'org.springframework.boot'
+}
+
+group = 'com.io.shortly'
+
+dependencies {
+    implementation project(':shortly-shared-kernel')
+
+    // Spring Boot
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // Micrometer Prometheus
+    runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+
+    // JPA
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    runtimeOnly 'com.mysql:mysql-connector-j'
+
+    // Kafka
+    implementation 'org.springframework.kafka:spring-kafka'
+
+    // Swagger
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}"
+}
