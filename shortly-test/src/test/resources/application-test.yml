@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: shortly-e2e-test
+
+  # Kafka
+  kafka:
+    bootstrap-servers: ${spring.embedded.kafka.brokers}
+    consumer:
+      auto-offset-reset: earliest
+      group-id: test-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+  # JPA
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+
+  # Cache
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=100,expireAfterWrite=10m
+
+logging:
+  level:
+    com.io.shortly: DEBUG
+    org.springframework.kafka: INFO
+    org.springframework.data: INFO
+    org.hibernate.SQL: DEBUG
