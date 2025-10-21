@@ -1,0 +1,68 @@
+package com.io.shortly.click.application;
+
+import com.io.shortly.click.application.dto.ClickCommand.ClickDetailCommand;
+import com.io.shortly.click.application.dto.ClickCommand.ClickStatsCommand;
+import com.io.shortly.click.application.dto.ClickResult.ClickDetailResult;
+import com.io.shortly.click.application.dto.ClickResult.ClickStatsResult;
+import com.io.shortly.click.domain.UrlClick;
+import com.io.shortly.click.domain.UrlClickRepository;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import java.time.LocalDateTime;
+import java.util.List;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
+
+@Slf4j
+@Service
+@Validated
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class ClickService {
+
+    private static final int DEFAULT_LIMIT = 100;
+
+    private final UrlClickRepository urlClickRepository;
+
+    public ClickStatsResult getClickStats(@Valid @NotNull ClickStatsCommand command) {
+
+        long totalClicks = urlClickRepository.countByShortCode(command.shortCode());
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime last24Hours = now.minusHours(24);
+        LocalDateTime last7Days = now.minusDays(7);
+
+        List<UrlClick> last7DaysClicks = urlClickRepository.findByShortCodeAndClickedAtBetween(
+                command.shortCode(), last7Days, now
+        );
+
+        long clicksLast7Days = last7DaysClicks.size();
+        long clicksLast24Hours = last7DaysClicks.stream()
+                .filter(click -> click.getClickedAt().isAfter(last24Hours))
+                .count();
+
+        return ClickStatsResult.of(
+            command.shortCode(),
+            totalClicks,
+            clicksLast24Hours,
+            clicksLast7Days
+        );
+    }
+
+    public List<ClickDetailResult> getClickDetails(@Valid @NotNull ClickDetailCommand command) {
+
+        int effectiveLimit = command.limit() != null ? command.limit() : DEFAULT_LIMIT;
+
+        List<UrlClick> clicks = urlClickRepository.findByShortCodeWithLimit(
+                command.shortCode(),
+                effectiveLimit
+        );
+
+        return clicks.stream()
+                .map(click -> ClickDetailResult.of(click.getClickedAt()))
+                .toList();
+    }
+}
