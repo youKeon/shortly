@@ -1,0 +1,25 @@
+plugins {
+    id 'java-library'
+}
+
+group = 'com.io.shortly'
+
+dependencies {
+    // Kafka
+    api 'org.springframework.kafka:spring-kafka'
+
+    // Jackson
+    api 'com.fasterxml.jackson.core:jackson-databind'
+    api 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+
+    // Spring Web
+    compileOnly 'org.springframework.boot:spring-boot-starter-web'
+    compileOnly 'org.springframework.boot:spring-boot-starter-webflux'
+
+    // Micrometer
+    api 'io.micrometer:micrometer-tracing'
+    api 'io.micrometer:micrometer-tracing-bridge-brave'
+
+    // Test
+    testImplementation 'org.springframework.kafka:spring-kafka-test'
+}
