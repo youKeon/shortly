@@ -1,0 +1,33 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'shortly-monitor'
+
+scrape_configs:
+  # URL Service
+  - job_name: 'url-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8081']
+        labels:
+          application: 'shortly-url-service'
+          service: 'url'
+
+  # Redirect Service
+  - job_name: 'redirect-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8082']
+        labels:
+          application: 'shortly-redirect-service'
+          service: 'redirect'
+
+  # Click Service
+  - job_name: 'click-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8083']
+        labels:
+          application: 'shortly-click-service'
+          service: 'click'
