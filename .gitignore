@@ -46,4 +46,4 @@ coverage/
 *.swp
 
 # ==== AI ====
-agents/
+.claude/
