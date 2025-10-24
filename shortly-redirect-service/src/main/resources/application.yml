@@ -1,0 +1,93 @@
+spring:
+  application:
+    name: shortly-redirect-service
+
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+
+  # R2DBC Configuration
+  r2dbc:
+    url: r2dbc:mysql://${DB_HOST:localhost}:${DB_PORT:3307}/${DB_NAME:shortly_redirect}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:password}
+
+  # Schema initialization
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+
+  # Kafka Configuration
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: ${KAFKA_CONSUMER_GROUP:redirect-service-group}
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      properties:
+        spring.json.trusted.packages: "com.io.shortly.shared.event"
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    listener:
+      ack-mode: manual
+
+  # Redis Configuration
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+server:
+  port: 8082
+
+logging:
+  level:
+    org.springframework.boot.autoconfigure.sql.init: DEBUG
+    org.springframework.r2dbc.connection.init: DEBUG
+    root: INFO
+    com.io.shortly.redirect: DEBUG
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      - name: Redirect Service API
+        url: /v3/api-docs/webflux-api
+    urls-primary-name: Redirect Service API
+    disable-swagger-default-url: true
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+logging:
+  level:
+    root: INFO
+    com.io.shortly.redirect: INFO
