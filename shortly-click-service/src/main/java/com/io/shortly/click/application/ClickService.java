@@ -6,19 +6,15 @@ import com.io.shortly.click.application.dto.ClickResult.ClickDetailResult;
 import com.io.shortly.click.application.dto.ClickResult.ClickStatsResult;
 import com.io.shortly.click.domain.UrlClick;
 import com.io.shortly.click.domain.UrlClickRepository;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.validation.annotation.Validated;
 
 @Slf4j
 @Service
-@Validated
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class ClickService {
@@ -27,7 +23,7 @@ public class ClickService {
 
     private final UrlClickRepository urlClickRepository;
 
-    public ClickStatsResult getClickStats(@Valid @NotNull ClickStatsCommand command) {
+    public ClickStatsResult getClickStats(ClickStatsCommand command) {
 
         long totalClicks = urlClickRepository.countByShortCode(command.shortCode());
 
@@ -52,7 +48,7 @@ public class ClickService {
         );
     }
 
-    public List<ClickDetailResult> getClickDetails(@Valid @NotNull ClickDetailCommand command) {
+    public List<ClickDetailResult> getClickDetails(ClickDetailCommand command) {
 
         int effectiveLimit = command.limit() != null ? command.limit() : DEFAULT_LIMIT;
 

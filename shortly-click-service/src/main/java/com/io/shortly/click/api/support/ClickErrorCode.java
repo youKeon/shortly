@@ -8,11 +8,9 @@ import org.springframework.http.HttpStatus;
 @Getter
 @RequiredArgsConstructor
 public enum ClickErrorCode implements ErrorCode {
-    // Click tracking errors (400)
-    INVALID_LIMIT("CLICK-001", "Invalid limit parameter", HttpStatus.BAD_REQUEST),
 
-    // Analytics errors (500)
-    ANALYTICS_QUERY_FAILED("CLICK-501", "Analytics query failed", HttpStatus.INTERNAL_SERVER_ERROR);
+    INVALID_SHORT_CODE("CLICK-001", "Invalid short code format", HttpStatus.BAD_REQUEST),
+    CLICK_NOT_FOUND("CLICK-002", "Click record not found", HttpStatus.NOT_FOUND);
 
     private final String code;
     private final String message;
