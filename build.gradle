@@ -1,0 +1,60 @@
+// 전역 plugin
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.5.6' apply false
+    id 'io.spring.dependency-management' version '1.1.7' apply false
+}
+
+group = 'com.io.shortly'
+version = '0.0.1-SNAPSHOT'
+
+// 전역 변수
+ext {
+    springBootVersion = '3.5.6'
+    springDependencyManagementVersion = '1.1.7'
+    r2dbcMysqlVersion = '1.0.5'
+    springdocVersion = '2.7.0'
+}
+
+allprojects {
+    repositories {
+        mavenCentral()
+    }
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'io.spring.dependency-management'
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
+    }
+
+    configurations {
+        compileOnly {
+            extendsFrom annotationProcessor
+        }
+    }
+
+    dependencyManagement {
+        imports {
+            mavenBom "org.springframework.boot:spring-boot-dependencies:${springBootVersion}"
+        }
+    }
+
+    dependencies {
+        // Lombok
+        compileOnly 'org.projectlombok:lombok'
+        annotationProcessor 'org.projectlombok:lombok'
+
+        // Test
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    }
+
+    tasks.named('test') {
+        useJUnitPlatform()
+    }
+}

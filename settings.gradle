@@ -1,0 +1,13 @@
+rootProject.name = 'shortly'
+
+include 'shortly-shared-kernel'
+include 'shortly-test'
+include 'shortly-url-service'
+include 'shortly-redirect-service'
+include 'shortly-click-service'
+
+project(':shortly-shared-kernel').projectDir = file('shortly-shared-kernel')
+project(':shortly-test').projectDir = file('shortly-test')
+project(':shortly-url-service').projectDir = file('shortly-url-service')
+project(':shortly-redirect-service').projectDir = file('shortly-redirect-service')
+project(':shortly-click-service').projectDir = file('shortly-click-service')
