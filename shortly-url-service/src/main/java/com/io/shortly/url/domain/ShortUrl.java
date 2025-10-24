@@ -16,14 +16,38 @@ public class ShortUrl {
             final String originalUrl,
             final LocalDateTime createdAt
     ) {
+        validateShortCode(shortCode);
+        validateOriginalUrl(originalUrl);
+
         this.id = id;
         this.shortCode = shortCode;
         this.originalUrl = originalUrl;
-        this.createdAt = createdAt;
+        this.createdAt = createdAt != null ? createdAt : LocalDateTime.now();
     }
 
     public static ShortUrl create(String shortCode, String originalUrl) {
         return new ShortUrl(null, shortCode, originalUrl, LocalDateTime.now());
+    }
+
+    private static void validateShortCode(String shortCode) {
+        if (shortCode == null || shortCode.isBlank()) {
+            throw new IllegalArgumentException("Short code must not be blank");
+        }
+        if (shortCode.length() < 6 || shortCode.length() > 10) {
+            throw new IllegalArgumentException("Short code must be 6-10 characters");
+        }
+        if (!shortCode.matches("^[a-zA-Z0-9]+$")) {
+            throw new IllegalArgumentException("Short code must be alphanumeric");
+        }
+    }
+
+    private static void validateOriginalUrl(String originalUrl) {
+        if (originalUrl == null || originalUrl.isBlank()) {
+            throw new IllegalArgumentException("Original URL must not be blank");
+        }
+        if (originalUrl.length() > 2048) {
+            throw new IllegalArgumentException("URL must not exceed 2048 characters");
+        }
     }
 
     public static ShortUrl restore(Long id, String shortCode, String originalUrl, LocalDateTime createdAt) {

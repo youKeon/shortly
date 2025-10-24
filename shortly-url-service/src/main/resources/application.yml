@@ -45,9 +45,16 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
-    export:
-      prometheus:
+  prometheus:
+    metrics:
+      export:
         enabled: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui
+  api-docs:
+    path: /api-docs
 
 ---
 # prod

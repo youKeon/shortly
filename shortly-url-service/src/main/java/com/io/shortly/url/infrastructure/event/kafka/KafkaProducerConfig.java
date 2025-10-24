@@ -1,6 +1,6 @@
 package com.io.shortly.url.infrastructure.event.kafka;
 
-import com.io.shortly.shared.event.BaseEvent;
+import com.io.shortly.shared.event.UrlCreatedEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Bean;
@@ -19,14 +19,14 @@ public class KafkaProducerConfig {
     private final KafkaProperties kafkaProperties;
 
     @Bean
-    public ProducerFactory<String, BaseEvent> producerFactory() {
+    public ProducerFactory<String, UrlCreatedEvent> producerFactory() {
         Map<String, Object> config = kafkaProperties.buildProducerProperties(null);
         config.put(JsonSerializer.ADD_TYPE_INFO_HEADERS, false);
         return new DefaultKafkaProducerFactory<>(config);
     }
 
     @Bean
-    public KafkaTemplate<String, BaseEvent> kafkaTemplate() {
+    public KafkaTemplate<String, UrlCreatedEvent> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }
 }

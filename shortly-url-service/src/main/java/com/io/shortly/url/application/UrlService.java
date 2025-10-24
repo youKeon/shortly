@@ -13,7 +13,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.springframework.util.Assert;
 
 @Slf4j
 @Service
@@ -28,9 +27,6 @@ public class UrlService {
     private final TransactionTemplate txTemplate;
 
     public ShortenedResult shortenUrl(ShortenCommand command) {
-        Assert.notNull(command, "Command must not be null");
-        Assert.hasText(command.originalUrl(), "URL must not be blank");
-
         for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
             String candidate = shortUrlGenerator.generate(command.originalUrl());
 
