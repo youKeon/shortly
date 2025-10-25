@@ -43,8 +43,8 @@ server:
   port: 8082
 
 logging:
-  pattern:
-    console: "%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %clr(%5level) %clr(%5pid){magenta} --- %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} : %msg%n"
+  file:
+    name: logs/shortly-redirect-service.log
   level:
     org.springframework.boot.autoconfigure.sql.init: DEBUG
     org.springframework.r2dbc.connection.init: DEBUG
@@ -86,10 +86,15 @@ springdoc:
     use-root-path: true
 
 ---
+# prod
 spring:
   config:
     activate:
       on-profile: prod
+
+  sql:
+    init:
+      mode: never
 
 logging:
   level:

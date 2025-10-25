@@ -13,7 +13,8 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create  # 서버 시작 시 테이블 drop 후 재생성 (테스트용)
+    show-sql: true
     open-in-view: false
 
   kafka:
@@ -32,8 +33,8 @@ server:
   port: 8083
 
 logging:
-  pattern:
-    console: "%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %clr(%5level) %clr(%5pid){magenta} --- %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} : %msg%n"
+  file:
+    name: logs/shortly-click-service.log
   level:
     root: INFO
     com.io.shortly.click: DEBUG
@@ -72,6 +73,8 @@ spring:
       on-profile: prod
 
   jpa:
+    hibernate:
+      ddl-auto: validate
     show-sql: false
 
 logging:
