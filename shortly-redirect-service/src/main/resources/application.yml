@@ -7,7 +7,7 @@ spring:
 
   # R2DBC Configuration
   r2dbc:
-    url: r2dbc:mysql://${DB_HOST:localhost}:${DB_PORT:3307}/${DB_NAME:shortly_redirect}
+    url: r2dbc:mysql://${DB_HOST:localhost}:${DB_PORT:3308}/${DB_NAME:shortly_redirect}
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:password}
 
@@ -43,6 +43,8 @@ server:
   port: 8082
 
 logging:
+  pattern:
+    console: "%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %clr(%5level) %clr(%5pid){magenta} --- %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} : %msg%n"
   level:
     org.springframework.boot.autoconfigure.sql.init: DEBUG
     org.springframework.r2dbc.connection.init: DEBUG
@@ -70,16 +72,18 @@ management:
       export:
         enabled: true
 
+# SpringDoc OpenAPI - WebFlux 기본 설정 사용
+# Swagger UI: http://localhost:8082/webjars/swagger-ui/index.html
+# API Docs: http://localhost:8082/v3/api-docs
 springdoc:
   api-docs:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
-    urls:
-      - name: Redirect Service API
-        url: /v3/api-docs/webflux-api
-    urls-primary-name: Redirect Service API
-    disable-swagger-default-url: true
+    # Try-it-out 기능 활성화
+    try-it-out-enabled: true
+    # CORS 요청 허용
+    use-root-path: true
 
 ---
 spring:
