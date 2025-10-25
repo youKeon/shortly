@@ -101,7 +101,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "rate(http_server_requests_seconds_count{application=~\"shortly.*\"}[1m])",
+          "expr": "sum by (application) (rate(http_server_requests_seconds_count{application=~\"shortly.*\"}[1m]))",
           "legendFormat": "{{application}}",
           "refId": "A"
         }
@@ -196,7 +196,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "(rate(http_server_requests_seconds_sum{application=~\"shortly.*\"}[1m]) / rate(http_server_requests_seconds_count{application=~\"shortly.*\"}[1m])) * 1000",
+          "expr": "sum by (application) (rate(http_server_requests_seconds_sum{application=~\"shortly.*\"}[1m])) / sum by (application) (rate(http_server_requests_seconds_count{application=~\"shortly.*\"}[1m])) * 1000",
           "legendFormat": "{{application}} - Avg",
           "refId": "A"
         },
@@ -205,12 +205,30 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "http_server_requests_seconds_max{application=~\"shortly.*\"} * 1000",
-          "legendFormat": "{{application}} - Max",
+          "expr": "histogram_quantile(0.95, sum by (application, le) (rate(http_server_requests_seconds_bucket{application=~\"shortly.*\"}[1m]))) * 1000",
+          "legendFormat": "{{application}} - P95",
           "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "histogram_quantile(0.99, sum by (application, le) (rate(http_server_requests_seconds_bucket{application=~\"shortly.*\"}[1m]))) * 1000",
+          "legendFormat": "{{application}} - P99",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "max by (application) (http_server_requests_seconds_max{application=~\"shortly.*\"}) * 1000",
+          "legendFormat": "{{application}} - Max",
+          "refId": "D"
         }
       ],
-      "title": "Response Time (Avg/Max)",
+      "title": "Response Time (Avg/P95/P99/Max)",
       "type": "timeseries"
     },
     {
@@ -292,7 +310,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "100 * sum(rate(http_server_requests_seconds_count{application=~\"shortly.*\",status!~\"2..\"}[1m])) by (application) / sum(rate(http_server_requests_seconds_count{application=~\"shortly.*\"}[1m])) by (application)",
+          "expr": "100 * sum(rate(http_server_requests_seconds_count{application=~\"shortly.*\",status=~\"[45]..\"}[1m])) by (application) / sum(rate(http_server_requests_seconds_count{application=~\"shortly.*\"}[1m])) by (application)",
           "legendFormat": "{{application}}",
           "refId": "A"
         }
@@ -634,8 +652,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "100 * sum(rate(cache_gets_total{result=\"hit\",application=\"shortly-redirect-service\"}[1m])) / (sum(rate(cache_gets_total{result=\"hit\",application=\"shortly-redirect-service\"}[1m])) + sum(rate(cache_gets_total{result=\"miss\",application=\"shortly-redirect-service\"}[1m])))",
-          "legendFormat": "Cache Hit Rate %",
+          "expr": "100 * sum by (level) (rate(cache_gets_total{result=\"hit\",application=\"shortly-redirect-service\"}[1m])) / (sum by (level) (rate(cache_gets_total{result=\"hit\",application=\"shortly-redirect-service\"}[1m])) + sum by (level) (rate(cache_gets_total{result=\"miss\",application=\"shortly-redirect-service\"}[1m])))",
+          "legendFormat": "{{level}} Hit Rate %",
           "refId": "A"
         },
         {
@@ -643,8 +661,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "rate(cache_gets_total{result=\"hit\",application=\"shortly-redirect-service\"}[1m])",
-          "legendFormat": "Cache Hits/sec",
+          "expr": "sum by (level) (rate(cache_gets_total{result=\"hit\",application=\"shortly-redirect-service\"}[1m]))",
+          "legendFormat": "{{level}} Hits/sec",
           "refId": "B"
         },
         {
@@ -652,8 +670,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "rate(cache_gets_total{result=\"miss\",application=\"shortly-redirect-service\"}[1m])",
-          "legendFormat": "Cache Misses/sec",
+          "expr": "sum by (level) (rate(cache_gets_total{result=\"miss\",application=\"shortly-redirect-service\"}[1m]))",
+          "legendFormat": "{{level}} Misses/sec",
           "refId": "C"
         }
       ],
@@ -770,7 +788,7 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "Shortly MSA Performance Dashboard",
+  "title": "Shortly Dashboard",
   "uid": "shortly-msa",
   "version": 1,
   "weekStart": ""

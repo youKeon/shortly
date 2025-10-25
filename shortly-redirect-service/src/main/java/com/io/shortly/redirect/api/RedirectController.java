@@ -14,20 +14,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/urls")
 @RequiredArgsConstructor
 @Validated
 public class RedirectController {
 
     private final RedirectService redirectService;
 
-    @GetMapping("/{shortCode}")
+    @GetMapping("/r/{shortCode}")
     public Mono<ResponseEntity<Void>> redirect(
             @PathVariable
             @NotBlank(message = "Short code must not be blank")
@@ -39,7 +37,7 @@ public class RedirectController {
     ) {
         GetRedirectRequest request = new GetRedirectRequest(shortCode);
         return redirectService.getOriginalUrl(request.shortCode())
-            .map(result -> ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY)
+            .map(result -> ResponseEntity.status(HttpStatus.FOUND)
                 .location(URI.create(result.originalUrl()))
                 .build());
     }

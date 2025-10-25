@@ -9,7 +9,7 @@ services:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: shortly_url
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - mysql-url-data:/var/lib/mysql
     networks:
@@ -28,7 +28,7 @@ services:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: shortly_redirect
     ports:
-      - "3307:3306"
+      - "3308:3306"
     volumes:
       - mysql-redirect-data:/var/lib/mysql
     networks:
@@ -47,7 +47,7 @@ services:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: shortly_click
     ports:
-      - "3308:3306"
+      - "3309:3306"
     volumes:
       - mysql-click-data:/var/lib/mysql
     networks:
@@ -148,6 +148,8 @@ services:
     depends_on:
       prometheus:
         condition: service_healthy
+      loki:
+        condition: service_healthy
     ports:
       - "3000:3000"
     environment:
@@ -165,6 +167,37 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
+
+  # Logging
+  loki:
+    image: grafana/loki:2.9.0
+    container_name: shortly-loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/loki-config.yml
+    volumes:
+      - ../monitoring/loki/loki-config.yml:/etc/loki/loki-config.yml
+      - loki-data:/loki
+    networks:
+      - shortly-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3100/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  promtail:
+    image: grafana/promtail:2.9.0
+    container_name: shortly-promtail
+    depends_on:
+      loki:
+        condition: service_healthy
+    command: -config.file=/etc/promtail/promtail-config.yml
+    volumes:
+      - ../monitoring/loki/promtail-config.yml:/etc/promtail/promtail-config.yml
+      - ../../logs:/var/log/shortly
+    networks:
+      - shortly-network
 
 networks:
   shortly-network:
@@ -184,3 +217,5 @@ volumes:
     name: shortly_prometheus-data
   grafana-data:
     name: shortly_grafana-data
+  loki-data:
+    name: shortly_loki-data
