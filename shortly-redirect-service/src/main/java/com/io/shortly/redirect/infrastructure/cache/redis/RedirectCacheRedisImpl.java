@@ -24,7 +24,7 @@ public class RedirectCacheRedisImpl implements RedirectCache {
         MeterRegistry meterRegistry
     ) {
         this.redisTemplate = redisTemplate;
-        this.metrics = CacheMetrics.of(meterRegistry, L2.getMetricName());
+        this.metrics = CacheMetrics.of(meterRegistry, L2.getMetricName(), "L2");
     }
 
     @Override

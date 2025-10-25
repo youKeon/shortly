@@ -1,0 +1,28 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  # Shortly services logs
+  - job_name: shortly-services
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: shortly
+          __path__: /var/log/shortly/*.log
+    pipeline_stages:
+      - regex:
+          expression: '^.*shortly-(?P<service>\w+)-service\.log'
+          source: filename
+      - labels:
+          service:
+      - template:
+          source: application
+          template: 'shortly-{{ .service }}-service'
