@@ -26,6 +26,8 @@ server:
   port: 8081
 
 logging:
+  pattern:
+    console: "%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %clr(%5level) %clr(%5pid){magenta} --- %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} : %msg%n"
   level:
     root: INFO
     com.io.shortly.url: DEBUG
