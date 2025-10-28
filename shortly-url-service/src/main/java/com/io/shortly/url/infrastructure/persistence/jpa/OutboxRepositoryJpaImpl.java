@@ -15,7 +15,7 @@ public class OutboxRepositoryJpaImpl implements OutboxRepository {
     @Override
     @Transactional
     public void save(Outbox outbox) {
-        OutboxEntity entity = OutboxEntity.fromDomain(outbox);
+        OutboxJpaEntity entity = OutboxJpaEntity.fromDomain(outbox);
         jpaRepository.save(entity);
     }
 }

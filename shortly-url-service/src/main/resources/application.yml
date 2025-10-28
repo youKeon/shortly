@@ -22,6 +22,9 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        max.block.ms: 3000              # Kafka 장애 시 빠른 실패 (3초)
+        retries: 0                      # Producer 재시도 없음 (Outbox 스케줄러가 재시도)
 
 server:
   port: 8081

@@ -3,7 +3,7 @@ package com.io.shortly.url.infrastructure.scheduler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.io.shortly.shared.event.UrlCreatedEvent;
 import com.io.shortly.shared.kafka.KafkaTopics;
-import com.io.shortly.url.infrastructure.persistence.jpa.OutboxEntity;
+import com.io.shortly.url.infrastructure.persistence.jpa.OutboxJpaEntity;
 import com.io.shortly.url.infrastructure.persistence.jpa.OutboxJpaRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +32,7 @@ public class OutboxPublisher {
     @Scheduled(fixedDelay = ONE_SECOND)
     @Transactional
     public void publishPendingEvents() {
-        List<OutboxEntity> events = outboxJpaRepository.findPendingEvents(
+        List<OutboxJpaEntity> events = outboxJpaRepository.findPendingEvents(
             PageRequest.of(0, BATCH_SIZE)
         );
 

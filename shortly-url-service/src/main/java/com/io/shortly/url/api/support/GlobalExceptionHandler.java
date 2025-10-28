@@ -3,7 +3,7 @@ package com.io.shortly.url.api.support;
 import com.io.shortly.shared.exception.BaseExceptionHandler;
 import com.io.shortly.shared.exception.ErrorResponse;
 import com.io.shortly.shared.exception.RetryPolicy;
-import com.io.shortly.url.domain.ShortCodeGenerationFailedException;
+import com.io.shortly.url.domain.url.ShortCodeGenerationFailedException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
