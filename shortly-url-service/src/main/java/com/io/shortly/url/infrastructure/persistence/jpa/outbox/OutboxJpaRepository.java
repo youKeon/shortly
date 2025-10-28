@@ -1,4 +1,4 @@
-package com.io.shortly.url.infrastructure.persistence.jpa;
+package com.io.shortly.url.infrastructure.persistence.jpa.outbox;
 
 import java.util.List;
 import org.springframework.data.domain.Pageable;
