@@ -1,4 +1,4 @@
-package com.io.shortly.url.infrastructure.persistence.jpa;
+package com.io.shortly.url.infrastructure.persistence.jpa.outbox;
 
 public enum OutboxEventStatus {
     PENDING,    // 발행 대기

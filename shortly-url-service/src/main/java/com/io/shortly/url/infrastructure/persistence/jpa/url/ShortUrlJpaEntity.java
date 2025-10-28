@@ -1,4 +1,4 @@
-package com.io.shortly.url.infrastructure.persistence.jpa;
+package com.io.shortly.url.infrastructure.persistence.jpa.url;
 
 import com.io.shortly.url.domain.url.ShortUrl;
 import jakarta.persistence.*;
