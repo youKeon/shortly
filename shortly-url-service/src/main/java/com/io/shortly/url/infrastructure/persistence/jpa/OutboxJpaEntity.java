@@ -24,7 +24,7 @@ import org.hibernate.annotations.CreationTimestamp;
     @Index(name = "idx_aggregate_aggregate_id", columnList = "aggregate, aggregate_id")
 })
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class OutboxEntity {
+public class OutboxJpaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -48,8 +48,8 @@ public class OutboxEntity {
     @Column(name = "created_at", nullable = false, updatable = false, columnDefinition = "TIMESTAMP(6)")
     private Instant createdAt;
 
-    public static OutboxEntity fromDomain(Outbox outbox) {
-        OutboxEntity entity = new OutboxEntity();
+    public static OutboxJpaEntity fromDomain(Outbox outbox) {
+        OutboxJpaEntity entity = new OutboxJpaEntity();
         entity.aggregate = outbox.getAggregate();
         entity.aggregateId = outbox.getAggregateId();
         entity.payload = outbox.getPayload();
