@@ -1,6 +1,6 @@
 package com.io.shortly.url.infrastructure.generator;
 
-import com.io.shortly.url.domain.ShortUrlGenerator;
+import com.io.shortly.url.domain.url.ShortUrlGenerator;
 import org.springframework.stereotype.Component;
 
 import java.security.MessageDigest;
