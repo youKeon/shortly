@@ -1,4 +1,4 @@
-package com.io.shortly.url.domain;
+package com.io.shortly.url.domain.url;
 
 import com.io.shortly.shared.exception.BusinessException;
 import com.io.shortly.url.api.support.UrlErrorCode;

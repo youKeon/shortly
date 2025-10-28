@@ -1,10 +1,10 @@
-package com.io.shortly.url.domain;
+package com.io.shortly.url.domain.url;
 
 import java.util.Optional;
 
 public interface ShortUrlRepository {
 
-    ShortUrl save(ShortUrl shortUrl);
+    void save(ShortUrl shortUrl);
 
     Optional<ShortUrl> findByShortCode(String shortCode);
 
