@@ -1,107 +1,33 @@
 spring:
-  application:
-    name: shortly-redirect-service
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+    open-in-view: false
 
-  profiles:
-    active: ${SPRING_PROFILES_ACTIVE:local}
-
-  # R2DBC Configuration
-  r2dbc:
-    url: r2dbc:mysql://${DB_HOST:localhost}:${DB_PORT:3308}/${DB_NAME:shortly_redirect}
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3308}/${DB_NAME:shortly_redirect}?useSSL=false&serverTimezone=UTC
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:password}
-#    pool:
-#      initial-size: 20
-#      max-size: 50
-#      max-idle-time: 30m
-#      max-acquire-time: 20s
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      minimum-idle: 20
+      maximum-pool-size: 100
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
 
-  # Schema initialization
-  sql:
-    init:
-      mode: always
-      schema-locations: classpath:schema.sql
-
-  # Kafka Configuration
-  kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
-    consumer:
-      group-id: ${KAFKA_CONSUMER_GROUP:redirect-service-group}
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      auto-offset-reset: earliest
-      properties:
-        spring.json.trusted.packages: "com.io.shortly.shared.event"
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-    listener:
-      ack-mode: manual
-
-  # Redis Configuration
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-
-server:
-  port: 8082
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.r2dbc.R2dbcAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.r2dbc.R2dbcDataAutoConfiguration
 
 logging:
-  file:
-    name: logs/shortly-redirect-service.log
   level:
-    org.springframework.boot.autoconfigure.sql.init: DEBUG
-    org.springframework.r2dbc.connection.init: DEBUG
-    root: INFO
     com.io.shortly.redirect: DEBUG
-
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics,prometheus
-  endpoint:
-    health:
-      show-details: always
-    metrics:
-      enabled: true
-    prometheus:
-      enabled: true
-  metrics:
-    tags:
-      application: ${spring.application.name}
-  prometheus:
-    metrics:
-      export:
-        enabled: true
-
-# SpringDoc OpenAPI - WebFlux 기본 설정 사용
-# Swagger UI: http://localhost:8082/webjars/swagger-ui/index.html
-# API Docs: http://localhost:8082/v3/api-docs
-springdoc:
-  api-docs:
-    path: /v3/api-docs
-  swagger-ui:
-    path: /swagger-ui.html
-    # Try-it-out 기능 활성화
-    try-it-out-enabled: true
-    # CORS 요청 허용
-    use-root-path: true
-
----
-# prod
-spring:
-  config:
-    activate:
-      on-profile: prod
-
-  sql:
-    init:
-      mode: never
-
-logging:
-  level:
-    root: INFO
-    com.io.shortly.redirect: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

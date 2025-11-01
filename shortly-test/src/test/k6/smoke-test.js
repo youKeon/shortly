@@ -8,8 +8,7 @@ import { check, sleep } from 'k6';
  * 부하: 최소 (1-5 VUs, 1분)
  *
  * 실행 방법:
- * - MVC 버전: k6 run smoke-test.js
- * - WebFlux 버전: k6 run -e PROFILE=webflux smoke-test.js
+ * k6 run smoke-test.js
  */
 
 export const options = {
@@ -20,9 +19,6 @@ export const options = {
     'http_req_failed': ['rate<0.05'],     // 5% 미만 에러
   },
 };
-
-// Profile 설정 (default: mvc)
-const PROFILE = __ENV.PROFILE || 'mvc';
 
 const URL_SERVICE = __ENV.URL_SERVICE || 'http://localhost:8081';
 const REDIRECT_SERVICE = __ENV.REDIRECT_SERVICE || 'http://localhost:8082';
@@ -83,7 +79,6 @@ export default function () {
 
 export function handleSummary(data) {
   console.log('\n========== Smoke Test Summary ==========');
-  console.log(`Profile: ${PROFILE.toUpperCase()}`);
   console.log(`Duration: ${(data.state.testRunDurationMs / 1000).toFixed(2)}s`);
   console.log(`Total Requests: ${data.metrics.http_reqs.values.count}`);
   console.log(`Failed Requests: ${(data.metrics.http_req_failed.values.rate * 100).toFixed(2)}%`);
