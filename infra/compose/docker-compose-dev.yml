@@ -199,6 +199,30 @@ services:
     networks:
       - shortly-network
 
+  # k6
+  influxdb:
+    image: influxdb:2.7
+    container_name: shortly-influxdb
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: admin
+      DOCKER_INFLUXDB_INIT_PASSWORD: password123
+      DOCKER_INFLUXDB_INIT_ORG: shortly
+      DOCKER_INFLUXDB_INIT_BUCKET: k6
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: shortly-k6-token-2024
+    ports:
+      - "8086:8086"
+    volumes:
+      - influxdb-data:/var/lib/influxdb2
+    networks:
+      - shortly-network
+    healthcheck:
+      test: ["CMD", "influx", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
 networks:
   shortly-network:
     driver: bridge
@@ -219,3 +243,5 @@ volumes:
     name: shortly_grafana-data
   loki-data:
     name: shortly_loki-data
+  influxdb-data:
+    name: shortly_influxdb-data
