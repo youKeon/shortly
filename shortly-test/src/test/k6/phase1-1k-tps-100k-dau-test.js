@@ -5,7 +5,7 @@ import { htmlReport } from 'https://raw.githubusercontent.com/benc-uk/k6-reporte
 import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.1/index.js';
 
 /**
- * Phase 1:
+ * Phase 1: 1,000 TPS Performance Test
  *
  * 목표: 1,000 TPS, 100만 DAU
  * 시간: 5분
@@ -16,6 +16,9 @@ import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.1/index.js';
  * - P99 응답 시간: < 800ms
  * - 에러율: < 3%
  * - 성공률: > 97%
+ *
+ * 실행 방법:
+ * k6 run phase1-1k-tps-100k-dau-test.js
  */
 
 const shortenSuccessRate = new Rate('shorten_success_rate');
@@ -89,9 +92,6 @@ export const options = {
   summaryTrendStats: ['avg', 'min', 'med', 'max', 'p(90)', 'p(95)', 'p(99)'],
 };
 
-// Profile 설정(MVC 기준)
-const PROFILE = __ENV.PROFILE || 'mvc';
-
 // Service Endpoints
 const URL_SERVICE = __ENV.URL_SERVICE || 'http://localhost:8081';
 const REDIRECT_SERVICE = __ENV.REDIRECT_SERVICE || 'http://localhost:8082';
@@ -125,7 +125,6 @@ export function setup() {
   console.log('╔══════════════════════════════════════════════════════════════╗');
   console.log('║         Phase 1: 1,000 TPS Performance Test - Setup         ║');
   console.log('║                    Target: 100만 DAU                         ║');
-  console.log(`║                    Profile: ${PROFILE.toUpperCase().padEnd(8)}                          ║`);
   console.log('╚══════════════════════════════════════════════════════════════╝');
   console.log('');
 
@@ -277,7 +276,7 @@ export function redirect(data) {
 }
 
 /**
- * Scenario 3: Statistics Query (2% traffic)
+ * Scenario 3: 통계 (2% traffic)
  */
 export function getStats(data) {
   if (globalShortCodes.length === 0 && data && data.shortCodes) {
@@ -321,7 +320,7 @@ export function getStats(data) {
 }
 
 /**
- * Teardown Phase: 결과 출력
+ * 결과 출력
  */
 export function teardown(data) {
   if (data && data.startTime) {
@@ -356,7 +355,6 @@ export function handleSummary(data) {
   console.log('');
   console.log('╔══════════════════════════════════════════════════════════════╗');
   console.log('║            Phase 1: 1,000 TPS Performance Result             ║');
-  console.log(`║                    Profile: ${PROFILE.toUpperCase()}                              ║`);
   console.log('╠══════════════════════════════════════════════════════════════╣');
   console.log(`║ Target TPS:            ${String(targetTPS).padStart(10)}                        ║`);
   console.log(`║ Actual TPS:            ${tps.toFixed(2).padStart(10)} ${tpsAchieved}                    ║`);
@@ -379,7 +377,6 @@ export function handleSummary(data) {
     'summary.html': htmlReport(data),
     'phase1-result.json': JSON.stringify({
       phase: 1,
-      profile: PROFILE,
       target: {
         tps: targetTPS,
         dau: 1000000,
