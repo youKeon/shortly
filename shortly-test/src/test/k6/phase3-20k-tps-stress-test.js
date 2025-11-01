@@ -19,6 +19,10 @@ import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.1/index.js';
  * - 성공률: > 90%
  *
  * 특징: 시스템 한계 테스트, 미래 확장성 검증
+ *
+ * 실행 방법:
+ * - MVC 버전 (default): k6 run phase3-20k-tps-stress-test.js
+ * - WebFlux 버전: k6 run -e PROFILE=webflux phase3-20k-tps-stress-test.js
  */
 
 // Custom Metrics
@@ -105,6 +109,8 @@ export const options = {
   summaryTrendStats: ['avg', 'min', 'med', 'max', 'p(90)', 'p(95)', 'p(99)'],
 };
 
+// Profile 설정 (default: mvc)
+const PROFILE = __ENV.PROFILE || 'mvc';
 // Service Endpoints
 const URL_SERVICE = __ENV.URL_SERVICE || 'http://localhost:8081';
 const REDIRECT_SERVICE = __ENV.REDIRECT_SERVICE || 'http://localhost:8082';
@@ -137,6 +143,7 @@ export function setup() {
   console.log('');
   console.log('╔══════════════════════════════════════════════════════════════╗');
   console.log('║         Phase 3: 20,000 TPS Stress Test - Setup             ║');
+  console.log(`║                    Profile: ${PROFILE.toUpperCase().padEnd(8)}                          ║`);
   console.log('║                  System Limit Verification                   ║');
   console.log('╚══════════════════════════════════════════════════════════════╝');
   console.log('');
@@ -370,6 +377,7 @@ export function handleSummary(data) {
   console.log('');
   console.log('╔══════════════════════════════════════════════════════════════╗');
   console.log('║          Phase 3: 20,000 TPS Stress Test Result              ║');
+  console.log(`║                    Profile: ${PROFILE.toUpperCase()}                              ║`);
   console.log('╠══════════════════════════════════════════════════════════════╣');
   console.log(`║ Target TPS:            ${String(targetTPS).padStart(10)}                        ║`);
   console.log(`║ Actual TPS:            ${tps.toFixed(2).padStart(10)} ${tpsAchieved}                    ║`);
@@ -387,6 +395,7 @@ export function handleSummary(data) {
   console.log('');
 
   // 시스템 한계 분석
+      profile: PROFILE,
   if (tps >= targetTPS) {
     console.log('✅ SUCCESS: 시스템이 20,000 TPS를 달성했습니다!');
     console.log('   → 미래 확장성 확보됨');

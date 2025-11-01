@@ -5,11 +5,10 @@ import { htmlReport } from 'https://raw.githubusercontent.com/benc-uk/k6-reporte
 import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.1/index.js';
 
 /**
- * Phase 1: Performance Validation Test
+ * Phase 1:
  *
  * 목표: 1,000 TPS, 100만 DAU
  * 시간: 5분
- * 부하: 점진적 증가 → 안정적 유지 → 감소
  *
  * 검증 지표:
  * - TPS: 1,000 이상
@@ -19,7 +18,6 @@ import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.1/index.js';
  * - 성공률: > 97%
  */
 
-// Custom Metrics
 const shortenSuccessRate = new Rate('shorten_success_rate');
 const redirectSuccessRate = new Rate('redirect_success_rate');
 const statsSuccessRate = new Rate('stats_success_rate');
@@ -30,47 +28,45 @@ const statsDuration = new Trend('stats_duration');
 
 const totalRequests = new Counter('total_requests');
 const totalErrors = new Counter('total_errors');
-const currentTPS = new Gauge('current_tps');
 
-// Test Configuration
 export const options = {
   scenarios: {
-    // Scenario 1: URL Creation (8% of traffic, Target: 80 TPS)
+    // 단축 URL 생성 (8%, 80 TPS)
     url_creation: {
       executor: 'ramping-vus',
       startVUs: 0,
       stages: [
-        { duration: '1m', target: 40 },     // Warm-up: 50% target
-        { duration: '2m', target: 80 },     // Baseline: 100% target
-        { duration: '2m', target: 0 },      // Cool-down
+        { duration: '1m', target: 40 },
+        { duration: '2m', target: 80 },
+        { duration: '2m', target: 0 },
       ],
       exec: 'shortenUrl',
       gracefulRampDown: '30s',
     },
 
-    // Scenario 2: Redirection (90% of traffic, Target: 900 TPS)
+    // Redirection (90%, 900 TPS)
     redirection: {
       executor: 'ramping-vus',
       startVUs: 0,
-      startTime: '10s',  // 시작 지연 (URL 생성 후)
+      startTime: '10s',
       stages: [
-        { duration: '50s', target: 225 },   // Warm-up: 50% target
-        { duration: '2m', target: 450 },    // Baseline: 100% target
-        { duration: '2m', target: 0 },      // Cool-down
+        { duration: '50s', target: 225 },
+        { duration: '2m', target: 450 },
+        { duration: '2m', target: 0 },
       ],
       exec: 'redirect',
       gracefulRampDown: '30s',
     },
 
-    // Scenario 3: Statistics Query (2% of traffic, Target: 20 TPS)
+    // 클릭 통계 (2%, 20 TPS)
     statistics: {
       executor: 'ramping-vus',
       startVUs: 0,
-      startTime: '20s',  // 시작 지연 (충분한 데이터 생성 후)
+      startTime: '20s',
       stages: [
-        { duration: '40s', target: 18 },    // Warm-up: 50% target
-        { duration: '2m', target: 35 },     // Baseline: 100% target
-        { duration: '2m', target: 0 },      // Cool-down
+        { duration: '40s', target: 18 },
+        { duration: '2m', target: 35 },
+        { duration: '2m', target: 0 },
       ],
       exec: 'getStats',
       gracefulRampDown: '30s',
@@ -78,24 +74,23 @@ export const options = {
   },
 
   thresholds: {
-    // 성능 임계값 (Phase 1: 기본 안정성)
     'http_req_duration': ['p(95)<300', 'p(99)<800'],    // P95 < 300ms, P99 < 800ms
     'http_req_failed': ['rate<0.03'],                   // 에러율 < 3%
 
-    // 기능별 성공률
     'shorten_success_rate': ['rate>0.97'],              // 단축 성공률 > 97%
     'redirect_success_rate': ['rate>0.97'],             // 리디렉션 성공률 > 97%
     'stats_success_rate': ['rate>0.95'],                // 통계 조회 성공률 > 95%
 
-    // 기능별 응답 시간
     'shorten_duration': ['p(95)<250'],                  // 단축 P95 < 250ms
     'redirect_duration': ['p(95)<80'],                  // 리디렉션 P95 < 80ms (캐시 적중)
     'stats_duration': ['p(95)<150'],                    // 통계 P95 < 150ms
   },
 
-  // Summary 설정
   summaryTrendStats: ['avg', 'min', 'med', 'max', 'p(90)', 'p(95)', 'p(99)'],
 };
+
+// Profile 설정(MVC 기준)
+const PROFILE = __ENV.PROFILE || 'mvc';
 
 // Service Endpoints
 const URL_SERVICE = __ENV.URL_SERVICE || 'http://localhost:8081';
@@ -130,11 +125,12 @@ export function setup() {
   console.log('╔══════════════════════════════════════════════════════════════╗');
   console.log('║         Phase 1: 1,000 TPS Performance Test - Setup         ║');
   console.log('║                    Target: 100만 DAU                         ║');
+  console.log(`║                    Profile: ${PROFILE.toUpperCase().padEnd(8)}                          ║`);
   console.log('╚══════════════════════════════════════════════════════════════╝');
   console.log('');
 
   // Health Check
-  console.log('1. Health Check 중...');
+  console.log('1. Health Check');
   const healthChecks = [
     { name: 'URL Service', url: `${URL_SERVICE}/actuator/health` },
     { name: 'Redirect Service', url: `${REDIRECT_SERVICE}/actuator/health` },
@@ -154,7 +150,7 @@ export function setup() {
   console.log('');
   console.log('2. Seed Data 생성 중...');
   const codes = [];
-  const seedCount = 100;  // Phase 1은 적은 Seed Data
+  const seedCount = 100;
 
   for (let i = 0; i < seedCount; i++) {
     const url = `${getRandomUrl()}/seed/${i}-${Date.now()}`;
@@ -169,9 +165,7 @@ export function setup() {
         if (body.shortCode) {
           codes.push(body.shortCode);
         }
-      } catch (e) {
-        // JSON 파싱 실패 무시
-      }
+      } catch (e) {}
     }
 
     // 부하 분산
@@ -197,7 +191,7 @@ export function setup() {
 }
 
 /**
- * Scenario 1: URL Shortening (8% traffic)
+ * Scenario 1: URL 단축 (8% traffic)
  */
 export function shortenUrl(data) {
   if (globalShortCodes.length === 0 && data && data.shortCodes) {
@@ -245,7 +239,7 @@ export function shortenUrl(data) {
 }
 
 /**
- * Scenario 2: Redirection (90% traffic)
+ * Scenario 2: 리다이렉션 (90% traffic)
  */
 export function redirect(data) {
   if (globalShortCodes.length === 0 && data && data.shortCodes) {
@@ -362,6 +356,7 @@ export function handleSummary(data) {
   console.log('');
   console.log('╔══════════════════════════════════════════════════════════════╗');
   console.log('║            Phase 1: 1,000 TPS Performance Result             ║');
+  console.log(`║                    Profile: ${PROFILE.toUpperCase()}                              ║`);
   console.log('╠══════════════════════════════════════════════════════════════╣');
   console.log(`║ Target TPS:            ${String(targetTPS).padStart(10)}                        ║`);
   console.log(`║ Actual TPS:            ${tps.toFixed(2).padStart(10)} ${tpsAchieved}                    ║`);
@@ -384,6 +379,7 @@ export function handleSummary(data) {
     'summary.html': htmlReport(data),
     'phase1-result.json': JSON.stringify({
       phase: 1,
+      profile: PROFILE,
       target: {
         tps: targetTPS,
         dau: 1000000,
