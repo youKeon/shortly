@@ -7,6 +7,10 @@ import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.1/index.js';
 /**
  * Phase 2: High Performance Validation Test
  *
+ * 실행 방법:
+ * - MVC 버전 (default): k6 run phase2-10k-tps-500k-dau-test.js
+ * - WebFlux 버전: k6 run -e PROFILE=webflux phase2-10k-tps-500k-dau-test.js
+ *
  * 목표: 10,000 TPS, 500만 DAU
  * 시간: 8분
  * 부하: 점진적 증가 → 최대 부하 유지 → 감소
@@ -100,6 +104,8 @@ export const options = {
   summaryTrendStats: ['avg', 'min', 'med', 'max', 'p(90)', 'p(95)', 'p(99)'],
 };
 
+// Profile 설정 (default: mvc)
+const PROFILE = __ENV.PROFILE || 'mvc';
 // Service Endpoints
 const URL_SERVICE = __ENV.URL_SERVICE || 'http://localhost:8081';
 const REDIRECT_SERVICE = __ENV.REDIRECT_SERVICE || 'http://localhost:8082';
@@ -132,6 +138,7 @@ export function setup() {
   console.log('');
   console.log('╔══════════════════════════════════════════════════════════════╗');
   console.log('║        Phase 2: 10,000 TPS Performance Test - Setup         ║');
+  console.log(`║                    Profile: ${PROFILE.toUpperCase().padEnd(8)}                          ║`);
   console.log('║                    Target: 500만 DAU                         ║');
   console.log('╚══════════════════════════════════════════════════════════════╝');
   console.log('');
@@ -365,6 +372,7 @@ export function handleSummary(data) {
   console.log('');
   console.log('╔══════════════════════════════════════════════════════════════╗');
   console.log('║           Phase 2: 10,000 TPS Performance Result             ║');
+  console.log(`║                    Profile: ${PROFILE.toUpperCase()}                              ║`);
   console.log('╠══════════════════════════════════════════════════════════════╣');
   console.log(`║ Target TPS:            ${String(targetTPS).padStart(10)}                        ║`);
   console.log(`║ Actual TPS:            ${tps.toFixed(2).padStart(10)} ${tpsAchieved}                    ║`);
@@ -387,6 +395,7 @@ export function handleSummary(data) {
     'summary.html': htmlReport(data),
     'phase2-result.json': JSON.stringify({
       phase: 2,
+      profile: PROFILE,
       target: {
         tps: targetTPS,
         dau: 5000000,
