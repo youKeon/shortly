@@ -10,6 +10,11 @@ spring:
     url: r2dbc:mysql://${DB_HOST:localhost}:${DB_PORT:3308}/${DB_NAME:shortly_redirect}
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:password}
+#    pool:
+#      initial-size: 20
+#      max-size: 50
+#      max-idle-time: 30m
+#      max-acquire-time: 20s
 
   # Schema initialization
   sql:
