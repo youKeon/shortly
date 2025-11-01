@@ -1,4 +1,4 @@
-package com.io.shortly.redirect.config;
+package com.io.shortly.redirect.infrastructure.persistence.jpa;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;

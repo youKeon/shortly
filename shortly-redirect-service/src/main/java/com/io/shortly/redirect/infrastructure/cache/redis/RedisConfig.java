@@ -1,4 +1,4 @@
-package com.io.shortly.redirect.config;
+package com.io.shortly.redirect.infrastructure.cache.redis;
 
 import com.io.shortly.redirect.infrastructure.cache.CachedRedirect;
 import org.springframework.context.annotation.Bean;
