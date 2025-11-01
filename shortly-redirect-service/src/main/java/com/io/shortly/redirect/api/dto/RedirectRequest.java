@@ -1,4 +1,4 @@
-package com.io.shortly.redirect.mvc.api.dto;
+package com.io.shortly.redirect.api.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;

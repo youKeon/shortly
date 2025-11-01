@@ -1,8 +1,8 @@
-package com.io.shortly.redirect.mvc.infrastructure.event.kafka;
+package com.io.shortly.redirect.infrastructure.event.kafka;
 
-import com.io.shortly.redirect.mvc.domain.Redirect;
-import com.io.shortly.redirect.mvc.domain.RedirectCache;
-import com.io.shortly.redirect.mvc.domain.RedirectRepository;
+import com.io.shortly.redirect.domain.Redirect;
+import com.io.shortly.redirect.domain.RedirectCache;
+import com.io.shortly.redirect.domain.RedirectRepository;
 import com.io.shortly.shared.event.UrlCreatedEvent;
 import com.io.shortly.shared.kafka.KafkaTopics;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +25,7 @@ public class UrlCreatedEventConsumer {
         containerFactory = "kafkaListenerContainerFactory"
     )
     public void consumeUrlCreated(UrlCreatedEvent event, Acknowledgment ack) {
-        log.debug("[Event-MVC] Received: shortCode={}, topic={}", event.getShortCode(), KafkaTopics.URL_CREATED);
+        log.debug("[Event] Received: shortCode={}, topic={}", event.getShortCode(), KafkaTopics.URL_CREATED);
 
         try {
             Redirect redirect = Redirect.create(
@@ -39,10 +39,10 @@ public class UrlCreatedEventConsumer {
 
             // 수동 커밋 (성공 시에만)
             ack.acknowledge();
-            log.info("[Event-MVC] Processed and committed: shortCode={}", saved.getShortCode());
+            log.info("[Event] Processed and committed: shortCode={}", saved.getShortCode());
 
         } catch (Exception e) {
-            log.error("[Event-MVC] Processing failed, will retry: shortCode={}", event.getShortCode(), e);
+            log.error("[Event] Processing failed, will retry: shortCode={}", event.getShortCode(), e);
             // 커밋하지 않음 → Kafka가 재전송
             // TODO: Dead Letter Queue
         }

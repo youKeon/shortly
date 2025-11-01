@@ -1,4 +1,4 @@
-package com.io.shortly.redirect.mvc.infrastructure.cache;
+package com.io.shortly.redirect.infrastructure.cache;
 
 import java.time.Duration;
 import lombok.Getter;

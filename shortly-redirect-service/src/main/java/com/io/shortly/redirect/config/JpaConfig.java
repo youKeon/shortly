@@ -1,11 +1,9 @@
-package com.io.shortly.redirect.mvc.config;
+package com.io.shortly.redirect.config;
 
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @Configuration
-@Profile("mvc")
-@EnableJpaRepositories(basePackages = "com.io.shortly.redirect.mvc.infrastructure.persistence.jpa")
+@EnableJpaRepositories(basePackages = "com.io.shortly.redirect.infrastructure.persistence.jpa")
 public class JpaConfig {
 }

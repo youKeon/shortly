@@ -1,4 +1,4 @@
-package com.io.shortly.redirect.mvc.api.support;
+package com.io.shortly.redirect.api.support;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AccessLevel;

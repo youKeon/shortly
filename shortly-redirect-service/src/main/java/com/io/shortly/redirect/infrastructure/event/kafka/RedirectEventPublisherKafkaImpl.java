@@ -1,6 +1,6 @@
-package com.io.shortly.redirect.mvc.infrastructure.event.kafka;
+package com.io.shortly.redirect.infrastructure.event.kafka;
 
-import com.io.shortly.redirect.mvc.domain.RedirectEventPublisher;
+import com.io.shortly.redirect.domain.RedirectEventPublisher;
 import com.io.shortly.shared.event.UrlClickedEvent;
 import com.io.shortly.shared.kafka.KafkaTopics;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-@Component("mvcRedirectEventPublisher")
+@Component
 @RequiredArgsConstructor
 public class RedirectEventPublisherKafkaImpl implements RedirectEventPublisher {
 
@@ -27,13 +27,13 @@ public class RedirectEventPublisherKafkaImpl implements RedirectEventPublisher {
 
         future.whenComplete((result, ex) -> {
             if (ex == null) {
-                log.debug("[Event-MVC] Published: shortCode={}, topic={}, partition={}, offset={}",
+                log.debug("[Event] Published: shortCode={}, topic={}, partition={}, offset={}",
                     event.getShortCode(),
                     KafkaTopics.URL_CLICKED,
                     result.getRecordMetadata().partition(),
                     result.getRecordMetadata().offset());
             } else {
-                log.error("[Event-MVC] Publish failed: shortCode={}, topic={}",
+                log.error("[Event] Publish failed: shortCode={}, topic={}",
                     event.getShortCode(), KafkaTopics.URL_CLICKED, ex);
             }
         });

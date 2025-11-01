@@ -1,6 +1,6 @@
-package com.io.shortly.redirect.mvc.api.support;
+package com.io.shortly.redirect.api.support;
 
-import com.io.shortly.redirect.mvc.domain.ShortCodeNotFoundException;
+import com.io.shortly.redirect.domain.ShortCodeNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +18,7 @@ public class GlobalExceptionHandler {
         ShortCodeNotFoundException ex,
         HttpServletRequest request
     ) {
-        log.warn("[Exception-MVC] Short code not found: {}", ex.getShortCode());
+        log.warn("[Exception] Short code not found: {}", ex.getShortCode());
 
         ErrorResponse response = ErrorResponse.of(
             RedirectErrorCode.SHORT_CODE_NOT_FOUND,
@@ -35,7 +35,7 @@ public class GlobalExceptionHandler {
         ConstraintViolationException ex,
         HttpServletRequest request
     ) {
-        log.warn("[Exception-MVC] Validation failed: {}", ex.getMessage());
+        log.warn("[Exception] Validation failed: {}", ex.getMessage());
 
         ErrorResponse response = ErrorResponse.of(
             RedirectErrorCode.INVALID_SHORT_CODE.getCode(),
@@ -53,7 +53,7 @@ public class GlobalExceptionHandler {
         Exception ex,
         HttpServletRequest request
     ) {
-        log.error("[Exception-MVC] Unexpected error", ex);
+        log.error("[Exception] Unexpected error", ex);
 
         ErrorResponse response = ErrorResponse.of(
             "INTERNAL_ERROR",

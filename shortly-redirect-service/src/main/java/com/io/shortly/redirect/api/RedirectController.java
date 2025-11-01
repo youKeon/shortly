@@ -1,9 +1,9 @@
-package com.io.shortly.redirect.mvc.api;
+package com.io.shortly.redirect.api;
 
-import static com.io.shortly.redirect.mvc.api.dto.RedirectRequest.GetRedirectRequest;
-import static com.io.shortly.redirect.mvc.api.dto.RedirectRequest.SHORT_CODE_REGEX;
+import static com.io.shortly.redirect.api.dto.RedirectRequest.GetRedirectRequest;
+import static com.io.shortly.redirect.api.dto.RedirectRequest.SHORT_CODE_REGEX;
 
-import com.io.shortly.redirect.mvc.application.RedirectService;
+import com.io.shortly.redirect.application.RedirectService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -50,7 +50,7 @@ public class RedirectController {
         )
         String shortCode
     ) {
-        log.debug("[Controller-MVC] Redirect request: shortCode={}", shortCode);
+        log.debug("[Controller] Redirect request: shortCode={}", shortCode);
 
         GetRedirectRequest request = GetRedirectRequest.of(shortCode);
         var result = redirectService.getOriginalUrl(request.shortCode());

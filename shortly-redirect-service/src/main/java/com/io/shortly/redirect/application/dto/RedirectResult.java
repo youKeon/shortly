@@ -1,4 +1,4 @@
-package com.io.shortly.redirect.mvc.application.dto;
+package com.io.shortly.redirect.application.dto;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

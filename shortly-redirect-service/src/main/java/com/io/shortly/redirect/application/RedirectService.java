@@ -1,11 +1,11 @@
-package com.io.shortly.redirect.mvc.application;
+package com.io.shortly.redirect.application;
 
-import static com.io.shortly.redirect.mvc.application.dto.RedirectResult.Redirect;
+import static com.io.shortly.redirect.application.dto.RedirectResult.Redirect;
 
-import com.io.shortly.redirect.mvc.domain.RedirectCache;
-import com.io.shortly.redirect.mvc.domain.RedirectEventPublisher;
-import com.io.shortly.redirect.mvc.domain.RedirectRepository;
-import com.io.shortly.redirect.mvc.domain.ShortCodeNotFoundException;
+import com.io.shortly.redirect.domain.RedirectCache;
+import com.io.shortly.redirect.domain.RedirectEventPublisher;
+import com.io.shortly.redirect.domain.RedirectRepository;
+import com.io.shortly.redirect.domain.ShortCodeNotFoundException;
 import com.io.shortly.shared.event.UrlClickedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,13 +25,13 @@ public class RedirectService {
         return redirectCache.get(shortCode)
             .or(() -> {
                 // 2. DB 조회
-                log.info("[Service-MVC] Cache miss: shortCode={}, querying DB", shortCode);
+                log.info("[Service] Cache miss: shortCode={}, querying DB", shortCode);
 
                 return redirectRepository.findByShortCode(shortCode)
                     .map(redirect -> {
                         // 3. 캐시 워밍업
                         redirectCache.put(redirect);
-                        log.info("[Service-MVC] Cache warmed: shortCode={}", shortCode);
+                        log.info("[Service] Cache warmed: shortCode={}", shortCode);
                         return redirect;
                     });
             })
@@ -47,7 +47,7 @@ public class RedirectService {
                 return Redirect.of(redirect.getTargetUrl());
             })
             .orElseThrow(() -> {
-                log.error("[Service-MVC] Redirect failed: shortCode={} not found", shortCode);
+                log.error("[Service] Redirect failed: shortCode={} not found", shortCode);
                 return new ShortCodeNotFoundException(shortCode);
             });
     }
