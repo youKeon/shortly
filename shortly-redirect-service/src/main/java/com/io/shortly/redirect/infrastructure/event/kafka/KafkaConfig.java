@@ -1,4 +1,4 @@
-package com.io.shortly.redirect.config;
+package com.io.shortly.redirect.infrastructure.event.kafka;
 
 import com.io.shortly.shared.event.UrlClickedEvent;
 import com.io.shortly.shared.event.UrlCreatedEvent;

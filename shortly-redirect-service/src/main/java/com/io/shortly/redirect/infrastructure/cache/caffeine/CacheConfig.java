@@ -1,4 +1,4 @@
-package com.io.shortly.redirect.config;
+package com.io.shortly.redirect.infrastructure.cache.caffeine;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
