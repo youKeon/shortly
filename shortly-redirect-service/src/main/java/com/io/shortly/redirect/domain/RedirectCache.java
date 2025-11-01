@@ -1,4 +1,4 @@
-package com.io.shortly.redirect.mvc.domain;
+package com.io.shortly.redirect.domain;
 
 import java.util.Optional;
 

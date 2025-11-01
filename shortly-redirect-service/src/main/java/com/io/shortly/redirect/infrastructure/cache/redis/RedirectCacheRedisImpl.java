@@ -1,9 +1,9 @@
-package com.io.shortly.redirect.mvc.infrastructure.cache.redis;
+package com.io.shortly.redirect.infrastructure.cache.redis;
 
-import com.io.shortly.redirect.mvc.domain.Redirect;
-import com.io.shortly.redirect.mvc.domain.RedirectCache;
-import com.io.shortly.redirect.mvc.infrastructure.cache.CachedRedirect;
-import com.io.shortly.redirect.mvc.infrastructure.cache.CacheLayer;
+import com.io.shortly.redirect.domain.Redirect;
+import com.io.shortly.redirect.domain.RedirectCache;
+import com.io.shortly.redirect.infrastructure.cache.CachedRedirect;
+import com.io.shortly.redirect.infrastructure.cache.CacheLayer;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +12,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 @Slf4j
-@Component("mvcRedisCache")
+@Component("redisCache")
 @RequiredArgsConstructor
 public class RedirectCacheRedisImpl implements RedirectCache {
 
@@ -27,14 +27,14 @@ public class RedirectCacheRedisImpl implements RedirectCache {
             CachedRedirect cached = redisTemplate.opsForValue().get(key);
 
             if (cached != null) {
-                log.debug("[Cache:L2-MVC] Hit: shortCode={}", shortCode);
+                log.debug("[Cache:L2] Hit: shortCode={}", shortCode);
                 return Optional.of(cached.toDomain());
             }
 
-            log.debug("[Cache:L2-MVC] Miss: shortCode={}", shortCode);
+            log.debug("[Cache:L2] Miss: shortCode={}", shortCode);
             return Optional.empty();
         } catch (Exception e) {
-            log.warn("[Cache:L2-MVC] Read failed: shortCode={}, continuing", shortCode, e);
+            log.warn("[Cache:L2] Read failed: shortCode={}, continuing", shortCode, e);
             return Optional.empty();
         }
     }
@@ -52,9 +52,9 @@ public class RedirectCacheRedisImpl implements RedirectCache {
                 TimeUnit.MINUTES
             );
 
-            log.debug("[Cache:L2-MVC] Put: shortCode={}", redirect.getShortCode());
+            log.debug("[Cache:L2] Put: shortCode={}", redirect.getShortCode());
         } catch (Exception e) {
-            log.warn("[Cache:L2-MVC] Put failed: shortCode={}", redirect.getShortCode(), e);
+            log.warn("[Cache:L2] Put failed: shortCode={}", redirect.getShortCode(), e);
             throw e;
         }
     }
@@ -64,9 +64,9 @@ public class RedirectCacheRedisImpl implements RedirectCache {
         try {
             String key = LAYER.buildKey(shortCode);
             redisTemplate.delete(key);
-            log.debug("[Cache:L2-MVC] Evicted: shortCode={}", shortCode);
+            log.debug("[Cache:L2] Evicted: shortCode={}", shortCode);
         } catch (Exception e) {
-            log.warn("[Cache:L2-MVC] Eviction failed: shortCode={}", shortCode, e);
+            log.warn("[Cache:L2] Eviction failed: shortCode={}", shortCode, e);
             throw e;
         }
     }

@@ -1,4 +1,4 @@
-package com.io.shortly.redirect.mvc.infrastructure.persistence.jpa;
+package com.io.shortly.redirect.infrastructure.persistence.jpa;
 
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;

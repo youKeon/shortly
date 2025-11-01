@@ -1,6 +1,6 @@
-package com.io.shortly.redirect.mvc.infrastructure.cache;
+package com.io.shortly.redirect.infrastructure.cache;
 
-import com.io.shortly.redirect.mvc.domain.Redirect;
+import com.io.shortly.redirect.domain.Redirect;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;

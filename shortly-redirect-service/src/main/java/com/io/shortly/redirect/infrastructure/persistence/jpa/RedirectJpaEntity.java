@@ -1,6 +1,6 @@
-package com.io.shortly.redirect.mvc.infrastructure.persistence.jpa;
+package com.io.shortly.redirect.infrastructure.persistence.jpa;
 
-import com.io.shortly.redirect.mvc.domain.Redirect;
+import com.io.shortly.redirect.domain.Redirect;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;

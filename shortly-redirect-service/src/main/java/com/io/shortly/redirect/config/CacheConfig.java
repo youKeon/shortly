@@ -1,15 +1,13 @@
-package com.io.shortly.redirect.mvc.config;
+package com.io.shortly.redirect.config;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import com.io.shortly.redirect.mvc.domain.Redirect;
+import com.io.shortly.redirect.domain.Redirect;
 import java.time.Duration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 
 @Configuration
-@Profile("mvc")
 public class CacheConfig {
 
     private static final int MAX_CACHE_SIZE = 100_000;  // 10만 개
