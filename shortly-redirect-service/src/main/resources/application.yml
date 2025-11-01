@@ -37,12 +37,6 @@ spring:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
 
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.r2dbc.R2dbcAutoConfiguration
-      - org.springframework.boot.autoconfigure.data.r2dbc.R2dbcDataAutoConfiguration
-      - org.springframework.boot.autoconfigure.data.r2dbc.R2dbcRepositoriesAutoConfiguration
-
 server:
   port: 8082
 
