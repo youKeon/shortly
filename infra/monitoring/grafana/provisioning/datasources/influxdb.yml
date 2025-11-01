@@ -1,0 +1,14 @@
+datasources:
+  - name: InfluxDB (k6)
+    type: influxdb
+    access: proxy
+    uid: influxdb-k6
+    url: http://influxdb:8086
+    editable: true
+    jsonData:
+      version: Flux
+      organization: shortly
+      defaultBucket: k6
+      tlsSkipVerify: true
+    secureJsonData:
+      token: shortly-k6-token-2024

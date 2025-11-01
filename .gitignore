@@ -13,6 +13,7 @@ build/
 .gradle/
 !**/src/**/build/
 *.log
+logs/
 
 # ==== Spring Boot ====
 *.env
