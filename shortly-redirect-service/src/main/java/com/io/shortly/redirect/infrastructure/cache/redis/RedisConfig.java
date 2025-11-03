@@ -1,5 +1,8 @@
 package com.io.shortly.redirect.infrastructure.cache.redis;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.io.shortly.redirect.infrastructure.cache.CachedRedirect;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,9 +24,13 @@ public class RedisConfig {
         // Key: String 직렬화
         template.setKeySerializer(new StringRedisSerializer());
 
-        // Value: JSON 직렬화
+        // Value: JSON 직렬화 (Java 8 날짜/시간 지원)
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
         Jackson2JsonRedisSerializer<CachedRedirect> serializer =
-            new Jackson2JsonRedisSerializer<>(CachedRedirect.class);
+            new Jackson2JsonRedisSerializer<>(objectMapper, CachedRedirect.class);
         template.setValueSerializer(serializer);
 
         return template;
