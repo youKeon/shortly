@@ -50,7 +50,7 @@ public class RedirectController {
         )
         String shortCode
     ) {
-        log.debug("[Controller] Redirect request: shortCode={}", shortCode);
+        log.debug("[Controller] 리디렉션 요청: shortCode={}", shortCode);
 
         GetRedirectRequest request = GetRedirectRequest.of(shortCode);
         var result = redirectService.getOriginalUrl(request.shortCode());

@@ -27,13 +27,13 @@ public class RedirectEventPublisherKafkaImpl implements RedirectEventPublisher {
 
         future.whenComplete((result, ex) -> {
             if (ex == null) {
-                log.debug("[Event] Published: shortCode={}, topic={}, partition={}, offset={}",
+                log.debug("[Event] 이벤트 발행 완료: shortCode={}, topic={}, partition={}, offset={}",
                     event.getShortCode(),
                     KafkaTopics.URL_CLICKED,
                     result.getRecordMetadata().partition(),
                     result.getRecordMetadata().offset());
             } else {
-                log.error("[Event] Publish failed: shortCode={}, topic={}",
+                log.error("[Event] 이벤트 발행 실패: shortCode={}, topic={}",
                     event.getShortCode(), KafkaTopics.URL_CLICKED, ex);
             }
         });

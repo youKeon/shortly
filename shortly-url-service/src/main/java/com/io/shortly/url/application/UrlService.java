@@ -37,13 +37,13 @@ public class UrlService {
 
             try {
                 return transactionTemplate.execute(status -> {
-                    // 1. 단축 URL 저장
+                    // 단축 URL 저장
                     ShortUrl shortUrl = ShortUrl.create(candidate, command.originalUrl());
                     shortUrlRepository.save(shortUrl);
 
                     log.info("URL shortened: {} -> {}", command.originalUrl(), shortUrl.getShortCode());
 
-                    // 2. 이벤트 저장
+                    // 이벤트 저장
                     saveEvent(shortUrl);
 
                     return ShortenedResult.of(shortUrl.getShortCode(), shortUrl.getOriginalUrl());
