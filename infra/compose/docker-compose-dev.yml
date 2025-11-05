@@ -1,7 +1,5 @@
-version: '3.8'
-
 services:
-  # MySQL
+  # MySQL - URL Service
   mysql-url:
     image: mysql:8.0
     container_name: shortly-mysql-url
@@ -14,13 +12,8 @@ services:
       - mysql-url-data:/var/lib/mysql
     networks:
       - shortly-network
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-ppassword"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
 
+  # MySQL - Redirect Service
   mysql-redirect:
     image: mysql:8.0
     container_name: shortly-mysql-redirect
@@ -33,13 +26,8 @@ services:
       - mysql-redirect-data:/var/lib/mysql
     networks:
       - shortly-network
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-ppassword"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
 
+  # MySQL - Click Service
   mysql-click:
     image: mysql:8.0
     container_name: shortly-mysql-click
@@ -52,176 +40,48 @@ services:
       - mysql-click-data:/var/lib/mysql
     networks:
       - shortly-network
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-ppassword"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
 
-  # Cache
+  # Redis Cache
   redis:
     image: redis:7-alpine
     container_name: shortly-redis
     ports:
       - "6379:6379"
-    volumes:
-      - redis-data:/data
     networks:
       - shortly-network
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
-  # MQ
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.5.0
-    container_name: shortly-zookeeper
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    ports:
-      - "2181:2181"
-    networks:
-      - shortly-network
-    healthcheck:
-      test: ["CMD", "bash", "-c", "echo ruok | nc localhost 2181"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
+  # Kafka
   kafka:
     image: confluentinc/cp-kafka:7.5.0
     container_name: shortly-kafka
-    depends_on:
-      zookeeper:
-        condition: service_healthy
     ports:
       - "9092:9092"
       - "9093:9093"
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:9093
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_NODE_ID: 1
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_CLUSTER_ID: mkI2byNATaCEEI1u9GdYSw
+      CLUSTER_ID: mkI2byNATaCEEI1u9GdYSw
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
     networks:
       - shortly-network
-    healthcheck:
-      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
-      interval: 10s
-      timeout: 10s
-      retries: 5
-      start_period: 40s
-
-  # Monitoring
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: shortly-prometheus
-    ports:
-      - "9090:9090"
-    volumes:
-      - ../monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus-data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
-      - '--web.console.templates=/usr/share/prometheus/consoles'
-    networks:
-      - shortly-network
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/-/healthy"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  grafana:
-    image: grafana/grafana:latest
-    container_name: shortly-grafana
-    depends_on:
-      prometheus:
-        condition: service_healthy
-      loki:
-        condition: service_healthy
-    ports:
-      - "3000:3000"
-    environment:
-      GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: admin
-      GF_USERS_ALLOW_SIGN_UP: false
-    volumes:
-      - grafana-data:/var/lib/grafana
-      - ../monitoring/grafana/provisioning:/etc/grafana/provisioning
-    networks:
-      - shortly-network
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-
-  # Logging
-  loki:
-    image: grafana/loki:2.9.0
-    container_name: shortly-loki
-    ports:
-      - "3100:3100"
-    command: -config.file=/etc/loki/loki-config.yml
-    volumes:
-      - ../monitoring/loki/loki-config.yml:/etc/loki/loki-config.yml
-      - loki-data:/loki
-    networks:
-      - shortly-network
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3100/ready"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  promtail:
-    image: grafana/promtail:2.9.0
-    container_name: shortly-promtail
-    depends_on:
-      loki:
-        condition: service_healthy
-    command: -config.file=/etc/promtail/promtail-config.yml
-    volumes:
-      - ../monitoring/loki/promtail-config.yml:/etc/promtail/promtail-config.yml
-      - ../../logs:/var/log/shortly
-    networks:
-      - shortly-network
-
-  # k6
-  influxdb:
-    image: influxdb:2.7
-    container_name: shortly-influxdb
-    environment:
-      DOCKER_INFLUXDB_INIT_MODE: setup
-      DOCKER_INFLUXDB_INIT_USERNAME: admin
-      DOCKER_INFLUXDB_INIT_PASSWORD: password123
-      DOCKER_INFLUXDB_INIT_ORG: shortly
-      DOCKER_INFLUXDB_INIT_BUCKET: k6
-      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: shortly-k6-token-2024
-    ports:
-      - "8086:8086"
-    volumes:
-      - influxdb-data:/var/lib/influxdb2
-    networks:
-      - shortly-network
-    healthcheck:
-      test: ["CMD", "influx", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
+    command: >
+      bash -c "
+      if [ ! -f /var/lib/kafka/data/meta.properties ]; then
+        kafka-storage format --config /etc/kafka/kraft/server.properties --cluster-id mkI2byNATaCEEI1u9GdYSw;
+      fi;
+      /etc/confluent/docker/run
+      "
 
 networks:
   shortly-network:
@@ -235,13 +95,3 @@ volumes:
     name: shortly_mysql-redirect-data
   mysql-click-data:
     name: shortly_mysql-click-data
-  redis-data:
-    name: shortly_redis-data
-  prometheus-data:
-    name: shortly_prometheus-data
-  grafana-data:
-    name: shortly_grafana-data
-  loki-data:
-    name: shortly_loki-data
-  influxdb-data:
-    name: shortly_influxdb-data
