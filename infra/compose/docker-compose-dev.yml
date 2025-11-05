@@ -13,20 +13,6 @@ services:
     networks:
       - shortly-network
 
-  # MySQL - Redirect Service
-  mysql-redirect:
-    image: mysql:8.0
-    container_name: shortly-mysql-redirect
-    environment:
-      MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: shortly_redirect
-    ports:
-      - "3308:3306"
-    volumes:
-      - mysql-redirect-data:/var/lib/mysql
-    networks:
-      - shortly-network
-
   # MySQL - Click Service
   mysql-click:
     image: mysql:8.0
@@ -91,7 +77,6 @@ networks:
 volumes:
   mysql-url-data:
     name: shortly_mysql-url-data
-  mysql-redirect-data:
-    name: shortly_mysql-redirect-data
+  # mysql-redirect-data 제거 (Redirect Service는 Cache-Only)
   mysql-click-data:
     name: shortly_mysql-click-data

@@ -21,25 +21,6 @@ services:
       retries: 5
       start_period: 30s
 
-  mysql-redirect:
-    image: mysql:8.0
-    container_name: shortly-mysql-redirect
-    environment:
-      MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: shortly_redirect
-    ports:
-      - "3307:3306"
-    volumes:
-      - mysql-redirect-data:/var/lib/mysql
-    networks:
-      - shortly-network
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-ppassword"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-
   mysql-click:
     image: mysql:8.0
     container_name: shortly-mysql-click
@@ -211,6 +192,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      url-service:
+        condition: service_healthy
     ports:
       - "8082:8082"
     environment:
@@ -218,9 +201,7 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9093
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      SPRING_R2DBC_URL: r2dbc:mysql://mysql-redirect:3306/shortly_redirect
-      SPRING_R2DBC_USERNAME: root
-      SPRING_R2DBC_PASSWORD: password
+      URL_SERVICE_URL: http://url-service:8081  # DB 대신 API Fallback
     networks:
       - shortly-network
     healthcheck:
@@ -265,8 +246,7 @@ networks:
 volumes:
   mysql-url-data:
     name: shortly_mysql-url-data
-  mysql-redirect-data:
-    name: shortly_mysql-redirect-data
+  # mysql-redirect-data 제거 (Redirect Service는 Cache-Only)
   mysql-click-data:
     name: shortly_mysql-click-data
   redis-data:

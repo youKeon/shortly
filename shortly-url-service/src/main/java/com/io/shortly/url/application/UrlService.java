@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.io.shortly.shared.event.UrlCreatedEvent;
 import com.io.shortly.url.application.dto.ShortUrlCommand.ShortenCommand;
 import com.io.shortly.url.application.dto.ShortUrlResult.ShortenedResult;
+import com.io.shortly.url.domain.url.ShortCodeNotFoundException;
 import com.io.shortly.url.domain.event.Aggregate;
 import com.io.shortly.url.domain.event.Outbox;
 import com.io.shortly.url.domain.event.OutboxRepository;
@@ -100,5 +101,14 @@ public class UrlService {
                     message.contains("duplicate key") ||
                     message.contains("Duplicate entry")
             );
+    }
+
+    public ShortenedResult findByShortCode(String shortCode) {
+        ShortUrl shortUrl = shortUrlRepository.findByShortCode(shortCode)
+            .orElseThrow(() -> new ShortCodeNotFoundException(shortCode));
+
+        log.debug("URL found: {} -> {}", shortCode, shortUrl.getOriginalUrl());
+
+        return ShortenedResult.of(shortUrl.getShortCode(), shortUrl.getOriginalUrl());
     }
 }
