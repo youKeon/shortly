@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class OutboxPublisher {
+public class OutboxEventRelay {
 
     private static final int BATCH_SIZE = 100;
     private static final int ONE_SECOND = 1000;
@@ -26,12 +26,9 @@ public class OutboxPublisher {
     private final KafkaTemplate<String, UrlCreatedEvent> kafkaTemplate;
     private final ObjectMapper objectMapper;
 
-    /**
-     * 발행 대기 중인 이벤트를 폴링하여 Kafka로 발행
-     */
     @Scheduled(fixedDelay = ONE_SECOND)
     @Transactional
-    public void publishPendingEvents() {
+    public void relayPendingEvents() {
         List<OutboxJpaEntity> events = outboxJpaRepository.findPendingEvents(
             PageRequest.of(0, BATCH_SIZE)
         );
@@ -39,8 +36,6 @@ public class OutboxPublisher {
         if (events.isEmpty()) {
             return;
         }
-
-        log.info("Publishing {} pending outbox events", events.size());
 
         for (var event : events) {
             try {
@@ -58,10 +53,10 @@ public class OutboxPublisher {
                 event.markAsPublished();
                 outboxJpaRepository.save(event);
 
-                log.info("Published outbox event: aggregate={}, aggregateId={}",
+                log.info("[Outbox] Kafka 발행 완료: aggregate={}, aggregateId={}",
                     event.getAggregate(), event.getAggregateId());
             } catch (Exception e) {
-                log.error("Failed to publish outbox event: aggregate={}, aggregateId={}, error={}",
+                log.error("[Outbox] Kafka 발행 실패: aggregate={}, aggregateId={}, error={}",
                     event.getAggregate(), event.getAggregateId(), e.getMessage());
             }
         }

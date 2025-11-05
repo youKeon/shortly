@@ -1,6 +1,6 @@
 package com.io.shortly.redirect.infrastructure.cache.redis;
 
-import com.io.shortly.redirect.infrastructure.cache.pubsub.CacheNotificationListener;
+import com.io.shortly.redirect.infrastructure.cache.pubsub.CacheNotificationSubscriber;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,7 +34,7 @@ public class RedisPubSubConfig {
     }
 
     @Bean
-    public MessageListenerAdapter messageListenerAdapter(CacheNotificationListener listener) {
-        return new MessageListenerAdapter(listener, "handleUrlCreated");
+    public MessageListenerAdapter messageListenerAdapter(CacheNotificationSubscriber subscriber) {
+        return new MessageListenerAdapter(subscriber, "onUrlCreated");
     }
 }
