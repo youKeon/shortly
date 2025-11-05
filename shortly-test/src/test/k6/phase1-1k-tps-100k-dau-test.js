@@ -298,10 +298,10 @@ export function getStats(data) {
 
     const success = check(response, {
       'stats: status is 200': (r) => r.status === 200,
-      'stats: has clickCount': (r) => {
+      'stats: has totalClicks': (r) => {
         try {
           const body = JSON.parse(r.body);
-          return body.clickCount !== undefined;
+          return body.totalClicks !== undefined;
         } catch (e) {
           return false;
         }

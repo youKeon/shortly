@@ -306,15 +306,15 @@ export function getStats(data) {
     const shortCode = globalShortCodes[Math.floor(Math.random() * globalShortCodes.length)];
 
     const startTime = new Date().getTime();
-    const response = http.get(`${CLICK_SERVICE}/api/v1/clicks/${shortCode}/stats`);
+    const response = http.get(`${CLICK_SERVICE}/api/v1/analytics/${shortCode}/stats`);
     const duration = new Date().getTime() - startTime;
 
     const success = check(response, {
       'stats: status is 200': (r) => r.status === 200,
-      'stats: has clickCount': (r) => {
+      'stats: has totalClicks': (r) => {
         try {
           const body = JSON.parse(r.body);
-          return body.clickCount !== undefined;
+          return body.totalClicks !== undefined;
         } catch (e) {
           return false;
         }
