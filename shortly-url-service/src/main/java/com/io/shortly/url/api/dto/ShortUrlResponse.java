@@ -9,4 +9,13 @@ public class ShortUrlResponse {
             String shortCode,
             String originalUrl
     ) {}
+
+    public record GetShortUrlResponse(
+            String shortCode,
+            String originalUrl
+    ) {
+        public static GetShortUrlResponse of(String shortCode, String originalUrl) {
+            return new GetShortUrlResponse(shortCode, originalUrl);
+        }
+    }
 }

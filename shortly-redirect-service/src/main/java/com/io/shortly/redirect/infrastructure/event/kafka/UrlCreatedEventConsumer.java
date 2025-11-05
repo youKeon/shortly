@@ -2,7 +2,6 @@ package com.io.shortly.redirect.infrastructure.event.kafka;
 
 import com.io.shortly.redirect.domain.Redirect;
 import com.io.shortly.redirect.domain.RedirectCache;
-import com.io.shortly.redirect.domain.RedirectRepository;
 import com.io.shortly.redirect.infrastructure.cache.pubsub.CacheNotificationPublisher;
 import com.io.shortly.shared.event.UrlCreatedEvent;
 import com.io.shortly.shared.kafka.KafkaTopics;
@@ -18,7 +17,6 @@ import org.springframework.stereotype.Component;
 public class UrlCreatedEventConsumer {
 
     private final RedirectCache redirectCache;
-    private final RedirectRepository redirectRepository;
     private final CacheNotificationPublisher cacheNotificationPublisher;
 
     @KafkaListener(
@@ -35,16 +33,14 @@ public class UrlCreatedEventConsumer {
                 event.getOriginalUrl()
             );
 
-            Redirect saved = redirectRepository.save(redirect);
+            // 캐시 저장
+            redirectCache.put(redirect);
 
-            // L1/L2 캐시 저장
-            redirectCache.put(saved);
-
-            // Redis Pub/Sub 알림
-            cacheNotificationPublisher.notifyUrlCreated(saved.getShortCode());
+            // L1 캐시 동기화
+            cacheNotificationPublisher.notifyUrlCreated(redirect.getShortCode());
 
             ack.acknowledge();
-            log.info("[Event] 처리 및 커밋 완료: shortCode={}", saved.getShortCode());
+            log.info("[Event] 캐시 저장 및 커밋 완료: shortCode={}", redirect.getShortCode());
 
         } catch (Exception e) {
             log.error("[Event] 처리 실패, 재시도 예정: shortCode={}", event.getShortCode(), e);

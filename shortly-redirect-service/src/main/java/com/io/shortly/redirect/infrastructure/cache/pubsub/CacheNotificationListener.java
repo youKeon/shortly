@@ -3,8 +3,8 @@ package com.io.shortly.redirect.infrastructure.cache.pubsub;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.io.shortly.redirect.domain.Redirect;
 import com.io.shortly.redirect.domain.RedirectCache;
-import com.io.shortly.redirect.domain.RedirectRepository;
 import com.io.shortly.redirect.infrastructure.cache.CacheLayer;
+import com.io.shortly.redirect.infrastructure.client.UrlServiceClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -22,16 +22,16 @@ public class CacheNotificationListener {
 
     private final Cache<String, Redirect> caffeineCache;
     private final RedirectCache redisCache;
-    private final RedirectRepository redirectRepository;
+    private final UrlServiceClient urlServiceClient;  // DB 대신 API Client
 
     public CacheNotificationListener(
             Cache<String, Redirect> caffeineCache,
             @Qualifier("redisCache") RedirectCache redisCache,
-            RedirectRepository redirectRepository
+            UrlServiceClient urlServiceClient
     ) {
         this.caffeineCache = caffeineCache;
         this.redisCache = redisCache;
-        this.redirectRepository = redirectRepository;
+        this.urlServiceClient = urlServiceClient;
     }
 
     public void handleUrlCreated(String shortCode) {
@@ -44,17 +44,17 @@ public class CacheNotificationListener {
                     caffeineCache.put(l1Key, redirect);
                 },
                 () -> {
-                    // L2 Miss → DB 조회
-                    log.warn("[Cache:L2] Pub/Sub 처리 중 L2 미스, DB로 폴백: shortCode={}", shortCode);
-                    redirectRepository.findByShortCode(shortCode).ifPresentOrElse(
+                    // L2 Miss → URL Service API 호출 (Fallback)
+                    log.warn("[Cache:L2] Pub/Sub 처리 중 L2 미스, API로 폴백: shortCode={}", shortCode);
+                    urlServiceClient.findByShortCode(shortCode).ifPresentOrElse(
                         redirect -> {
-                            // DB에서 찾음 → L1/L2 캐시에 모두 저장
+                            // API에서 찾음 → L1/L2 캐시에 모두 저장
                             String l1Key = CacheLayer.L1.buildKey(shortCode);
                             caffeineCache.put(l1Key, redirect);
                             redisCache.put(redirect);  // L2도 함께 저장
                         },
                         () -> {
-                            log.error("[Cache:DB] DB에 존재하지 않는 URL입니다: shortCode={}", shortCode);
+                            log.error("[Cache:API] URL Service에 존재하지 않는 URL입니다: shortCode={}", shortCode);
                         }
                     );
                 }
