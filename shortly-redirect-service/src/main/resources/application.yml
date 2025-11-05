@@ -41,6 +41,12 @@ spring:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
 
+# Shortly 커스텀 설정
+shortly:
+  cache:
+    sync:
+      enabled: true  # 멀티 인스턴스 캐시 동기화 활성화
+
 server:
   port: 8082
 

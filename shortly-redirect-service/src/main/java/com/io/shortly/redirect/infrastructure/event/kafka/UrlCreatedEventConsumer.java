@@ -3,6 +3,7 @@ package com.io.shortly.redirect.infrastructure.event.kafka;
 import com.io.shortly.redirect.domain.Redirect;
 import com.io.shortly.redirect.domain.RedirectCache;
 import com.io.shortly.redirect.domain.RedirectRepository;
+import com.io.shortly.redirect.infrastructure.cache.pubsub.CacheNotificationPublisher;
 import com.io.shortly.shared.event.UrlCreatedEvent;
 import com.io.shortly.shared.kafka.KafkaTopics;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,7 @@ public class UrlCreatedEventConsumer {
 
     private final RedirectCache redirectCache;
     private final RedirectRepository redirectRepository;
+    private final CacheNotificationPublisher cacheNotificationPublisher;
 
     @KafkaListener(
         topics = KafkaTopics.URL_CREATED,
@@ -25,7 +27,7 @@ public class UrlCreatedEventConsumer {
         containerFactory = "kafkaListenerContainerFactory"
     )
     public void consumeUrlCreated(UrlCreatedEvent event, Acknowledgment ack) {
-        log.debug("[Event] Received: shortCode={}, topic={}", event.getShortCode(), KafkaTopics.URL_CREATED);
+        log.debug("[Event] 이벤트 수신: shortCode={}, topic={}", event.getShortCode(), KafkaTopics.URL_CREATED);
 
         try {
             Redirect redirect = Redirect.create(
@@ -35,15 +37,17 @@ public class UrlCreatedEventConsumer {
 
             Redirect saved = redirectRepository.save(redirect);
 
+            // L1/L2 캐시 저장
             redirectCache.put(saved);
 
-            // 수동 커밋 (성공 시에만)
+            // Redis Pub/Sub 알림
+            cacheNotificationPublisher.notifyUrlCreated(saved.getShortCode());
+
             ack.acknowledge();
-            log.info("[Event] Processed and committed: shortCode={}", saved.getShortCode());
+            log.info("[Event] 처리 및 커밋 완료: shortCode={}", saved.getShortCode());
 
         } catch (Exception e) {
-            log.error("[Event] Processing failed, will retry: shortCode={}", event.getShortCode(), e);
-            // 커밋하지 않음 → Kafka가 재전송
+            log.error("[Event] 처리 실패, 재시도 예정: shortCode={}", event.getShortCode(), e);
             // TODO: Dead Letter Queue
         }
     }
