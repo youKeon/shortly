@@ -18,7 +18,7 @@ public class GlobalExceptionHandler {
         ShortCodeNotFoundException ex,
         HttpServletRequest request
     ) {
-        log.warn("[Exception] Short code not found: {}", ex.getShortCode());
+        log.warn("[Exception] 단축 코드를 찾을 수 없음: {}", ex.getShortCode());
 
         ErrorResponse response = ErrorResponse.of(
             RedirectErrorCode.SHORT_CODE_NOT_FOUND,
@@ -35,7 +35,7 @@ public class GlobalExceptionHandler {
         ConstraintViolationException ex,
         HttpServletRequest request
     ) {
-        log.warn("[Exception] Validation failed: {}", ex.getMessage());
+        log.warn("[Exception] 유효성 검증 실패: {}", ex.getMessage());
 
         ErrorResponse response = ErrorResponse.of(
             RedirectErrorCode.INVALID_SHORT_CODE.getCode(),
@@ -53,7 +53,7 @@ public class GlobalExceptionHandler {
         Exception ex,
         HttpServletRequest request
     ) {
-        log.error("[Exception] Unexpected error", ex);
+        log.error("[Exception] 예상치 못한 오류 발생", ex);
 
         ErrorResponse response = ErrorResponse.of(
             "INTERNAL_ERROR",

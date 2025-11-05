@@ -24,7 +24,7 @@ public class RedisConfig {
         // Key: String 직렬화
         template.setKeySerializer(new StringRedisSerializer());
 
-        // Value: JSON 직렬화 (Java 8 날짜/시간 지원)
+        // Value: JSON 직렬화
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);

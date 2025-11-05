@@ -27,14 +27,14 @@ public class RedirectCacheRedisImpl implements RedirectCache {
             CachedRedirect cached = redisTemplate.opsForValue().get(key);
 
             if (cached != null) {
-                log.debug("[Cache:L2] Hit: shortCode={}", shortCode);
+                log.debug("[Cache:L2] 히트: shortCode={}", shortCode);
                 return Optional.of(cached.toDomain());
             }
 
-            log.debug("[Cache:L2] Miss: shortCode={}", shortCode);
+            log.debug("[Cache:L2] 미스: shortCode={}", shortCode);
             return Optional.empty();
         } catch (Exception e) {
-            log.warn("[Cache:L2] Read failed: shortCode={}, continuing", shortCode, e);
+            log.warn("[Cache:L2] 조회 실패: shortCode={}, 계속 진행", shortCode, e);
             return Optional.empty();
         }
     }
@@ -52,9 +52,9 @@ public class RedirectCacheRedisImpl implements RedirectCache {
                 TimeUnit.MINUTES
             );
 
-            log.debug("[Cache:L2] Put: shortCode={}", redirect.getShortCode());
+            log.debug("[Cache:L2] 저장 완료: shortCode={}", redirect.getShortCode());
         } catch (Exception e) {
-            log.warn("[Cache:L2] Put failed: shortCode={}", redirect.getShortCode(), e);
+            log.warn("[Cache:L2] 저장 실패: shortCode={}", redirect.getShortCode(), e);
             throw e;
         }
     }
@@ -64,9 +64,9 @@ public class RedirectCacheRedisImpl implements RedirectCache {
         try {
             String key = LAYER.buildKey(shortCode);
             redisTemplate.delete(key);
-            log.debug("[Cache:L2] Evicted: shortCode={}", shortCode);
+            log.debug("[Cache:L2] 삭제 완료: shortCode={}", shortCode);
         } catch (Exception e) {
-            log.warn("[Cache:L2] Eviction failed: shortCode={}", shortCode, e);
+            log.warn("[Cache:L2] 삭제 실패: shortCode={}", shortCode, e);
             throw e;
         }
     }

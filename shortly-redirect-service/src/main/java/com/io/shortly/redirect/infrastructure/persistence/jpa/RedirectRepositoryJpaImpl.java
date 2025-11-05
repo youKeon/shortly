@@ -16,27 +16,27 @@ public class RedirectRepositoryJpaImpl implements RedirectRepository {
 
     @Override
     public Optional<Redirect> findByShortCode(String shortCode) {
-        log.debug("[DB] Finding redirect: shortCode={}", shortCode);
+        log.debug("[DB] 리디렉션 조회 중: shortCode={}", shortCode);
         return jpaRepository.findByShortCode(shortCode)
             .map(entity -> {
-                log.debug("[DB] Found: shortCode={}", shortCode);
+                log.debug("[DB] 조회 완료: shortCode={}", shortCode);
                 return entity.toDomain();
             });
     }
 
     @Override
     public Redirect save(Redirect redirect) {
-        log.info("[DB] Saving redirect: shortCode={}", redirect.getShortCode());
+        log.info("[DB] 리디렉션 저장 중: shortCode={}", redirect.getShortCode());
         RedirectJpaEntity entity = RedirectJpaEntity.fromDomain(redirect);
         RedirectJpaEntity saved = jpaRepository.save(entity);
-        log.info("[DB] Saved: shortCode={}", saved.getShortCode());
+        log.info("[DB] 저장 완료: shortCode={}", saved.getShortCode());
         return saved.toDomain();
     }
 
     @Override
     public boolean existsByShortCode(String shortCode) {
         boolean exists = jpaRepository.existsByShortCode(shortCode);
-        log.debug("[DB] Exists check: shortCode={}, exists={}", shortCode, exists);
+        log.debug("[DB] 존재 여부 확인: shortCode={}, exists={}", shortCode, exists);
         return exists;
     }
 }

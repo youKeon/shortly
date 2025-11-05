@@ -25,13 +25,13 @@ public class RedirectService {
         return redirectCache.get(shortCode)
             .or(() -> {
                 // 2. DB 조회
-                log.info("[Service] Cache miss: shortCode={}, querying DB", shortCode);
+                log.info("[Service] 캐시 미스: shortCode={}, DB 조회 중", shortCode);
 
                 return redirectRepository.findByShortCode(shortCode)
                     .map(redirect -> {
                         // 3. 캐시 워밍업
                         redirectCache.put(redirect);
-                        log.info("[Service] Cache warmed: shortCode={}", shortCode);
+                        log.info("[Service] 캐시 워밍업 완료: shortCode={}", shortCode);
                         return redirect;
                     });
             })
@@ -47,7 +47,7 @@ public class RedirectService {
                 return Redirect.of(redirect.getTargetUrl());
             })
             .orElseThrow(() -> {
-                log.error("[Service] Redirect failed: shortCode={} not found", shortCode);
+                log.error("[Service] 리디렉션 실패: shortCode={} 찾을 수 없음", shortCode);
                 return new ShortCodeNotFoundException(shortCode);
             });
     }
