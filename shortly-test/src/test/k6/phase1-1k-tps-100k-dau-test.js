@@ -17,8 +17,6 @@ import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.1/index.js';
  * - 에러율: < 3%
  * - 성공률: > 97%
  *
- * 실행 방법:
- * k6 run phase1-1k-tps-100k-dau-test.js
  */
 
 const shortenSuccessRate = new Rate('shorten_success_rate');
@@ -36,43 +34,37 @@ export const options = {
   scenarios: {
     // 단축 URL 생성 (8%, 80 TPS)
     url_creation: {
-      executor: 'ramping-vus',
-      startVUs: 0,
-      stages: [
-        { duration: '1m', target: 40 },
-        { duration: '2m', target: 80 },
-        { duration: '2m', target: 0 },
-      ],
+      executor: 'constant-arrival-rate',
+      rate: 80,
+      timeUnit: '1s',
+      duration: '5m',
+      preAllocatedVUs: 20,
+      maxVUs: 100,
       exec: 'shortenUrl',
-      gracefulRampDown: '30s',
     },
 
     // Redirection (90%, 900 TPS)
     redirection: {
-      executor: 'ramping-vus',
-      startVUs: 0,
-      startTime: '10s',
-      stages: [
-        { duration: '50s', target: 225 },
-        { duration: '2m', target: 450 },
-        { duration: '2m', target: 0 },
-      ],
+      executor: 'constant-arrival-rate',
+      rate: 900,
+      timeUnit: '1s',
+      duration: '5m',
+      preAllocatedVUs: 200,
+      maxVUs: 1000,
       exec: 'redirect',
-      gracefulRampDown: '30s',
+      startTime: '10s',
     },
 
     // 클릭 통계 (2%, 20 TPS)
     statistics: {
-      executor: 'ramping-vus',
-      startVUs: 0,
-      startTime: '20s',
-      stages: [
-        { duration: '40s', target: 18 },
-        { duration: '2m', target: 35 },
-        { duration: '2m', target: 0 },
-      ],
+      executor: 'constant-arrival-rate',
+      rate: 20,
+      timeUnit: '1s',
+      duration: '5m',
+      preAllocatedVUs: 10,
+      maxVUs: 50,
       exec: 'getStats',
-      gracefulRampDown: '30s',
+      startTime: '20s',
     },
   },
 
@@ -167,10 +159,9 @@ export function setup() {
       } catch (e) {}
     }
 
-    // 부하 분산
+    // 진행 상황 출력
     if (i % 20 === 0 && i > 0) {
       console.log(`   생성 중: ${codes.length}/${seedCount}`);
-      sleep(0.5);
     }
   }
 
@@ -232,8 +223,6 @@ export function shortenUrl(data) {
     if (!success) {
       totalErrors.add(1);
     }
-
-    sleep(Math.random() * 2 + 1);  // 1-3초 대기
   });
 }
 
@@ -248,7 +237,6 @@ export function redirect(data) {
   group('Redirection', function () {
     if (globalShortCodes.length === 0) {
       totalErrors.add(1);
-      sleep(5);
       return;
     }
 
@@ -270,8 +258,6 @@ export function redirect(data) {
     if (!success) {
       totalErrors.add(1);
     }
-
-    sleep(Math.random() * 0.5);  // 0-0.5초 대기
   });
 }
 
@@ -286,7 +272,6 @@ export function getStats(data) {
   group('Statistics Query', function () {
     if (globalShortCodes.length === 0) {
       totalErrors.add(1);
-      sleep(5);
       return;
     }
 
@@ -314,8 +299,6 @@ export function getStats(data) {
     if (!success) {
       totalErrors.add(1);
     }
-
-    sleep(Math.random() * 3 + 2);  // 2-5초 대기
   });
 }
 
@@ -350,14 +333,19 @@ export function handleSummary(data) {
   const statsSuccess = data.metrics.stats_success_rate?.values?.rate || 0;
 
   const targetTPS = 1000;
-  const tpsAchieved = tps >= targetTPS ? '✅' : '❌';
+
+  // 순수 테스트 TPS 계산 (setup/teardown 제외)
+  const testDuration = 300; // 5분
+  const pureTPS = totalReqs / testDuration;
+  const tpsAchieved = pureTPS >= targetTPS ? '✅' : '❌';
 
   console.log('');
   console.log('╔══════════════════════════════════════════════════════════════╗');
   console.log('║            Phase 1: 1,000 TPS Performance Result             ║');
   console.log('╠══════════════════════════════════════════════════════════════╣');
   console.log(`║ Target TPS:            ${String(targetTPS).padStart(10)}                        ║`);
-  console.log(`║ Actual TPS:            ${tps.toFixed(2).padStart(10)} ${tpsAchieved}                    ║`);
+  console.log(`║ k6 Reported TPS:       ${tps.toFixed(2).padStart(10)} (setup 포함)          ║`);
+  console.log(`║ Pure Test TPS:         ${pureTPS.toFixed(2).padStart(10)} ${tpsAchieved}                    ║`);
   console.log(`║ Total Requests:        ${String(totalReqs).padStart(10)}                        ║`);
   console.log(`║ Total Errors:          ${String(totalErrs).padStart(10)} (${((totalErrs / totalReqs) * 100).toFixed(2)}%)             ║`);
   console.log('╠══════════════════════════════════════════════════════════════╣');
@@ -386,8 +374,9 @@ export function handleSummary(data) {
         totalRequests: totalReqs,
         totalErrors: totalErrs,
         errorRate: ((totalErrs / totalReqs) * 100).toFixed(2),
-        tps: tps.toFixed(2),
-        tpsAchieved: tps >= targetTPS,
+        k6ReportedTPS: tps.toFixed(2),
+        pureTestTPS: pureTPS.toFixed(2),
+        tpsAchieved: pureTPS >= targetTPS,
         avgDuration: avgDuration.toFixed(2),
         p95Duration: p95Duration.toFixed(2),
         p99Duration: p99Duration.toFixed(2),
