@@ -1,7 +1,4 @@
-version: '3.8'
-
 services:
-  # MySQL
   mysql-url:
     image: mysql:8.0
     container_name: shortly-mysql-url
@@ -14,12 +11,6 @@ services:
       - mysql-url-data:/var/lib/mysql
     networks:
       - shortly-network
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-ppassword"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
 
   mysql-click:
     image: mysql:8.0
@@ -33,154 +24,57 @@ services:
       - mysql-click-data:/var/lib/mysql
     networks:
       - shortly-network
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-ppassword"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
 
-  # Cache
   redis:
     image: redis:7-alpine
     container_name: shortly-redis
     ports:
       - "6379:6379"
-    volumes:
-      - redis-data:/data
     networks:
       - shortly-network
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # MQ
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.5.0
-    container_name: shortly-zookeeper
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    ports:
-      - "2181:2181"
-    networks:
-      - shortly-network
-    healthcheck:
-      test: ["CMD", "bash", "-c", "echo ruok | nc localhost 2181"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   kafka:
-    image: confluentinc/cp-kafka:7.5.0
+    image: apache/kafka:3.7.0
     container_name: shortly-kafka
-    depends_on:
-      zookeeper:
-        condition: service_healthy
     ports:
       - "9092:9092"
-      - "9093:9093"
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:9093
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093,PLAINTEXT_INTERNAL://0.0.0.0:9094
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:9094
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
     networks:
       - shortly-network
-    healthcheck:
-      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
-      interval: 10s
-      timeout: 10s
-      retries: 5
-      start_period: 40s
 
-  # Monitoring
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: shortly-prometheus
-    ports:
-      - "9090:9090"
-    volumes:
-      - ../monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus-data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
-      - '--web.console.templates=/usr/share/prometheus/consoles'
-    networks:
-      - shortly-network
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/-/healthy"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  grafana:
-    image: grafana/grafana:latest
-    container_name: shortly-grafana
-    depends_on:
-      prometheus:
-        condition: service_healthy
-    ports:
-      - "3000:3000"
-    environment:
-      GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: admin
-      GF_USERS_ALLOW_SIGN_UP: false
-    volumes:
-      - grafana-data:/var/lib/grafana
-      - ../monitoring/grafana/provisioning:/etc/grafana/provisioning
-    networks:
-      - shortly-network
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-
-  # API
   url-service:
     build:
       context: ../..
       dockerfile: shortly-url-service/Dockerfile
     container_name: shortly-url-service
     depends_on:
-      kafka:
-        condition: service_healthy
-      mysql-url:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - kafka
+      - mysql-url
+      - redis
     ports:
       - "8081:8081"
     environment:
-      SPRING_PROFILES_ACTIVE: docker
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9093
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-url:3306/shortly_url?createDatabaseIfNotExist=true
+      SPRING_PROFILES_ACTIVE: prod
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9094
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-url:3306/shortly_url
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: password
-      SPRING_R2DBC_URL: r2dbc:mysql://mysql-url:3306/shortly_url
-      SPRING_R2DBC_USERNAME: root
-      SPRING_R2DBC_PASSWORD: password
       REDIS_HOST: redis
       REDIS_PORT: 6379
     networks:
       - shortly-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
 
   redirect-service:
     build:
@@ -188,28 +82,17 @@ services:
       dockerfile: shortly-redirect-service/Dockerfile
     container_name: shortly-redirect-service
     depends_on:
-      kafka:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      url-service:
-        condition: service_healthy
+      - kafka
+      - redis
     ports:
       - "8082:8082"
     environment:
-      SPRING_PROFILES_ACTIVE: docker
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9093
+      SPRING_PROFILES_ACTIVE: prod
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9094
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      URL_SERVICE_URL: http://url-service:8081  # DB 대신 API Fallback
     networks:
       - shortly-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
 
   click-service:
     build:
@@ -217,41 +100,50 @@ services:
       dockerfile: shortly-click-service/Dockerfile
     container_name: shortly-click-service
     depends_on:
-      kafka:
-        condition: service_healthy
-      mysql-click:
-        condition: service_healthy
+      - kafka
+      - mysql-click
     ports:
       - "8083:8083"
     environment:
-      SPRING_PROFILES_ACTIVE: docker
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9093
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-click:3306/shortly_click?createDatabaseIfNotExist=true
+      SPRING_PROFILES_ACTIVE: prod
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9094
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-click:3306/shortly_click
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: password
     networks:
       - shortly-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
+
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    container_name: shortly-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ../monitoring/prometheus-prod.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    networks:
+      - shortly-network
+
+  grafana:
+    image: grafana/grafana:10.2.2
+    container_name: shortly-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ../monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - grafana-data:/var/lib/grafana
+    networks:
+      - shortly-network
 
 networks:
   shortly-network:
-    driver: bridge
     name: shortly-network
 
 volumes:
   mysql-url-data:
-    name: shortly_mysql-url-data
-  # mysql-redirect-data 제거 (Redirect Service는 Cache-Only)
   mysql-click-data:
-    name: shortly_mysql-click-data
-  redis-data:
-    name: shortly_redis-data
   prometheus-data:
-    name: shortly_prometheus-data
   grafana-data:
-    name: shortly_grafana-data

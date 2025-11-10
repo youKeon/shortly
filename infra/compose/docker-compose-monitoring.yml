@@ -1,0 +1,36 @@
+services:
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    container_name: shortly-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ../monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    networks:
+      - shortly-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  grafana:
+    image: grafana/grafana:10.2.2
+    container_name: shortly-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ../monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - grafana-data:/var/lib/grafana
+    networks:
+      - shortly-network
+
+networks:
+  shortly-network:
+    external: true
+    name: shortly-network
+
+volumes:
+  prometheus-data:
+  grafana-data:

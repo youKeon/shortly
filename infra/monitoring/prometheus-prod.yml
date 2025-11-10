@@ -16,28 +16,28 @@ scrape_configs:
   - job_name: 'shortly-url-service'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['host.docker.internal:8081']
+      - targets: ['url-service:8081']
         labels:
           service: 'url-service'
           application: 'shortly-url-service'
-          environment: 'dev'
+          environment: 'prod'
 
   # Redirect Service
   - job_name: 'shortly-redirect-service'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['host.docker.internal:8082']
+      - targets: ['redirect-service:8082']
         labels:
           service: 'redirect-service'
           application: 'shortly-redirect-service'
-          environment: 'dev'
+          environment: 'prod'
 
   # Click Service
   - job_name: 'shortly-click-service'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['host.docker.internal:8083']
+      - targets: ['click-service:8083']
         labels:
           service: 'click-service'
           application: 'shortly-click-service'
-          environment: 'dev'
+          environment: 'prod'

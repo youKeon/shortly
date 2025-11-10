@@ -28,6 +28,9 @@ spring:
 
 server:
   port: 8081
+  tomcat:
+    mbeanregistry:
+      enabled: true
 
 logging:
   file:
@@ -44,17 +47,16 @@ management:
   endpoint:
     health:
       show-details: always
-    metrics:
-      enabled: true
-    prometheus:
-      enabled: true
   metrics:
     tags:
       application: ${spring.application.name}
-  prometheus:
-    metrics:
-      export:
-        enabled: true
+    enable:
+      tomcat: true
+      jvm: true
+      process: true
+      system: true
+      hikaricp: true
+      http: true
 
 springdoc:
   swagger-ui:
