@@ -7,6 +7,12 @@ shortly:
 
 server:
   port: 8082
+  tomcat:
+    mbeanregistry:
+      enabled: true
+    threads:
+      max: 400
+      min-spare: 50
 
 spring:
   application:
@@ -50,17 +56,15 @@ management:
   endpoint:
     health:
       show-details: always
-    metrics:
-      enabled: true
-    prometheus:
-      enabled: true
   metrics:
     tags:
       application: ${spring.application.name}
-  prometheus:
-    metrics:
-      export:
-        enabled: true
+    enable:
+      tomcat: true
+      jvm: true
+      process: true
+      system: true
+      http: true
 
 springdoc:
   swagger-ui:

@@ -1,5 +1,4 @@
 services:
-  # MySQL - URL Service
   mysql-url:
     image: mysql:8.0
     container_name: shortly-mysql-url
@@ -13,7 +12,6 @@ services:
     networks:
       - shortly-network
 
-  # MySQL - Click Service
   mysql-click:
     image: mysql:8.0
     container_name: shortly-mysql-click
@@ -27,7 +25,6 @@ services:
     networks:
       - shortly-network
 
-  # Redis Cache
   redis:
     image: redis:7-alpine
     container_name: shortly-redis
@@ -36,47 +33,31 @@ services:
     networks:
       - shortly-network
 
-  # Kafka
   kafka:
-    image: confluentinc/cp-kafka:7.5.0
+    image: apache/kafka:3.7.0
     container_name: shortly-kafka
     ports:
       - "9092:9092"
-      - "9093:9093"
     environment:
-      KAFKA_PROCESS_ROLES: broker,controller
       KAFKA_NODE_ID: 1
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_PROCESS_ROLES: broker,controller
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-      KAFKA_CLUSTER_ID: mkI2byNATaCEEI1u9GdYSw
-      CLUSTER_ID: mkI2byNATaCEEI1u9GdYSw
-      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
     networks:
       - shortly-network
-    command: >
-      bash -c "
-      if [ ! -f /var/lib/kafka/data/meta.properties ]; then
-        kafka-storage format --config /etc/kafka/kraft/server.properties --cluster-id mkI2byNATaCEEI1u9GdYSw;
-      fi;
-      /etc/confluent/docker/run
-      "
 
 networks:
   shortly-network:
-    driver: bridge
     name: shortly-network
 
 volumes:
   mysql-url-data:
-    name: shortly_mysql-url-data
-  # mysql-redirect-data 제거 (Redirect Service는 Cache-Only)
   mysql-click-data:
-    name: shortly_mysql-click-data

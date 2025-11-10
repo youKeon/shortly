@@ -1,9 +1,10 @@
+# Grafana Dashboard Provider Configuration
 apiVersion: 1
 
 providers:
   - name: 'Shortly Dashboards'
     orgId: 1
-    folder: ''
+    folder: 'Shortly'
     type: file
     disableDeletion: false
     updateIntervalSeconds: 10
