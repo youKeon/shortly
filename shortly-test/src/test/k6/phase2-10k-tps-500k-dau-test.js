@@ -17,9 +17,6 @@ import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.1/index.js';
  * - P99 응답 시간: < 1000ms
  * - 에러율: < 5%
  * - 성공률: > 95%
- *
- * 실행 방법:
- * k6 run phase2-10k-tps-500k-dau-test.js
  */
 
 // Custom Metrics
@@ -40,51 +37,42 @@ export const options = {
   scenarios: {
     // Scenario 1: URL Creation (8% of traffic, Target: 800 TPS)
     url_creation: {
-      executor: 'ramping-vus',
-      startVUs: 0,
-      stages: [
-        { duration: '1m', target: 200 },    // Warm-up: 25% target
-        { duration: '2m', target: 400 },    // Ramp-up: 50% target
-        { duration: '3m', target: 800 },    // Peak: 100% target ⭐
-        { duration: '2m', target: 0 },      // Cool-down
-      ],
+      executor: 'constant-arrival-rate',
+      rate: 800,
+      timeUnit: '1s',
+      duration: '8m',
+      preAllocatedVUs: 200,
+      maxVUs: 1000,
       exec: 'shortenUrl',
-      gracefulRampDown: '30s',
     },
 
     // Scenario 2: Redirection (90% of traffic, Target: 9,000 TPS)
     redirection: {
-      executor: 'ramping-vus',
-      startVUs: 0,
-      startTime: '10s',  // 시작 지연 (URL 생성 후)
-      stages: [
-        { duration: '50s', target: 1125 },  // Warm-up: 25% target
-        { duration: '2m', target: 2250 },   // Ramp-up: 50% target
-        { duration: '3m', target: 4500 },   // Peak: 100% target ⭐
-        { duration: '2m', target: 0 },      // Cool-down
-      ],
+      executor: 'constant-arrival-rate',
+      rate: 9000,
+      timeUnit: '1s',
+      duration: '8m',
+      preAllocatedVUs: 2000,
+      maxVUs: 10000,
       exec: 'redirect',
-      gracefulRampDown: '30s',
+      startTime: '10s',  // 시작 지연 (URL 생성 후)
     },
 
     // Scenario 3: Statistics Query (2% of traffic, Target: 200 TPS)
     statistics: {
-      executor: 'ramping-vus',
-      startVUs: 0,
-      startTime: '20s',  // 시작 지연 (충분한 데이터 생성 후)
-      stages: [
-        { duration: '40s', target: 90 },    // Warm-up: 25% target
-        { duration: '2m', target: 175 },    // Ramp-up: 50% target
-        { duration: '3m', target: 350 },    // Peak: 100% target ⭐
-        { duration: '2m', target: 0 },      // Cool-down
-      ],
+      executor: 'constant-arrival-rate',
+      rate: 200,
+      timeUnit: '1s',
+      duration: '8m',
+      preAllocatedVUs: 50,
+      maxVUs: 500,
       exec: 'getStats',
-      gracefulRampDown: '30s',
+      startTime: '20s',  // 시작 지연 (충분한 데이터 생성 후)
     },
   },
 
   thresholds: {
-    // 성능 임계값 (Phase 2: 목표 TPS 달성)
+    // 성능 임계값
     'http_req_duration': ['p(95)<500', 'p(99)<1000'],   // P95 < 500ms, P99 < 1s
     'http_req_failed': ['rate<0.05'],                   // 에러율 < 5%
 
@@ -180,10 +168,9 @@ export function setup() {
       }
     }
 
-    // 부하 분산
+    // 진행 상황 출력
     if (i % 30 === 0 && i > 0) {
       console.log(`   생성 중: ${codes.length}/${seedCount}`);
-      sleep(0.5);
     }
   }
 
@@ -245,8 +232,6 @@ export function shortenUrl(data) {
     if (!success) {
       totalErrors.add(1);
     }
-
-    sleep(Math.random() * 2 + 1);  // 1-3초 대기
   });
 }
 
@@ -261,7 +246,6 @@ export function redirect(data) {
   group('Redirection', function () {
     if (globalShortCodes.length === 0) {
       totalErrors.add(1);
-      sleep(5);
       return;
     }
 
@@ -283,8 +267,6 @@ export function redirect(data) {
     if (!success) {
       totalErrors.add(1);
     }
-
-    sleep(Math.random() * 0.5);  // 0-0.5초 대기
   });
 }
 
@@ -299,7 +281,6 @@ export function getStats(data) {
   group('Statistics Query', function () {
     if (globalShortCodes.length === 0) {
       totalErrors.add(1);
-      sleep(5);
       return;
     }
 
@@ -327,8 +308,6 @@ export function getStats(data) {
     if (!success) {
       totalErrors.add(1);
     }
-
-    sleep(Math.random() * 3 + 2);  // 2-5초 대기
   });
 }
 
