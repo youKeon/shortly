@@ -7,6 +7,8 @@ public interface UrlClickRepository {
 
     UrlClick save(UrlClick urlClick);
 
+    void saveAll(List<UrlClick> urlClicks);
+
     long countByShortCode(String shortCode);
 
     List<UrlClick> findByShortCode(String shortCode);

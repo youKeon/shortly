@@ -8,7 +8,6 @@ import com.io.shortly.shared.kafka.KafkaTopics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -24,7 +23,7 @@ public class UrlCreatedEventConsumer {
         groupId = KafkaTopics.REDIRECT_SERVICE_GROUP,
         containerFactory = "kafkaListenerContainerFactory"
     )
-    public void consumeUrlCreated(UrlCreatedEvent event, Acknowledgment ack) {
+    public void consumeUrlCreated(UrlCreatedEvent event) {
         log.debug("[Event] 이벤트 수신: shortCode={}, topic={}", event.getShortCode(), KafkaTopics.URL_CREATED);
 
         try {
@@ -39,12 +38,10 @@ public class UrlCreatedEventConsumer {
             // L1 캐시 동기화
             cacheNotificationPublisher.notifyUrlCreated(redirect.getShortCode());
 
-            ack.acknowledge();
-            log.info("[Event] 캐시 저장 및 커밋 완료: shortCode={}", redirect.getShortCode());
+            log.info("[Event] 캐시 저장 완료: shortCode={}", redirect.getShortCode());
 
         } catch (Exception e) {
             log.error("[Event] 처리 실패, 재시도 예정: shortCode={}", event.getShortCode(), e);
-            // TODO: Dead Letter Queue
         }
     }
 }
