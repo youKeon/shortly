@@ -22,6 +22,14 @@ public class UrlClickRepositoryJpaImpl implements UrlClickRepository {
     }
 
     @Override
+    public void saveAll(List<UrlClick> urlClicks) {
+        List<UrlClickJpaEntity> entities = urlClicks.stream()
+                .map(UrlClickJpaEntity::fromDomain)
+                .toList();
+        jpaRepository.saveAll(entities);
+    }
+
+    @Override
     public long countByShortCode(String shortCode) {
         return jpaRepository.countByShortCode(shortCode);
     }
