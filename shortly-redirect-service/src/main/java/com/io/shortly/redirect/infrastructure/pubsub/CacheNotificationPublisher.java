@@ -1,22 +1,15 @@
-package com.io.shortly.redirect.infrastructure.cache.pubsub;
+package com.io.shortly.redirect.infrastructure.pubsub;
 
 import static com.io.shortly.redirect.infrastructure.cache.redis.RedisPubSubConfig.CACHE_NOTIFICATION_CHANNEL;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(
-    prefix = "shortly.cache.sync",
-    name = "enabled",
-    havingValue = "true",
-    matchIfMissing = true
-)
 public class CacheNotificationPublisher {
 
     private final StringRedisTemplate stringRedisTemplate;

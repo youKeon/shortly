@@ -59,11 +59,4 @@ public class UrlServiceClient {
             return Optional.empty();
         }
     }
-
-    public record UrlLookupResponse(
-        String shortCode,
-        String originalUrl
-    ) {
-
-    }
 }
