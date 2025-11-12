@@ -1,4 +1,4 @@
-package com.io.shortly.click.config;
+package com.io.shortly.click.infrastructure.swagger;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
