@@ -1,30 +1,30 @@
 package com.io.shortly.url.unit;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.io.shortly.url.application.UrlService;
 import com.io.shortly.url.application.dto.ShortUrlCommand.ShortenCommand;
 import com.io.shortly.url.application.dto.ShortUrlResult.ShortenedResult;
-import com.io.shortly.url.domain.event.Outbox;
-import com.io.shortly.url.domain.event.OutboxRepository;
+import com.io.shortly.url.domain.outbox.Outbox;
+import com.io.shortly.url.domain.outbox.OutboxRepository;
 import com.io.shortly.url.domain.url.ShortCodeGenerationFailedException;
 import com.io.shortly.url.domain.url.ShortCodeNotFoundException;
 import com.io.shortly.url.domain.url.ShortUrl;
 import com.io.shortly.url.domain.url.ShortUrlGenerator;
 import com.io.shortly.url.domain.url.ShortUrlRepository;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
-
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.*;
 
 @DisplayName("UrlService 단위 테스트")
 class UrlServiceTest {
@@ -47,11 +47,11 @@ class UrlServiceTest {
             SuccessTransactionTemplate transactionTemplate = new SuccessTransactionTemplate();
 
             UrlService urlService = new UrlService(
+                transactionTemplate,
                 urlRepository,
                 generator,
                 outboxRepository,
-                objectMapper,
-                transactionTemplate
+                objectMapper
             );
 
             ShortenCommand command = new ShortenCommand(originalUrl);
@@ -80,11 +80,11 @@ class UrlServiceTest {
             RetryOnceTransactionTemplate transactionTemplate = new RetryOnceTransactionTemplate();
 
             UrlService urlService = new UrlService(
+                transactionTemplate,
                 urlRepository,
                 generator,
                 outboxRepository,
-                objectMapper,
-                transactionTemplate
+                objectMapper
             );
 
             ShortenCommand command = new ShortenCommand(originalUrl);
@@ -109,11 +109,11 @@ class UrlServiceTest {
             AlwaysFailTransactionTemplate transactionTemplate = new AlwaysFailTransactionTemplate();
 
             UrlService urlService = new UrlService(
+                transactionTemplate,
                 urlRepository,
                 generator,
                 outboxRepository,
-                objectMapper,
-                transactionTemplate
+                objectMapper
             );
 
             ShortenCommand command = new ShortenCommand(originalUrl);
@@ -138,11 +138,11 @@ class UrlServiceTest {
                 new ForeignKeyConstraintTransactionTemplate();
 
             UrlService urlService = new UrlService(
+                transactionTemplate,
                 urlRepository,
                 generator,
                 outboxRepository,
-                objectMapper,
-                transactionTemplate
+                objectMapper
             );
 
             ShortenCommand command = new ShortenCommand(originalUrl);
@@ -164,11 +164,11 @@ class UrlServiceTest {
             SuccessTransactionTemplate transactionTemplate = new SuccessTransactionTemplate();
 
             UrlService urlService = new UrlService(
+                transactionTemplate,
                 urlRepository,
                 generator,
                 outboxRepository,
-                objectMapper,
-                transactionTemplate
+                objectMapper
             );
 
             ShortenCommand command = new ShortenCommand(originalUrl);
@@ -196,8 +196,8 @@ class UrlServiceTest {
             urlRepository.save(shortUrl);
 
             UrlService urlService = new UrlService(
-                urlRepository,
                 null,
+                urlRepository,
                 null,
                 null,
                 null
@@ -220,8 +220,8 @@ class UrlServiceTest {
             FakeShortUrlRepository urlRepository = new FakeShortUrlRepository();
 
             UrlService urlService = new UrlService(
-                urlRepository,
                 null,
+                urlRepository,
                 null,
                 null,
                 null

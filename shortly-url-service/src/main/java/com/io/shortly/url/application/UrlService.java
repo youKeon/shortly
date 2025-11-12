@@ -6,9 +6,9 @@ import com.io.shortly.shared.event.UrlCreatedEvent;
 import com.io.shortly.url.application.dto.ShortUrlCommand.ShortenCommand;
 import com.io.shortly.url.application.dto.ShortUrlResult.ShortenedResult;
 import com.io.shortly.url.domain.url.ShortCodeNotFoundException;
-import com.io.shortly.url.domain.event.Aggregate;
-import com.io.shortly.url.domain.event.Outbox;
-import com.io.shortly.url.domain.event.OutboxRepository;
+import com.io.shortly.url.domain.outbox.Aggregate;
+import com.io.shortly.url.domain.outbox.Outbox;
+import com.io.shortly.url.domain.outbox.OutboxRepository;
 import com.io.shortly.url.domain.url.ShortCodeGenerationFailedException;
 import com.io.shortly.url.domain.url.ShortUrl;
 import com.io.shortly.url.domain.url.ShortUrlGenerator;
@@ -26,11 +26,11 @@ public class UrlService {
 
     private static final int MAX_ATTEMPTS = 5;
 
+    private final TransactionTemplate transactionTemplate;
     private final ShortUrlRepository shortUrlRepository;
     private final ShortUrlGenerator shortUrlGenerator;
     private final OutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
-    private final TransactionTemplate transactionTemplate;
 
     public ShortenedResult shortenUrl(ShortenCommand command) {
         for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
@@ -63,6 +63,15 @@ public class UrlService {
 
         log.error("Failed to generate unique short code");
         throw new ShortCodeGenerationFailedException(MAX_ATTEMPTS);
+    }
+
+    public ShortenedResult findByShortCode(String shortCode) {
+        ShortUrl shortUrl = shortUrlRepository.findByShortCode(shortCode)
+            .orElseThrow(() -> new ShortCodeNotFoundException(shortCode));
+
+        log.debug("URL found: {} -> {}", shortCode, shortUrl.getOriginalUrl());
+
+        return ShortenedResult.of(shortUrl.getShortCode(), shortUrl.getOriginalUrl());
     }
 
     private void saveEvent(ShortUrl shortUrl) {
@@ -101,14 +110,5 @@ public class UrlService {
                     message.contains("duplicate key") ||
                     message.contains("Duplicate entry")
             );
-    }
-
-    public ShortenedResult findByShortCode(String shortCode) {
-        ShortUrl shortUrl = shortUrlRepository.findByShortCode(shortCode)
-            .orElseThrow(() -> new ShortCodeNotFoundException(shortCode));
-
-        log.debug("URL found: {} -> {}", shortCode, shortUrl.getOriginalUrl());
-
-        return ShortenedResult.of(shortUrl.getShortCode(), shortUrl.getOriginalUrl());
     }
 }

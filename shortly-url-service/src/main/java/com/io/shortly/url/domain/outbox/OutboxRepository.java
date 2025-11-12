@@ -1,4 +1,4 @@
-package com.io.shortly.url.domain.event;
+package com.io.shortly.url.domain.outbox;
 
 public interface OutboxRepository {
 
