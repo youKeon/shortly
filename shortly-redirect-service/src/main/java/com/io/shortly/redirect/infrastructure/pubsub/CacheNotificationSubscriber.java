@@ -1,50 +1,37 @@
-package com.io.shortly.redirect.infrastructure.cache.pubsub;
+package com.io.shortly.redirect.infrastructure.pubsub;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.io.shortly.redirect.domain.Redirect;
 import com.io.shortly.redirect.domain.RedirectCache;
 import com.io.shortly.redirect.infrastructure.cache.CacheLayer;
 import com.io.shortly.redirect.infrastructure.client.UrlServiceClient;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-@ConditionalOnProperty(
-    prefix = "shortly.cache.sync",
-    name = "enabled",
-    havingValue = "true",
-    matchIfMissing = true
-)
+@RequiredArgsConstructor
 public class CacheNotificationSubscriber {
 
     private final Cache<String, Redirect> caffeineCache;
-    private final RedirectCache redisCache;
-    private final UrlServiceClient urlServiceClient;
 
-    public CacheNotificationSubscriber(
-            Cache<String, Redirect> caffeineCache,
-            @Qualifier("redisCache") RedirectCache redisCache,
-            UrlServiceClient urlServiceClient
-    ) {
-        this.caffeineCache = caffeineCache;
-        this.redisCache = redisCache;
-        this.urlServiceClient = urlServiceClient;
-    }
+    @Qualifier("redisCache")
+    private final RedirectCache redisCache;
+
+    private final UrlServiceClient urlServiceClient;
 
     public void onUrlCreated(String shortCode) {
         try {
-            // L2 (Redis)에서 조회
+            // L2 (Redis)에서 단축 코드를 조회해서 L1 (Caffeine)에 저장
             redisCache.get(shortCode).ifPresentOrElse(
                 redirect -> {
-                    // L1 캐시에 저장
                     String l1Key = CacheLayer.L1.buildKey(shortCode);
                     caffeineCache.put(l1Key, redirect);
                 },
                 () -> {
-                    // L2 Miss → URL Service API 호출
+                    // L2 Miss → URL Service API(DB) 호출
                     log.warn("[Cache:L2] Pub/Sub 처리 중 L2 미스, API로 폴백: shortCode={}", shortCode);
                     urlServiceClient.findByShortCode(shortCode).ifPresentOrElse(
                         redirect -> {

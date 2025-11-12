@@ -1,9 +1,6 @@
 shortly:
   url-service:
     base-url: ${URL_SERVICE_URL:http://localhost:8081}
-  cache:
-    sync:
-      enabled: true
 
 server:
   port: 8082
@@ -33,8 +30,11 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: 1           # Leader만 확인 (클릭 이벤트는 유실 허용)
+      properties:
+        linger.ms: 10   # 배치 처리로 성능 향상
     listener:
-      ack-mode: manual
+      ack-mode: batch                               # 자동 커밋
 
   data:
     redis:
@@ -78,8 +78,6 @@ spring:
   config:
     activate:
       on-profile: prod
-
-  # DB 설정 제거 - Cache-Only 아키텍처
 
 logging:
   level:

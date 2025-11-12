@@ -2,7 +2,7 @@ package com.io.shortly.redirect.infrastructure.event.kafka;
 
 import com.io.shortly.redirect.domain.Redirect;
 import com.io.shortly.redirect.domain.RedirectCache;
-import com.io.shortly.redirect.infrastructure.cache.pubsub.CacheNotificationPublisher;
+import com.io.shortly.redirect.infrastructure.pubsub.CacheNotificationPublisher;
 import com.io.shortly.shared.event.UrlCreatedEvent;
 import com.io.shortly.shared.kafka.KafkaTopics;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +35,7 @@ public class UrlCreatedEventConsumer {
             // 캐시 저장
             redirectCache.put(redirect);
 
-            // L1 캐시 동기화
+            // L1 캐시 동기화 (Redis Pub/Sub)
             cacheNotificationPublisher.notifyUrlCreated(redirect.getShortCode());
 
             log.info("[Event] 캐시 저장 완료: shortCode={}", redirect.getShortCode());
