@@ -1,6 +1,5 @@
 package com.io.shortly.click.infrastructure.event.kafka;
 
-import com.io.shortly.click.infrastructure.event.dlq.ClickEventDLQRecord;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Bean;

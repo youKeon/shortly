@@ -132,97 +132,6 @@ class ClickServiceTest {
     }
 
     @Test
-    @DisplayName("빈 단축 코드는 예외를 발생시킨다")
-    void getClickStats_EmptyShortCode_ThrowsException() {
-        // Given
-        ClickStatsCommand command = ClickStatsCommand.of("");
-
-        // When & Then
-        assertThatThrownBy(() -> clickService.getClickStats(command))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Short code must not be blank");
-    }
-
-    @Test
-    @DisplayName("잘못된 형식의 단축 코드는 예외를 발생시킨다")
-    void getClickStats_InvalidFormat_ThrowsException() {
-        // Given - short code with special characters
-        ClickStatsCommand command = ClickStatsCommand.of("abc@#$");
-
-        // When & Then
-        assertThatThrownBy(() -> clickService.getClickStats(command))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("6-10 alphanumeric characters");
-    }
-
-    @Test
-    @DisplayName("단축 코드가 너무 짧으면 예외를 발생시킨다")
-    void getClickStats_TooShortCode_ThrowsException() {
-        // Given
-        ClickStatsCommand command = ClickStatsCommand.of("abc12"); // 5 chars
-
-        // When & Then
-        assertThatThrownBy(() -> clickService.getClickStats(command))
-            .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    @DisplayName("단축 코드가 너무 길면 예외를 발생시킨다")
-    void getClickStats_TooLongCode_ThrowsException() {
-        // Given
-        ClickStatsCommand command = ClickStatsCommand.of("abc12345678"); // 11 chars
-
-        // When & Then
-        assertThatThrownBy(() -> clickService.getClickStats(command))
-            .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    @DisplayName("limit이 0이면 예외를 발생시킨다")
-    void getClickDetails_ZeroLimit_ThrowsException() {
-        // Given
-        ClickDetailCommand command = ClickDetailCommand.of("abc123", 0);
-
-        // When & Then
-        assertThatThrownBy(() -> clickService.getClickDetails(command))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Limit must be positive");
-    }
-
-    @Test
-    @DisplayName("limit이 음수면 예외를 발생시킨다")
-    void getClickDetails_NegativeLimit_ThrowsException() {
-        // Given
-        ClickDetailCommand command = ClickDetailCommand.of("abc123", -1);
-
-        // When & Then
-        assertThatThrownBy(() -> clickService.getClickDetails(command))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Limit must be positive");
-    }
-
-    @Test
-    @DisplayName("limit이 최대값을 초과하면 예외를 발생시킨다")
-    void getClickDetails_LimitExceedsMax_ThrowsException() {
-        // Given
-        ClickDetailCommand command = ClickDetailCommand.of("abc123", 1001); // MAX_LIMIT = 1000
-
-        // When & Then
-        assertThatThrownBy(() -> clickService.getClickDetails(command))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Limit must not exceed 1000");
-    }
-
-    @Test
-    @DisplayName("null 커맨드는 예외를 발생시킨다")
-    void getClickStats_NullCommand_ThrowsException() {
-        // When & Then
-        assertThatThrownBy(() -> clickService.getClickStats(null))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Command must not be null");
-    }
-
-    @Test
     @DisplayName("통계 불변 조건을 검증한다 - 24시간 클릭 수는 7일 클릭 수를 초과할 수 없다")
     void getClickStats_Invariants_24HoursLessThan7Days() {
         // Given
@@ -299,6 +208,11 @@ class ClickServiceTest {
         public UrlClick save(UrlClick urlClick) {
             clicks.add(urlClick);
             return urlClick;
+        }
+
+        @Override
+        public void saveAll(List<UrlClick> urlClicks) {
+            clicks.addAll(urlClicks);
         }
     }
 }

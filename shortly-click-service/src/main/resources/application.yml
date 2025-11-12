@@ -6,16 +6,23 @@ spring:
     active: ${SPRING_PROFILES_ACTIVE:local}
 
   datasource:
-    url: jdbc:mysql://localhost:3309/shortly_click?createDatabaseIfNotExist=true
+    url: jdbc:mysql://localhost:3309/shortly_click?createDatabaseIfNotExist=true&rewriteBatchedStatements=true
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:password}
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
 
   jpa:
     hibernate:
-      ddl-auto: create  # 서버 시작 시 테이블 drop 후 재생성 (테스트용)
+      ddl-auto: update
     show-sql: true
     open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 100  # 배치 처리로 DB 왕복 횟수 감소
 
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
@@ -28,12 +35,10 @@ spring:
         spring.json.trusted.packages: "com.io.shortly.shared.event"
     listener:
       ack-mode: batch
+      concurrency: 3
 
 server:
   port: 8083
-  tomcat:
-    mbeanregistry:
-      enabled: true
 
 logging:
   file:

@@ -1,4 +1,4 @@
-package com.io.shortly.click.infrastructure.event.dlq;
+package com.io.shortly.click.infrastructure.event.kafka;
 
 import com.io.shortly.shared.event.UrlClickedEvent;
 import lombok.AccessLevel;
