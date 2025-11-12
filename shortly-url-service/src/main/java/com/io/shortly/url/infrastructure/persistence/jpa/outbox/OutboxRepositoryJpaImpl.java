@@ -1,7 +1,7 @@
 package com.io.shortly.url.infrastructure.persistence.jpa.outbox;
 
-import com.io.shortly.url.domain.event.Outbox;
-import com.io.shortly.url.domain.event.OutboxRepository;
+import com.io.shortly.url.domain.outbox.Outbox;
+import com.io.shortly.url.domain.outbox.OutboxRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;

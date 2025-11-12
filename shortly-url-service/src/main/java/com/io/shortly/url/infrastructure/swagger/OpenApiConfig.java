@@ -1,4 +1,4 @@
-package com.io.shortly.url.config;
+package com.io.shortly.url.infrastructure.swagger;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;

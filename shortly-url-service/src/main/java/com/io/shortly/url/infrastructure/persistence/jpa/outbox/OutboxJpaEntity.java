@@ -1,7 +1,7 @@
 package com.io.shortly.url.infrastructure.persistence.jpa.outbox;
 
-import com.io.shortly.url.domain.event.Aggregate;
-import com.io.shortly.url.domain.event.Outbox;
+import com.io.shortly.url.domain.outbox.Aggregate;
+import com.io.shortly.url.domain.outbox.Outbox;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
