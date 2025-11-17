@@ -32,7 +32,7 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       acks: 1           # Leader만 확인 (클릭 이벤트는 유실 허용)
       properties:
-        linger.ms: 10   # 배치 처리로 성능 향상
+        linger.ms: 10   # 배치 처리
     listener:
       ack-mode: batch                               # 자동 커밋
 
@@ -40,6 +40,16 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+      timeout: 1000ms              # 연결 타임아웃
+      connect-timeout: 1000ms      # 명시적 연결 타임아웃
+      lettuce:
+        pool:
+          max-active: 8            # 최대 활성 연결
+          max-idle: 8              # 최대 유휴 연결
+          min-idle: 2              # 최소 유휴 연결
+          max-wait: 1000ms         # 풀에서 연결 대기 시간
+        shutdown-timeout: 200ms    # 종료 타임아웃
+        command-timeout: 1000ms    # 명령 실행 타임아웃
 
 logging:
   file:
@@ -71,6 +81,17 @@ springdoc:
     path: /swagger-ui
   api-docs:
     path: /api-docs
+
+# Circuit Breaker
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        failure-rate-threshold: 50          # 실패율 50% 이상 시 Circuit Open
+        wait-duration-in-open-state: 30s    # Open 상태 유지 시간
+    instances:
+      redisCache:
+        base-config: default
 
 ---
 # prod
