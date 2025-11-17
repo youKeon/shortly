@@ -3,7 +3,7 @@ package com.io.shortly.redirect.infrastructure.cache.redis;
 import static com.io.shortly.redirect.infrastructure.cache.CacheLayer.L2;
 
 import com.io.shortly.redirect.domain.Redirect;
-import com.io.shortly.redirect.domain.RedirectCacheService;
+import com.io.shortly.redirect.domain.RedirectCache;
 import com.io.shortly.redirect.infrastructure.cache.CacheKeyGenerator;
 import com.io.shortly.redirect.infrastructure.cache.CachedRedirect;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component("redisCache")
 @RequiredArgsConstructor
-public class RedirectCacheServiceRedisImpl implements RedirectCacheService {
+public class RedirectCacheRedisImpl implements RedirectCache {
 
     private final RedisTemplate<String, CachedRedirect> redisTemplate;
 

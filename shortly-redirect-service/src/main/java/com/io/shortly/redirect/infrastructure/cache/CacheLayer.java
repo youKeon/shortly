@@ -13,8 +13,4 @@ public enum CacheLayer {
     private final String keyPrefix;
     private final Duration ttl;
     private final String metricName;
-
-    public String buildKey(String shortCode) {
-        return keyPrefix + shortCode;
-    }
 }

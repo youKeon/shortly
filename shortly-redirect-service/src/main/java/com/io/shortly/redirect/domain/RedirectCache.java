@@ -2,7 +2,7 @@ package com.io.shortly.redirect.domain;
 
 import java.util.Optional;
 
-public interface RedirectCacheService {
+public interface RedirectCache {
 
     Optional<Redirect> get(String shortCode);
 

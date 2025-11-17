@@ -2,7 +2,9 @@ package com.io.shortly.redirect.api.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
+import lombok.experimental.UtilityClass;
 
+@UtilityClass
 public class RedirectRequest {
 
     public static final String SHORT_CODE_REGEX = "^[a-zA-Z0-9]{6,10}$";
