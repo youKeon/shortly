@@ -1,9 +1,11 @@
 package com.io.shortly.redirect.infrastructure.cache.caffeine;
 
+import static com.io.shortly.redirect.infrastructure.cache.CacheLayer.L1;
+
 import com.github.benmanes.caffeine.cache.Cache;
 import com.io.shortly.redirect.domain.Redirect;
-import com.io.shortly.redirect.domain.RedirectCache;
-import com.io.shortly.redirect.infrastructure.cache.CacheLayer;
+import com.io.shortly.redirect.domain.RedirectCacheService;
+import com.io.shortly.redirect.infrastructure.cache.CacheKeyGenerator;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -13,16 +15,14 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Primary
 @Component
-public class RedirectCacheCaffeineImpl implements RedirectCache {
-
-    private static final CacheLayer LAYER = CacheLayer.L1;
+public class RedirectCacheServiceCaffeineImpl implements RedirectCacheService {
 
     private final Cache<String, Redirect> caffeineCache;
-    private final RedirectCache redisCache;
+    private final RedirectCacheService redisCache;
 
-    public RedirectCacheCaffeineImpl(
+    public RedirectCacheServiceCaffeineImpl(
             Cache<String, Redirect> caffeineCache,
-            @Qualifier("redisCache") RedirectCache redisCache
+            @Qualifier("redisCache") RedirectCacheService redisCache
     ) {
         this.caffeineCache = caffeineCache;
         this.redisCache = redisCache;
@@ -31,7 +31,7 @@ public class RedirectCacheCaffeineImpl implements RedirectCache {
     @Override
     public Optional<Redirect> get(String shortCode) {
         // L1 캐시 조회
-        String key = LAYER.buildKey(shortCode);
+        String key = CacheKeyGenerator.generateCacheKey(L1, shortCode);
         Redirect l1Result = caffeineCache.getIfPresent(key);
 
         if (l1Result != null) {
@@ -54,7 +54,7 @@ public class RedirectCacheCaffeineImpl implements RedirectCache {
 
     @Override
     public void put(Redirect redirect) {
-        String key = LAYER.buildKey(redirect.getShortCode());
+        String key = CacheKeyGenerator.generateCacheKey(L1, redirect.getShortCode());
         caffeineCache.put(key, redirect);
         log.debug("[Cache:L1] 저장 완료: shortCode={}", redirect.getShortCode());
 
@@ -62,19 +62,6 @@ public class RedirectCacheCaffeineImpl implements RedirectCache {
             redisCache.put(redirect);
         } catch (Exception e) {
             log.warn("[Cache:L2] 저장 실패: shortCode={}, 계속 진행", redirect.getShortCode(), e);
-        }
-    }
-
-    @Override
-    public void evict(String shortCode) {
-        String key = LAYER.buildKey(shortCode);
-        caffeineCache.invalidate(key);
-        log.debug("[Cache:L1] 삭제 완료: shortCode={}", shortCode);
-
-        try {
-            redisCache.evict(shortCode);
-        } catch (Exception e) {
-            log.warn("[Cache:L2] 삭제 실패: shortCode={}, 계속 진행", shortCode, e);
         }
     }
 }
