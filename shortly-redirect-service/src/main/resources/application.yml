@@ -1,6 +1,8 @@
 shortly:
   url-service:
     base-url: ${URL_SERVICE_URL:http://localhost:8081}
+    connect-timeout: 1000  # 연결 타임아웃: 1초 (Cascading Failure 방지)
+    read-timeout: 2000     # 읽기 타임아웃: 2초 (URL Service 장애 시 빠른 실패)
 
 server:
   port: 8082
