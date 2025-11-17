@@ -1,4 +1,4 @@
-package com.io.shortly.redirect.infrastructure.config;
+package com.io.shortly.redirect.infrastructure.redis.config;
 
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;

@@ -1,11 +1,11 @@
-package com.io.shortly.redirect.infrastructure.cache.caffeine;
+package com.io.shortly.redirect.infrastructure.redis.cache;
 
-import static com.io.shortly.redirect.infrastructure.cache.CacheLayer.L1;
+import static com.io.shortly.redirect.infrastructure.redis.cache.CacheLayer.L1;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.io.shortly.redirect.domain.Redirect;
 import com.io.shortly.redirect.domain.RedirectCache;
-import com.io.shortly.redirect.infrastructure.cache.CacheKeyGenerator;
+import com.io.shortly.redirect.infrastructure.redis.cache.CacheKeyGenerator;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;

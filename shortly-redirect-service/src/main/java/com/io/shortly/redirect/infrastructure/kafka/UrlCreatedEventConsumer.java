@@ -1,8 +1,8 @@
-package com.io.shortly.redirect.infrastructure.event.kafka;
+package com.io.shortly.redirect.infrastructure.kafka;
 
 import com.io.shortly.redirect.domain.Redirect;
 import com.io.shortly.redirect.domain.RedirectCache;
-import com.io.shortly.redirect.infrastructure.pubsub.CacheNotificationPublisher;
+import com.io.shortly.redirect.infrastructure.redis.pubsub.CacheNotificationPublisher;
 import com.io.shortly.shared.event.UrlCreatedEvent;
 import com.io.shortly.shared.kafka.KafkaTopics;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package com.io.shortly.redirect.infrastructure.cache.caffeine;
+package com.io.shortly.redirect.infrastructure.redis.config;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;

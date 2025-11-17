@@ -1,6 +1,6 @@
-package com.io.shortly.redirect.infrastructure.cache.redis;
+package com.io.shortly.redirect.infrastructure.redis.config;
 
-import com.io.shortly.redirect.infrastructure.pubsub.CacheNotificationSubscriber;
+import com.io.shortly.redirect.infrastructure.redis.pubsub.CacheNotificationSubscriber;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;

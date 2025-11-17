@@ -1,9 +1,9 @@
-package com.io.shortly.redirect.infrastructure.cache.redis;
+package com.io.shortly.redirect.infrastructure.redis.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.io.shortly.redirect.infrastructure.cache.CachedRedirect;
+import com.io.shortly.redirect.infrastructure.redis.cache.CachedRedirect;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;

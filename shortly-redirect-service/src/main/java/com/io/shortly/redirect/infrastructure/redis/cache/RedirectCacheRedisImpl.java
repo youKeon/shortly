@@ -1,11 +1,11 @@
-package com.io.shortly.redirect.infrastructure.cache.redis;
+package com.io.shortly.redirect.infrastructure.redis.cache;
 
-import static com.io.shortly.redirect.infrastructure.cache.CacheLayer.L2;
+import static com.io.shortly.redirect.infrastructure.redis.cache.CacheLayer.L2;
 
 import com.io.shortly.redirect.domain.Redirect;
 import com.io.shortly.redirect.domain.RedirectCache;
-import com.io.shortly.redirect.infrastructure.cache.CacheKeyGenerator;
-import com.io.shortly.redirect.infrastructure.cache.CachedRedirect;
+import com.io.shortly.redirect.infrastructure.redis.cache.CacheKeyGenerator;
+import com.io.shortly.redirect.infrastructure.redis.cache.CachedRedirect;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;

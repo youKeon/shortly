@@ -1,4 +1,4 @@
-package com.io.shortly.redirect.infrastructure.lock;
+package com.io.shortly.redirect.infrastructure.redis.lock;
 
 import com.io.shortly.redirect.domain.DistributedLockTemplate;
 import com.io.shortly.redirect.domain.LockAcquisitionFailedException;
