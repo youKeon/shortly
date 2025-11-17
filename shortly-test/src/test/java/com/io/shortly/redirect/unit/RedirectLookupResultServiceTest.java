@@ -7,7 +7,7 @@ import com.io.shortly.redirect.domain.Redirect;
 import com.io.shortly.redirect.domain.RedirectCache;
 import com.io.shortly.redirect.domain.RedirectEventPublisher;
 import com.io.shortly.redirect.domain.ShortCodeNotFoundException;
-import com.io.shortly.redirect.infrastructure.client.UrlLookupResponse;
+import com.io.shortly.redirect.infrastructure.restclient.UrlLookupResponse;
 import com.io.shortly.shared.event.UrlClickedEvent;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

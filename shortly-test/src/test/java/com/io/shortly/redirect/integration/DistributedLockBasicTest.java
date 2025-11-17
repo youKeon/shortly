@@ -10,7 +10,7 @@ import static org.mockito.Mockito.when;
 import com.io.shortly.redirect.RedirectServiceApplication;
 import com.io.shortly.redirect.application.RedirectService;
 import com.io.shortly.redirect.domain.RedirectCache;
-import com.io.shortly.redirect.infrastructure.client.UrlLookupResponse;
+import com.io.shortly.redirect.infrastructure.restclient.UrlLookupResponse;
 import org.springframework.web.client.RestClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

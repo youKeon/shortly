@@ -1,4 +1,4 @@
-package com.io.shortly.redirect.infrastructure.client;
+package com.io.shortly.redirect.infrastructure.restclient;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

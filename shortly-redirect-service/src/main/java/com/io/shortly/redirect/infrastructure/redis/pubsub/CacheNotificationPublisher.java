@@ -1,6 +1,6 @@
-package com.io.shortly.redirect.infrastructure.pubsub;
+package com.io.shortly.redirect.infrastructure.redis.pubsub;
 
-import static com.io.shortly.redirect.infrastructure.cache.redis.RedisPubSubConfig.CACHE_NOTIFICATION_CHANNEL;
+import static com.io.shortly.redirect.infrastructure.redis.config.RedisPubSubConfig.CACHE_NOTIFICATION_CHANNEL;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

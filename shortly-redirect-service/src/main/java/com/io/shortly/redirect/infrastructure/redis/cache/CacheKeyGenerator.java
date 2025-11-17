@@ -1,4 +1,4 @@
-package com.io.shortly.redirect.infrastructure.cache;
+package com.io.shortly.redirect.infrastructure.redis.cache;
 
 import lombok.experimental.UtilityClass;
 
