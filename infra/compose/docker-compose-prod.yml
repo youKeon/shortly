@@ -6,11 +6,17 @@ services:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: shortly_url
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - mysql-url-data:/var/lib/mysql
     networks:
       - shortly-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-ppassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   mysql-click:
     image: mysql:8.0
@@ -24,14 +30,167 @@ services:
       - mysql-click-data:/var/lib/mysql
     networks:
       - shortly-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-ppassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   redis:
     image: redis:7-alpine
     container_name: shortly-redis
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
     ports:
       - "6379:6379"
+      - "16379:16379"
+    volumes:
+      - ../redis-cluster/conf/redis-node-0.conf:/usr/local/etc/redis/redis.conf:ro
+      - redis-node-0-data:/data
     networks:
       - shortly-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "6379", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis-node-1:
+    image: redis:7-alpine
+    container_name: shortly-redis-node-1
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    ports:
+      - "6380:6380"
+      - "16380:16380"
+    volumes:
+      - ../redis-cluster/conf/redis-node-1.conf:/usr/local/etc/redis/redis.conf:ro
+      - redis-node-1-data:/data
+    networks:
+      - shortly-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "6380", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis-node-2:
+    image: redis:7-alpine
+    container_name: shortly-redis-node-2
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    ports:
+      - "6381:6381"
+      - "16381:16381"
+    volumes:
+      - ../redis-cluster/conf/redis-node-2.conf:/usr/local/etc/redis/redis.conf:ro
+      - redis-node-2-data:/data
+    networks:
+      - shortly-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "6381", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis-node-3:
+    image: redis:7-alpine
+    container_name: shortly-redis-node-3
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    ports:
+      - "6382:6382"
+      - "16382:16382"
+    volumes:
+      - ../redis-cluster/conf/redis-node-3.conf:/usr/local/etc/redis/redis.conf:ro
+      - redis-node-3-data:/data
+    networks:
+      - shortly-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "6382", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis-node-4:
+    image: redis:7-alpine
+    container_name: shortly-redis-node-4
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    ports:
+      - "6383:6383"
+      - "16383:16383"
+    volumes:
+      - ../redis-cluster/conf/redis-node-4.conf:/usr/local/etc/redis/redis.conf:ro
+      - redis-node-4-data:/data
+    networks:
+      - shortly-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "6383", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis-node-5:
+    image: redis:7-alpine
+    container_name: shortly-redis-node-5
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    ports:
+      - "6384:6384"
+      - "16384:16384"
+    volumes:
+      - ../redis-cluster/conf/redis-node-5.conf:/usr/local/etc/redis/redis.conf:ro
+      - redis-node-5-data:/data
+    networks:
+      - shortly-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "6384", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis-cluster-init:
+    image: redis:7-alpine
+    container_name: shortly-redis-cluster-init
+    depends_on:
+      redis:
+        condition: service_healthy
+      redis-node-1:
+        condition: service_healthy
+      redis-node-2:
+        condition: service_healthy
+      redis-node-3:
+        condition: service_healthy
+      redis-node-4:
+        condition: service_healthy
+      redis-node-5:
+        condition: service_healthy
+    networks:
+      - shortly-network
+    entrypoint: ["/bin/sh", "-c"]
+    command: >
+      if redis-cli -h redis -p 6379 cluster info 2>/dev/null | grep -q "cluster_state:ok"; then
+        echo "Redis cluster already configured";
+      else
+        echo "Creating Redis cluster...";
+        yes yes | redis-cli --cluster create
+          redis:6379
+          redis-node-1:6380
+          redis-node-2:6381
+          redis-node-3:6382
+          redis-node-4:6383
+          redis-node-5:6384
+          --cluster-replicas 1;
+      fi;
+      touch /tmp/cluster-ready;
+      tail -f /tmp/cluster-ready
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -h redis -p 6379 cluster info | grep -q 'cluster_state:ok'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   kafka:
     image: apache/kafka:3.7.0
@@ -53,6 +212,12 @@ services:
       CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
     networks:
       - shortly-network
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   url-service:
     build:
@@ -60,9 +225,12 @@ services:
       dockerfile: shortly-url-service/Dockerfile
     container_name: shortly-url-service
     depends_on:
-      - kafka
-      - mysql-url
-      - redis
+      kafka:
+        condition: service_started
+      mysql-url:
+        condition: service_healthy
+      redis-cluster-init:
+        condition: service_healthy
     ports:
       - "8081:8081"
     environment:
@@ -73,8 +241,15 @@ services:
       SPRING_DATASOURCE_PASSWORD: password
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      SPRING_DATA_REDIS_CLUSTER_NODES: redis:6379,redis-node-1:6380,redis-node-2:6381,redis-node-3:6382,redis-node-4:6383,redis-node-5:6384
     networks:
       - shortly-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   redirect-service:
     build:
@@ -82,8 +257,12 @@ services:
       dockerfile: shortly-redirect-service/Dockerfile
     container_name: shortly-redirect-service
     depends_on:
-      - kafka
-      - redis
+      kafka:
+        condition: service_started
+      redis-cluster-init:
+        condition: service_healthy
+      url-service:
+        condition: service_started
     ports:
       - "8082:8082"
     environment:
@@ -91,8 +270,16 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9094
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      SPRING_DATA_REDIS_CLUSTER_NODES: redis:6379,redis-node-1:6380,redis-node-2:6381,redis-node-3:6382,redis-node-4:6383,redis-node-5:6384
+      URL_SERVICE_URL: http://url-service:8081
     networks:
       - shortly-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   click-service:
     build:
@@ -112,10 +299,55 @@ services:
       SPRING_DATASOURCE_PASSWORD: password
     networks:
       - shortly-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  frontend:
+    build:
+      context: ../..
+      dockerfile: frontend/Dockerfile
+    container_name: shortly-frontend
+    ports:
+      - "5173:80"
+    networks:
+      - shortly-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  nginx:
+    image: nginx:alpine
+    container_name: shortly-nginx
+    depends_on:
+      - url-service
+      - redirect-service
+      - click-service
+      - frontend
+    ports:
+      - "80:80"
+    volumes:
+      - ../nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - shortly-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   prometheus:
     image: prom/prometheus:v2.48.0
     container_name: shortly-prometheus
+    depends_on:
+      - url-service
+      - redirect-service
+      - click-service
     ports:
       - "9090:9090"
     volumes:
@@ -123,10 +355,17 @@ services:
       - prometheus-data:/prometheus
     networks:
       - shortly-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   grafana:
     image: grafana/grafana:10.2.2
     container_name: shortly-grafana
+    depends_on:
+      - prometheus
     ports:
       - "3000:3000"
     environment:
@@ -137,6 +376,11 @@ services:
       - grafana-data:/var/lib/grafana
     networks:
       - shortly-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 networks:
   shortly-network:
@@ -147,3 +391,9 @@ volumes:
   mysql-click-data:
   prometheus-data:
   grafana-data:
+  redis-node-0-data:
+  redis-node-1-data:
+  redis-node-2-data:
+  redis-node-3-data:
+  redis-node-4-data:
+  redis-node-5-data:

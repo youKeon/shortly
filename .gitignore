@@ -49,3 +49,6 @@ coverage/
 # ==== AI ====
 .claude/
 .env
+
+# ==== Documentation ====
+docs/

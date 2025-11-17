@@ -2,7 +2,7 @@ FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
 
-COPY shortly-redirect-service/build/libs/*.jar app.jar
+COPY shortly-redirectLookupResult-service/build/libs/*.jar app.jar
 
 EXPOSE 8082
 

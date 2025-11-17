@@ -11,9 +11,10 @@ export function attemptShortCodeRedirect(): boolean {
     return false;
   }
 
-  const target = `${API_BASE}/api/v1/urls/${firstSegment}`;
+  // 리디렉션 API 사용 (HTTP 302)
+  const target = `${API_BASE}/r/${firstSegment}`;
 
-  console.log('target ::: ', target);
+  console.log('Redirecting to:', target);
 
   window.location.replace(target);
   return true;
