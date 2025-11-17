@@ -5,6 +5,7 @@ const SHORT_BASE = import.meta.env.VITE_SHORT_BASE ?? window.location.origin;
 
 interface ShortenResponse {
   shortCode: string;
+  originalUrl: string;
 }
 
 export async function createShortLink(originalUrl: string): Promise<ShortLink> {
@@ -23,10 +24,11 @@ export async function createShortLink(originalUrl: string): Promise<ShortLink> {
 
   const data = (await response.json()) as ShortenResponse;
   const shortCode = data.shortCode.trim();
+  const originalUrlFromResponse = data.originalUrl || originalUrl;
 
   return {
     id: `${shortCode}-${Date.now()}`,
-    originalUrl,
+    originalUrl: originalUrlFromResponse,
     shortCode,
     shortUrl: `${SHORT_BASE}/${shortCode}`,
     createdAt: new Date().toISOString()

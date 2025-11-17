@@ -1,4 +1,3 @@
-// 전역 plugin
 plugins {
     id 'java'
     id 'org.springframework.boot' version '3.5.6' apply false
@@ -8,7 +7,6 @@ plugins {
 group = 'com.io.shortly'
 version = '0.0.1-SNAPSHOT'
 
-// 전역 변수
 ext {
     springBootVersion = '3.5.6'
     springDependencyManagementVersion = '1.1.7'

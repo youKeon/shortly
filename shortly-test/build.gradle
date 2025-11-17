@@ -29,6 +29,9 @@ dependencies {
 
     // Awaitility for async testing
     testImplementation 'org.awaitility:awaitility:4.2.0'
+
+    // Redisson
+    testImplementation 'org.redisson:redisson-spring-boot-starter:3.24.3'
 }
 
 bootJar {
