@@ -4,7 +4,7 @@ import static com.io.shortly.redirect.infrastructure.cache.CacheLayer.L1;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.io.shortly.redirect.domain.Redirect;
-import com.io.shortly.redirect.domain.RedirectCacheService;
+import com.io.shortly.redirect.domain.RedirectCache;
 import com.io.shortly.redirect.infrastructure.cache.CacheKeyGenerator;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -15,14 +15,14 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Primary
 @Component
-public class RedirectCacheServiceCaffeineImpl implements RedirectCacheService {
+public class RedirectCacheCaffeineImpl implements RedirectCache {
 
     private final Cache<String, Redirect> caffeineCache;
-    private final RedirectCacheService redisCache;
+    private final RedirectCache redisCache;
 
-    public RedirectCacheServiceCaffeineImpl(
+    public RedirectCacheCaffeineImpl(
             Cache<String, Redirect> caffeineCache,
-            @Qualifier("redisCache") RedirectCacheService redisCache
+            @Qualifier("redisCache") RedirectCache redisCache
     ) {
         this.caffeineCache = caffeineCache;
         this.redisCache = redisCache;

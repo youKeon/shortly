@@ -57,7 +57,7 @@ public class RedirectController {
 
         return ResponseEntity
             .status(HttpStatus.FOUND)
-            .location(URI.create(result.getOriginalUrl()))
+            .location(URI.create(result.originalUrl()))
             .build();
     }
 }
