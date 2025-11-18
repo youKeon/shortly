@@ -2,6 +2,8 @@ package com.io.shortly.redirect.infrastructure.redis.pubsub;
 
 import static com.io.shortly.redirect.infrastructure.redis.config.RedisPubSubConfig.CACHE_NOTIFICATION_CHANNEL;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -13,14 +15,26 @@ import org.springframework.stereotype.Component;
 public class CacheNotificationPublisher {
 
     private final StringRedisTemplate stringRedisTemplate;
+    private final MeterRegistry meterRegistry;
 
+    @CircuitBreaker(name = "redisPubSub", fallbackMethod = "notifyFallback")
     public void notifyUrlCreated(String shortCode) {
         try {
             stringRedisTemplate.convertAndSend(CACHE_NOTIFICATION_CHANNEL, shortCode);
-            log.debug("[Cache:Notification] URL 생성 알림 발행 완료: shortCode={}", shortCode);
+            meterRegistry.counter("cache.pubsub.published.success").increment();
+            log.debug("[Cache:Notification] Pub/Sub 발행 완료: shortCode={}", shortCode);
 
         } catch (Exception e) {
-            log.error("[Cache:Notification] 알림 발행 실패: shortCode={}", shortCode, e);
+            meterRegistry.counter("cache.pubsub.published.failure").increment();
+            log.warn("[Cache:Notification] Pub/Sub 발행 실패: shortCode={}", shortCode, e);
+            throw e;  // Circuit Breaker가 처리
         }
+    }
+
+    /**
+     * Pub/Sub 장애로 Circuit이 Open되면 L1 동기화를 생략
+     */
+    private void notifyFallback(String shortCode, Exception e) {
+        meterRegistry.counter("cache.pubsub.published.circuit_open").increment();
     }
 }
