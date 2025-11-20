@@ -10,4 +10,10 @@ public class ShortUrlCommand {
             return new ShortenCommand(originalUrl);
         }
     }
+
+    public record FindCommand(String shortCode) {
+        public static FindCommand of(String shortCode) {
+            return new FindCommand(shortCode);
+        }
+    }
 }

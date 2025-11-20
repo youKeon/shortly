@@ -4,45 +4,30 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.io.shortly.redirect.domain.Redirect;
 import java.time.Duration;
-import java.util.List;
-import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.cache.caffeine.CaffeineCache;
-import org.springframework.cache.caffeine.CaffeineCacheManager;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@EnableCaching
 public class CacheConfig {
 
-    private static final int MAX_CACHE_SIZE = 100000;  // 10만
-    private static final Duration CACHE_TTL = Duration.ofMinutes(10);
-    public static final String REDIRECT_CACHE_NAME = "redirects";
+    private final long l1MaxSize;
+    private final Duration l1Ttl;
 
-    @Bean
-    public CacheManager cacheManager() {
-        CaffeineCacheManager cacheManager = new CaffeineCacheManager();
-        cacheManager.setCaffeine(caffeineConfig());
-        cacheManager.setCacheNames(List.of(REDIRECT_CACHE_NAME));
-        return cacheManager;
+    public CacheConfig(
+        @Value("${shortly.cache.l1.max-size:100000}") long l1MaxSize,
+        @Value("${shortly.cache.l1.ttl:10m}") Duration l1Ttl
+    ) {
+        this.l1MaxSize = l1MaxSize;
+        this.l1Ttl = l1Ttl;
     }
 
     @Bean
-    public Caffeine<Object, Object> caffeineConfig() {
+    public Cache<String, Redirect> caffeineCache() {
         return Caffeine.newBuilder()
-            .maximumSize(MAX_CACHE_SIZE)
-            .expireAfterWrite(CACHE_TTL)
-            .recordStats();  // 메트릭 수집 활성화
-    }
-
-    @Bean
-    public Cache<String, Redirect> caffeineCache(CacheManager cacheManager) {
-        var cache = cacheManager.getCache(REDIRECT_CACHE_NAME);
-        if (cache instanceof CaffeineCache) {
-            Cache rawCache = ((CaffeineCache) cache).getNativeCache();
-            return (Cache<String, Redirect>) rawCache;
-        }
-        throw new IllegalStateException("CaffeineCache not found");
+            .maximumSize(l1MaxSize)
+            .expireAfterWrite(l1Ttl)
+            .recordStats()
+            .build();
     }
 }

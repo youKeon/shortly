@@ -1,9 +1,10 @@
 package com.io.shortly.url.api;
 
-import static com.io.shortly.url.api.dto.ShortUrlRequest.ShortenRequest;
+import static com.io.shortly.url.application.dto.ShortUrlCommand.FindCommand;
 import static com.io.shortly.url.application.dto.ShortUrlCommand.ShortenCommand;
 import static com.io.shortly.url.application.dto.ShortUrlResult.ShortenedResult;
 
+import com.io.shortly.url.api.dto.ShortUrlRequest;
 import com.io.shortly.url.api.dto.ShortUrlResponse.GetShortUrlResponse;
 import com.io.shortly.url.api.dto.ShortUrlResponse.ShortenedResponse;
 import com.io.shortly.url.application.UrlService;
@@ -34,12 +35,12 @@ public class UrlController {
     @PostMapping("/shorten")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "URL 단축", description = "긴 URL을 짧은 코드로 변환합니다")
-    public ShortenedResponse shortenUrl(@Valid @RequestBody ShortenRequest request) {
+    public ShortenedResponse shortenUrl(@Valid @RequestBody ShortUrlRequest.ShortenRequest request) {
         ShortenedResult result = urlService.shortenUrl(
             ShortenCommand.of(request.originalUrl())
         );
         log.info("URL shortened: {}", result.shortCode());
-        return new ShortenedResponse(result.shortCode(), result.originalUrl());
+        return ShortenedResponse.of(result);
     }
 
     @GetMapping("/{shortCode}")
@@ -47,7 +48,7 @@ public class UrlController {
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @ApiResponse(responseCode = "404", description = "Short Code를 찾을 수 없음")
     public GetShortUrlResponse findUrl(@PathVariable String shortCode) {
-        ShortenedResult result = urlService.findByShortCode(shortCode);
+        ShortenedResult result = urlService.findByShortCode(FindCommand.of(shortCode));
         return GetShortUrlResponse.of(result.shortCode(), result.originalUrl());
     }
 }

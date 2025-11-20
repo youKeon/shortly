@@ -1,8 +1,14 @@
 shortly:
   url-service:
     base-url: ${URL_SERVICE_URL:http://localhost:8081}
-    connect-timeout: 1000  # 연결 타임아웃: 1초 (Cascading Failure 방지)
-    read-timeout: 2000     # 읽기 타임아웃: 2초 (URL Service 장애 시 빠른 실패)
+    connect-timeout: 1s    # 연결 타임아웃: 1초 (Cascading Failure 방지)
+    read-timeout: 2s       # 읽기 타임아웃: 2초 (URL Service 장애 시 빠른 실패)
+  cache:
+    l1:
+      max-size: 100000
+      ttl: 10m
+    l2:
+      ttl: 30m
 
 server:
   port: 8082
@@ -135,3 +141,12 @@ logging:
   level:
     root: INFO
     com.io.shortly.redirect: INFO
+
+springdoc:
+  api-docs:
+    enabled: false
+
+management:
+  endpoint:
+    health:
+      show-details: when-authorized

@@ -25,7 +25,7 @@ public class UrlCreatedEventConsumer {
 
     @KafkaListener(
         topics = KafkaTopics.URL_CREATED,
-        groupId = KafkaTopics.REDIRECT_SERVICE_GROUP,
+        groupId = "${spring.kafka.consumer.group-id}",
         containerFactory = "kafkaListenerContainerFactory"
     )
     public void consumeUrlCreated(UrlCreatedEvent event) {

@@ -2,6 +2,7 @@ package com.io.shortly.redirect.domain;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
+import org.springframework.util.Assert;
 
 public class Redirect {
 
@@ -14,6 +15,10 @@ public class Redirect {
         final String targetUrl,
         final LocalDateTime createdAt
     ) {
+        Assert.hasText(shortCode, "Short code must not be blank");
+        Assert.hasText(targetUrl, "Target URL must not be blank");
+        Assert.notNull(createdAt, "Created at must not be null");
+
         this.shortCode = shortCode;
         this.targetUrl = targetUrl;
         this.createdAt = createdAt;
@@ -44,12 +49,13 @@ public class Redirect {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Redirect redirect = (Redirect) o;
-        return Objects.equals(shortCode, redirect.shortCode);
+        return Objects.equals(shortCode, redirect.shortCode) &&
+            Objects.equals(targetUrl, redirect.targetUrl);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(shortCode);
+        return Objects.hash(shortCode, targetUrl);
     }
 
     @Override

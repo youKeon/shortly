@@ -64,7 +64,11 @@ public class KafkaConfig {
             new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
 
-        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
+        ContainerProperties containerProperties = factory.getContainerProperties();
+        KafkaProperties.Listener listenerProps = kafkaProperties.getListener();
+        if (listenerProps != null && listenerProps.getAckMode() != null) {
+            containerProperties.setAckMode(listenerProps.getAckMode());
+        }
 
         return factory;
     }

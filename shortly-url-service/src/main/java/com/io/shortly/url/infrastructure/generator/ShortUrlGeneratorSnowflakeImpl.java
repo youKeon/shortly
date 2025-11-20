@@ -1,7 +1,7 @@
 package com.io.shortly.url.infrastructure.generator;
 
+import com.io.shortly.url.config.SnowflakeProperties;
 import com.io.shortly.url.domain.url.ShortUrlGenerator;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
@@ -15,8 +15,6 @@ public class ShortUrlGeneratorSnowflakeImpl implements ShortUrlGenerator {
     private static final long DATACENTER_ID_BITS = 5L;
     private static final long SEQUENCE_BITS = 12L;
 
-    private static final long MAX_WORKER_ID = ~(-1L << WORKER_ID_BITS);
-    private static final long MAX_DATACENTER_ID = ~(-1L << DATACENTER_ID_BITS);
     private static final long SEQUENCE_MASK = ~(-1L << SEQUENCE_BITS);
 
     private static final long WORKER_ID_SHIFT = SEQUENCE_BITS;
@@ -34,20 +32,9 @@ public class ShortUrlGeneratorSnowflakeImpl implements ShortUrlGenerator {
     private long sequence = 0L;
     private long lastTimestamp = -1L;
 
-    public ShortUrlGeneratorSnowflakeImpl(
-        @Value("${shortly.snowflake.worker-id:0}") long workerId,
-        @Value("${shortly.snowflake.datacenter-id:0}") long datacenterId
-    ) {
-        if (workerId < 0 || workerId > MAX_WORKER_ID) {
-            throw new IllegalArgumentException("workerId must be between 0 and " + MAX_WORKER_ID);
-        }
-        if (datacenterId < 0 || datacenterId > MAX_DATACENTER_ID) {
-            throw new IllegalArgumentException(
-                "datacenterId must be between 0 and " + MAX_DATACENTER_ID
-            );
-        }
-        this.workerId = workerId;
-        this.datacenterId = datacenterId;
+    public ShortUrlGeneratorSnowflakeImpl(SnowflakeProperties snowflakeProperties) {
+        this.workerId = snowflakeProperties.workerId();
+        this.datacenterId = snowflakeProperties.datacenterId();
     }
 
     @Override

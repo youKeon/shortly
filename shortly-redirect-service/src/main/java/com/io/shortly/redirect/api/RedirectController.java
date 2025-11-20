@@ -1,8 +1,5 @@
 package com.io.shortly.redirect.api;
 
-import static com.io.shortly.redirect.api.dto.RedirectRequest.GetRedirectRequest;
-import static com.io.shortly.redirect.api.dto.RedirectRequest.SHORT_CODE_REGEX;
-
 import com.io.shortly.redirect.application.RedirectService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -45,15 +42,14 @@ public class RedirectController {
         @PathVariable
         @NotBlank(message = "Short code must not be blank")
         @Pattern(
-            regexp = SHORT_CODE_REGEX,
+            regexp = "^[a-zA-Z0-9]{6,10}$",
             message = "Short code must be 6-10 alphanumeric characters"
         )
         String shortCode
     ) {
         log.debug("[Controller] 리디렉션 요청: shortCode={}", shortCode);
 
-        GetRedirectRequest request = GetRedirectRequest.of(shortCode);
-        var result = redirectService.getOriginalUrl(request.shortCode());
+        var result = redirectService.getOriginalUrl(shortCode);
 
         return ResponseEntity
             .status(HttpStatus.FOUND)

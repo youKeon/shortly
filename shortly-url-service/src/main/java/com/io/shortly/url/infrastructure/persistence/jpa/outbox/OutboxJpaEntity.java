@@ -16,6 +16,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
 @Getter
@@ -48,6 +49,10 @@ public class OutboxJpaEntity {
     @Column(name = "created_at", nullable = false, updatable = false, columnDefinition = "TIMESTAMP(6)")
     private Instant createdAt;
 
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false, columnDefinition = "TIMESTAMP(6)")
+    private Instant updatedAt;
+
     public static OutboxJpaEntity fromDomain(Outbox outbox) {
         OutboxJpaEntity entity = new OutboxJpaEntity();
         entity.aggregate = outbox.getAggregate();
@@ -56,7 +61,15 @@ public class OutboxJpaEntity {
         return entity;
     }
 
+    public void markAsProcessing() {
+        this.status = OutboxEventStatus.PROCESSING;
+    }
+
     public void markAsPublished() {
         this.status = OutboxEventStatus.PUBLISHED;
+    }
+
+    public void markAsPending() {
+        this.status = OutboxEventStatus.PENDING;
     }
 }
