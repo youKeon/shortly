@@ -13,7 +13,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     show-sql: true
     open-in-view: false
 
@@ -88,3 +88,12 @@ logging:
   level:
     root: INFO
     com.io.shortly.url: INFO
+
+springdoc:
+  api-docs:
+    enabled: false
+
+management:
+  endpoint:
+    health:
+      show-details: when-authorized

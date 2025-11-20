@@ -3,21 +3,24 @@ package com.io.shortly.url.application;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.io.shortly.shared.event.UrlCreatedEvent;
+import com.io.shortly.url.application.dto.ShortUrlCommand.FindCommand;
 import com.io.shortly.url.application.dto.ShortUrlCommand.ShortenCommand;
 import com.io.shortly.url.application.dto.ShortUrlResult.ShortenedResult;
-import com.io.shortly.url.domain.url.ShortCodeNotFoundException;
 import com.io.shortly.url.domain.outbox.Aggregate;
 import com.io.shortly.url.domain.outbox.Outbox;
 import com.io.shortly.url.domain.outbox.OutboxRepository;
 import com.io.shortly.url.domain.url.ShortCodeGenerationFailedException;
+import com.io.shortly.url.domain.url.ShortCodeNotFoundException;
 import com.io.shortly.url.domain.url.ShortUrl;
 import com.io.shortly.url.domain.url.ShortUrlGenerator;
 import com.io.shortly.url.domain.url.ShortUrlRepository;
+import java.sql.SQLException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.util.Assert;
 
 @Slf4j
 @Service
@@ -25,6 +28,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 public class UrlService {
 
     private static final int MAX_ATTEMPTS = 5;
+    private static final String UNIQUE_VIOLATION_SQL_STATE_PREFIX = "23";
 
     private final TransactionTemplate transactionTemplate;
     private final ShortUrlRepository shortUrlRepository;
@@ -33,6 +37,9 @@ public class UrlService {
     private final ObjectMapper objectMapper;
 
     public ShortenedResult shortenUrl(ShortenCommand command) {
+        Assert.notNull(command, "Command must not be null");
+        Assert.hasText(command.originalUrl(), "Original URL must not be blank");
+
         for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
             String candidate = shortUrlGenerator.generate(command.originalUrl());
 
@@ -65,7 +72,11 @@ public class UrlService {
         throw new ShortCodeGenerationFailedException(MAX_ATTEMPTS);
     }
 
-    public ShortenedResult findByShortCode(String shortCode) {
+    public ShortenedResult findByShortCode(FindCommand command) {
+        Assert.notNull(command, "Command must not be null");
+        Assert.hasText(command.shortCode(), "Short code must not be blank");
+
+        String shortCode = command.shortCode();
         ShortUrl shortUrl = shortUrlRepository.findByShortCode(shortCode)
             .orElseThrow(() -> new ShortCodeNotFoundException(shortCode));
 
@@ -101,14 +112,12 @@ public class UrlService {
 
     private boolean isDuplicatedException(DataIntegrityViolationException e) {
         Throwable cause = e.getMostSpecificCause();
-        String message = cause.getMessage();
-
-        return
-            message != null && (
-                message.contains("unique") ||
-                    message.contains("UK_") ||
-                    message.contains("duplicate key") ||
-                    message.contains("Duplicate entry")
-            );
+        if (cause instanceof SQLException) {
+            String sqlState = ((SQLException) cause).getSQLState();
+            if (sqlState != null) {
+                return sqlState.startsWith(UNIQUE_VIOLATION_SQL_STATE_PREFIX);
+            }
+        }
+        return false;
     }
 }

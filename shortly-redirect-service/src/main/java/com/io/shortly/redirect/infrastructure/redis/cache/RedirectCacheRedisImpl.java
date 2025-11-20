@@ -4,22 +4,28 @@ import static com.io.shortly.redirect.infrastructure.redis.cache.CacheLayer.L2;
 
 import com.io.shortly.redirect.domain.Redirect;
 import com.io.shortly.redirect.domain.RedirectCache;
-import com.io.shortly.redirect.infrastructure.redis.cache.CacheKeyGenerator;
-import com.io.shortly.redirect.infrastructure.redis.cache.CachedRedirect;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import java.time.Duration;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component("redisCache")
-@RequiredArgsConstructor
 public class RedirectCacheRedisImpl implements RedirectCache {
 
     private final RedisTemplate<String, CachedRedirect> redisTemplate;
+    private final Duration l2Ttl;
+
+    public RedirectCacheRedisImpl(
+        RedisTemplate<String, CachedRedirect> redisTemplate,
+        @Value("${shortly.cache.l2.ttl:30m}") Duration l2Ttl
+    ) {
+        this.redisTemplate = redisTemplate;
+        this.l2Ttl = l2Ttl;
+    }
 
     @Override
     @CircuitBreaker(name = "redisCache", fallbackMethod = "getFallback")
@@ -42,12 +48,7 @@ public class RedirectCacheRedisImpl implements RedirectCache {
         String key = CacheKeyGenerator.generateCacheKey(L2, redirect.getShortCode());
         CachedRedirect cached = CachedRedirect.from(redirect);
 
-        redisTemplate.opsForValue().set(
-            key,
-            cached,
-            L2.getTtl().toMinutes(),
-            TimeUnit.MINUTES
-        );
+        redisTemplate.opsForValue().set(key, cached, l2Ttl);
 
         log.debug("[Cache:L2] 저장 완료: shortCode={}", redirect.getShortCode());
     }

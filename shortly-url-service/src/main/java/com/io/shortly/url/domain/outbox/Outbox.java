@@ -11,6 +11,16 @@ public class Outbox {
         final String aggregateId,
         final String payload
     ) {
+        if (aggregate == null) {
+            throw new IllegalArgumentException("Aggregate must not be null");
+        }
+        if (aggregateId == null || aggregateId.isBlank()) {
+            throw new IllegalArgumentException("Aggregate ID must not be blank");
+        }
+        if (payload == null || payload.isBlank()) {
+            throw new IllegalArgumentException("Payload must not be blank");
+        }
+
         this.aggregate = aggregate;
         this.aggregateId = aggregateId;
         this.payload = payload;

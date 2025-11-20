@@ -5,6 +5,11 @@ import java.util.Objects;
 
 public class ShortUrl {
 
+    private static final int MIN_SHORT_CODE_LENGTH = 6;
+    private static final int MAX_SHORT_CODE_LENGTH = 10;
+    private static final String SHORT_CODE_PATTERN = "^[a-zA-Z0-9]+$";
+    private static final int MAX_ORIGINAL_URL_LENGTH = 2048;
+
     private final Long id;
     private final String shortCode;
     private final String originalUrl;
@@ -16,13 +21,16 @@ public class ShortUrl {
             final String originalUrl,
             final LocalDateTime createdAt
     ) {
+        if (createdAt == null) {
+            throw new IllegalArgumentException("createdAt must not be null");
+        }
         validateShortCode(shortCode);
         validateOriginalUrl(originalUrl);
 
         this.id = id;
         this.shortCode = shortCode;
         this.originalUrl = originalUrl;
-        this.createdAt = createdAt != null ? createdAt : LocalDateTime.now();
+        this.createdAt = createdAt;
     }
 
     public static ShortUrl create(String shortCode, String originalUrl) {
@@ -33,10 +41,10 @@ public class ShortUrl {
         if (shortCode == null || shortCode.isBlank()) {
             throw new IllegalArgumentException("Short code must not be blank");
         }
-        if (shortCode.length() < 6 || shortCode.length() > 10) {
-            throw new IllegalArgumentException("Short code must be 6-10 characters");
+        if (shortCode.length() < MIN_SHORT_CODE_LENGTH || shortCode.length() > MAX_SHORT_CODE_LENGTH) {
+            throw new IllegalArgumentException("Short code must be " + MIN_SHORT_CODE_LENGTH + "-" + MAX_SHORT_CODE_LENGTH + " characters");
         }
-        if (!shortCode.matches("^[a-zA-Z0-9]+$")) {
+        if (!shortCode.matches(SHORT_CODE_PATTERN)) {
             throw new IllegalArgumentException("Short code must be alphanumeric");
         }
     }
@@ -45,8 +53,8 @@ public class ShortUrl {
         if (originalUrl == null || originalUrl.isBlank()) {
             throw new IllegalArgumentException("Original URL must not be blank");
         }
-        if (originalUrl.length() > 2048) {
-            throw new IllegalArgumentException("URL must not exceed 2048 characters");
+        if (originalUrl.length() > MAX_ORIGINAL_URL_LENGTH) {
+            throw new IllegalArgumentException("URL must not exceed " + MAX_ORIGINAL_URL_LENGTH + " characters");
         }
     }
 
@@ -75,11 +83,12 @@ public class ShortUrl {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ShortUrl shortUrl = (ShortUrl) o;
-        return Objects.equals(shortCode, shortUrl.shortCode);
+        return Objects.equals(shortCode, shortUrl.shortCode) &&
+               Objects.equals(originalUrl, shortUrl.originalUrl);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(shortCode);
+        return Objects.hash(shortCode, originalUrl);
     }
 }
