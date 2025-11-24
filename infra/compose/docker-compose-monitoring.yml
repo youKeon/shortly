@@ -26,6 +26,31 @@ services:
     networks:
       - shortly-network
 
+  loki:
+    image: grafana/loki:2.9.3
+    container_name: shortly-loki
+    user: "0:0"
+    ports:
+      - "3100:3100"
+    volumes:
+      - ../monitoring/loki-config.yml:/etc/loki/local-config.yaml
+      - loki-data:/tmp/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - shortly-network
+
+  promtail:
+    image: grafana/promtail:2.9.3
+    container_name: shortly-promtail
+    volumes:
+      - ../monitoring/promtail-config.yml:/etc/promtail/config.yml
+      - ../../logs:/var/log/shortly:ro
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+      - shortly-network
+    depends_on:
+      - loki
+
 networks:
   shortly-network:
     external: true
@@ -34,3 +59,4 @@ networks:
 volumes:
   prometheus-data:
   grafana-data:
+  loki-data:
