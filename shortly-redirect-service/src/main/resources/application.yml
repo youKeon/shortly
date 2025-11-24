@@ -1,8 +1,6 @@
 shortly:
   url-service:
     base-url: ${URL_SERVICE_URL:http://localhost:8081}
-    connect-timeout: 1s    # 연결 타임아웃: 1초 (Cascading Failure 방지)
-    read-timeout: 2s       # 읽기 타임아웃: 2초 (URL Service 장애 시 빠른 실패)
   cache:
     l1:
       max-size: 100000
@@ -13,11 +11,11 @@ shortly:
 server:
   port: 8082
   tomcat:
-    mbeanregistry:
-      enabled: true
     threads:
-      max: 400
-      min-spare: 50
+      max: 300
+      min-spare: 30
+    accept-count: 300
+    max-connections: 1000
 
 spring:
   application:
@@ -26,8 +24,12 @@ spring:
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:local}
 
+  threads:
+    virtual:
+      enabled: true
+
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9093}
     consumer:
       group-id: ${KAFKA_CONSUMER_GROUP:redirect-service-group}
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
@@ -38,39 +40,25 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      acks: 1           # Leader만 확인 (클릭 이벤트는 유실 허용)
+      acks: 0
       properties:
-        max.block.ms: 1000                    # 1초 후 빠른 실패 (스레드 고갈 방지)
-        metadata.max.age.ms: 30000            # metadata를 30초마다 갱신(기본 5분) -> 빠른 장애 감지
-        request.timeout.ms: 5000              # 요청 타임아웃 5초, 실패 시 재시도
-        delivery.timeout.ms: 10000            # send() 호출부터 모든 재시도 포함 총 10초 초과 시 실패
-        linger.ms: 100                        # 배치 대기 시간 100ms (기존 10ms)
-        batch.size: 32768                     # 배치 크기 32KB (기본 16KB)
-        compression.type: lz4                 # LZ4 압축 (네트워크 부하 감소)
-        buffer.memory: 67108864               # 버퍼 메모리 64MB (기본 32MB)
+        batch.size: 32768
+        compression.type: lz4
+        linger.ms: 10
     listener:
-      ack-mode: batch                               # 배치 커밋 (처리량 우선)
+      ack-mode: batch
 
   data:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
-      timeout: 1000ms              # 연결 타임아웃
-      connect-timeout: 1000ms      # 명시적 연결 타임아웃
-      lettuce:
-        pool:
-          max-active: 50           # 최대 활성 연결
-          max-idle: 30             # 최대 유휴 연결
-          min-idle: 10             # 최소 유휴 연결
-          max-wait: 1000ms         # 연결 대기 시간
-        command-timeout: 1000ms    # 명령 실행 타임아웃
 
 logging:
   file:
     name: logs/shortly-redirect-service.log
   level:
     root: INFO
-    com.io.shortly.redirect: DEBUG
+    com.io.shortly.redirect: INFO
 
 management:
   endpoints:
@@ -96,57 +84,3 @@ springdoc:
   api-docs:
     path: /api-docs
 
-# Circuit Breaker
-resilience4j:
-  circuitbreaker:
-    configs:
-      default:
-        failure-rate-threshold: 50              # 실패율 50% 이상 시 Circuit Open
-        wait-duration-in-open-state: 30s        # Open 상태 유지 시간
-        sliding-window-size: 100                # 최근 100개 호출 기준
-        sliding-window-type: COUNT_BASED
-        permitted-number-of-calls-in-half-open-state: 5
-    instances:
-      redisCache:
-        base-config: default
-
-      # Kafka Click Event Producer Circuit Breaker
-      kafkaClickEvent:
-        failure-rate-threshold: 30              # 실패율 30% 초과 시 Open (빠른 차단)
-        slow-call-rate-threshold: 50            # 느린 호출 50% 초과 시 Open
-        slow-call-duration-threshold: 2s        # 2초 이상을 느린 호출로 간주
-        wait-duration-in-open-state: 30s        # Open 상태 30초 유지
-        permitted-number-of-calls-in-half-open-state: 5
-        sliding-window-size: 100
-        sliding-window-type: COUNT_BASED
-        minimum-number-of-calls: 10             # 최소 10개 호출 후 통계 수집
-
-      # Redis Pub/Sub Circuit Breaker
-      redisPubSub:
-        failure-rate-threshold: 50              # Pub/Sub은 50% 실패까지 허용
-        wait-duration-in-open-state: 20s        # 20초 후 재시도
-        sliding-window-size: 50
-        sliding-window-type: COUNT_BASED
-        permitted-number-of-calls-in-half-open-state: 3
-        minimum-number-of-calls: 5
-
----
-# prod
-spring:
-  config:
-    activate:
-      on-profile: prod
-
-logging:
-  level:
-    root: INFO
-    com.io.shortly.redirect: INFO
-
-springdoc:
-  api-docs:
-    enabled: false
-
-management:
-  endpoint:
-    health:
-      show-details: when-authorized
