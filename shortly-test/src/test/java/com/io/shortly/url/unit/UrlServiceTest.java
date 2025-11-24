@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.io.shortly.url.application.UrlService;
+import com.io.shortly.url.application.dto.ShortUrlCommand.FindCommand;
 import com.io.shortly.url.application.dto.ShortUrlCommand.ShortenCommand;
 import com.io.shortly.url.application.dto.ShortUrlResult.ShortenedResult;
 import com.io.shortly.url.domain.outbox.Outbox;
@@ -47,12 +48,11 @@ class UrlServiceTest {
             SuccessTransactionTemplate transactionTemplate = new SuccessTransactionTemplate();
 
             UrlService urlService = new UrlService(
-                transactionTemplate,
-                urlRepository,
-                generator,
-                outboxRepository,
-                objectMapper
-            );
+                    transactionTemplate,
+                    urlRepository,
+                    generator,
+                    outboxRepository,
+                    objectMapper);
 
             ShortenCommand command = new ShortenCommand(originalUrl);
 
@@ -80,12 +80,11 @@ class UrlServiceTest {
             RetryOnceTransactionTemplate transactionTemplate = new RetryOnceTransactionTemplate();
 
             UrlService urlService = new UrlService(
-                transactionTemplate,
-                urlRepository,
-                generator,
-                outboxRepository,
-                objectMapper
-            );
+                    transactionTemplate,
+                    urlRepository,
+                    generator,
+                    outboxRepository,
+                    objectMapper);
 
             ShortenCommand command = new ShortenCommand(originalUrl);
 
@@ -109,19 +108,18 @@ class UrlServiceTest {
             AlwaysFailTransactionTemplate transactionTemplate = new AlwaysFailTransactionTemplate();
 
             UrlService urlService = new UrlService(
-                transactionTemplate,
-                urlRepository,
-                generator,
-                outboxRepository,
-                objectMapper
-            );
+                    transactionTemplate,
+                    urlRepository,
+                    generator,
+                    outboxRepository,
+                    objectMapper);
 
             ShortenCommand command = new ShortenCommand(originalUrl);
 
             // when & then
             assertThatThrownBy(() -> urlService.shortenUrl(command))
-                .isInstanceOf(ShortCodeGenerationFailedException.class)
-                .hasMessageContaining("5");
+                    .isInstanceOf(ShortCodeGenerationFailedException.class)
+                    .hasMessageContaining("5");
 
             assertThat(generator.getGenerateCallCount()).isEqualTo(5);
         }
@@ -134,23 +132,21 @@ class UrlServiceTest {
             FakeShortUrlRepository urlRepository = new FakeShortUrlRepository();
             FakeOutboxRepository outboxRepository = new FakeOutboxRepository();
             StubObjectMapper objectMapper = new StubObjectMapper();
-            ForeignKeyConstraintTransactionTemplate transactionTemplate =
-                new ForeignKeyConstraintTransactionTemplate();
+            ForeignKeyConstraintTransactionTemplate transactionTemplate = new ForeignKeyConstraintTransactionTemplate();
 
             UrlService urlService = new UrlService(
-                transactionTemplate,
-                urlRepository,
-                generator,
-                outboxRepository,
-                objectMapper
-            );
+                    transactionTemplate,
+                    urlRepository,
+                    generator,
+                    outboxRepository,
+                    objectMapper);
 
             ShortenCommand command = new ShortenCommand(originalUrl);
 
             // when & then
             assertThatThrownBy(() -> urlService.shortenUrl(command))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("Database constraint violation");
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("Database constraint violation");
         }
 
         @Test
@@ -164,19 +160,18 @@ class UrlServiceTest {
             SuccessTransactionTemplate transactionTemplate = new SuccessTransactionTemplate();
 
             UrlService urlService = new UrlService(
-                transactionTemplate,
-                urlRepository,
-                generator,
-                outboxRepository,
-                objectMapper
-            );
+                    transactionTemplate,
+                    urlRepository,
+                    generator,
+                    outboxRepository,
+                    objectMapper);
 
             ShortenCommand command = new ShortenCommand(originalUrl);
 
             // when & then
             assertThatThrownBy(() -> urlService.shortenUrl(command))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("Failed to create outbox event");
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("Failed to create outbox event");
         }
     }
 
@@ -196,15 +191,14 @@ class UrlServiceTest {
             urlRepository.save(shortUrl);
 
             UrlService urlService = new UrlService(
-                null,
-                urlRepository,
-                null,
-                null,
-                null
-            );
+                    null,
+                    urlRepository,
+                    null,
+                    null,
+                    null);
 
             // when
-            ShortenedResult result = urlService.findByShortCode(shortCode);
+            ShortenedResult result = urlService.findByShortCode(new FindCommand(shortCode));
 
             // then
             assertThat(result).isNotNull();
@@ -220,17 +214,16 @@ class UrlServiceTest {
             FakeShortUrlRepository urlRepository = new FakeShortUrlRepository();
 
             UrlService urlService = new UrlService(
-                null,
-                urlRepository,
-                null,
-                null,
-                null
-            );
+                    null,
+                    urlRepository,
+                    null,
+                    null,
+                    null);
 
             // when & then
-            assertThatThrownBy(() -> urlService.findByShortCode(shortCode))
-                .isInstanceOf(ShortCodeNotFoundException.class)
-                .hasMessageContaining(shortCode);
+            assertThatThrownBy(() -> urlService.findByShortCode(new FindCommand(shortCode)))
+                    .isInstanceOf(ShortCodeNotFoundException.class)
+                    .hasMessageContaining(shortCode);
         }
     }
 
@@ -278,14 +271,14 @@ class UrlServiceTest {
         @Override
         public Optional<ShortUrl> findByShortCode(String shortCode) {
             return storage.stream()
-                .filter(url -> url.getShortCode().equals(shortCode))
-                .findFirst();
+                    .filter(url -> url.getShortCode().equals(shortCode))
+                    .findFirst();
         }
 
         @Override
         public boolean existsByShortCode(String shortCode) {
             return storage.stream()
-                .anyMatch(url -> url.getShortCode().equals(shortCode));
+                    .anyMatch(url -> url.getShortCode().equals(shortCode));
         }
 
         List<ShortUrl> getSavedShortUrls() {
@@ -316,7 +309,8 @@ class UrlServiceTest {
     static class FailingObjectMapper extends ObjectMapper {
         @Override
         public String writeValueAsString(Object value) throws JsonProcessingException {
-            throw new JsonProcessingException("Serialization failed") {};
+            throw new JsonProcessingException("Serialization failed") {
+            };
         }
     }
 
@@ -351,9 +345,8 @@ class UrlServiceTest {
         @Override
         public <T> T execute(TransactionCallback<T> action) {
             throw new DataIntegrityViolationException(
-                "Foreign key constraint",
-                new SQLException()
-            );
+                    "Foreign key constraint",
+                    new SQLException());
         }
     }
 }

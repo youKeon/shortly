@@ -1,6 +1,5 @@
 package com.io.shortly.url.infrastructure.generator;
 
-import com.io.shortly.url.config.SnowflakeProperties;
 import com.io.shortly.url.domain.url.ShortUrlGenerator;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
@@ -19,11 +18,9 @@ public class ShortUrlGeneratorSnowflakeImpl implements ShortUrlGenerator {
 
     private static final long WORKER_ID_SHIFT = SEQUENCE_BITS;
     private static final long DATACENTER_ID_SHIFT = SEQUENCE_BITS + WORKER_ID_BITS;
-    private static final long TIMESTAMP_LEFT_SHIFT =
-        SEQUENCE_BITS + WORKER_ID_BITS + DATACENTER_ID_BITS;
+    private static final long TIMESTAMP_LEFT_SHIFT = SEQUENCE_BITS + WORKER_ID_BITS + DATACENTER_ID_BITS;
 
-    private static final char[] BASE62 =
-        "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".toCharArray();
+    private static final char[] BASE62 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".toCharArray();
     private static final int MIN_SHORT_CODE_LENGTH = 6;
 
     private final long workerId;
@@ -32,9 +29,9 @@ public class ShortUrlGeneratorSnowflakeImpl implements ShortUrlGenerator {
     private long sequence = 0L;
     private long lastTimestamp = -1L;
 
-    public ShortUrlGeneratorSnowflakeImpl(SnowflakeProperties snowflakeProperties) {
-        this.workerId = snowflakeProperties.workerId();
-        this.datacenterId = snowflakeProperties.datacenterId();
+    public ShortUrlGeneratorSnowflakeImpl(NodeIdManager nodeIdManager) {
+        this.workerId = nodeIdManager.getWorkerId();
+        this.datacenterId = nodeIdManager.getDatacenterId();
     }
 
     @Override
@@ -42,9 +39,22 @@ public class ShortUrlGeneratorSnowflakeImpl implements ShortUrlGenerator {
         long timestamp = currentTimeMillis();
 
         if (timestamp < lastTimestamp) {
-            throw new IllegalStateException(
-                "Clock moved backwards. Refusing to generate id for " + (lastTimestamp - timestamp) + "ms"
-            );
+            long offset = lastTimestamp - timestamp;
+            if (offset <= 10) {
+                try {
+                    Thread.sleep(offset + 1);
+                    timestamp = currentTimeMillis();
+                    if (timestamp < lastTimestamp) {
+                        throw new IllegalStateException("Clock moved backwards even after waiting.");
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new IllegalStateException("Interrupted while waiting for clock to catch up", e);
+                }
+            } else {
+                throw new IllegalStateException(
+                        "Clock moved backwards. Refusing to generate id for " + offset + "ms");
+            }
         }
 
         if (timestamp == lastTimestamp) {
@@ -58,8 +68,7 @@ public class ShortUrlGeneratorSnowflakeImpl implements ShortUrlGenerator {
 
         lastTimestamp = timestamp;
 
-        long id =
-            ((timestamp - CUSTOM_EPOCH) << TIMESTAMP_LEFT_SHIFT)
+        long id = ((timestamp - CUSTOM_EPOCH) << TIMESTAMP_LEFT_SHIFT)
                 | (datacenterId << DATACENTER_ID_SHIFT)
                 | (workerId << WORKER_ID_SHIFT)
                 | sequence;
@@ -67,7 +76,7 @@ public class ShortUrlGeneratorSnowflakeImpl implements ShortUrlGenerator {
         return encodeBase62(id);
     }
 
-    private long currentTimeMillis() {
+    protected long currentTimeMillis() {
         return System.currentTimeMillis();
     }
 
