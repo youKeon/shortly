@@ -1,6 +1,6 @@
 import http from 'k6/http';
 import { check, group } from 'k6';
-import { Rate, Trend, Counter } from 'k6/metrics';
+import { Rate, Trend, Counter, Gauge } from 'k6/metrics';
 import { htmlReport } from 'https://raw.githubusercontent.com/benc-uk/k6-reporter/main/dist/bundle.js';
 import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.1/index.js';
 
@@ -32,6 +32,8 @@ const statsDuration = new Trend('stats_duration');
 const totalRequests = new Counter('total_requests');
 const totalErrors = new Counter('total_errors');
 
+const cacheHitRate = new Gauge('cache_hit_rate');
+
 export const options = {
   scenarios: {
     url_creation: {
@@ -62,6 +64,16 @@ export const options = {
       maxVUs: 500,
       exec: 'getStats',
       startTime: '20s',
+    },
+    cache_monitoring: {
+      executor: 'constant-arrival-rate',
+      rate: 1,
+      timeUnit: '5s',
+      duration: '8m',
+      preAllocatedVUs: 1,
+      maxVUs: 1,
+      exec: 'monitorCache',
+      startTime: '30s',
     },
   },
   thresholds: {
@@ -242,6 +254,22 @@ export function getStats(data) {
   });
 }
 
+export function monitorCache() {
+  const res = http.get(`${REDIRECT_SERVICE}/actuator/prometheus`);
+  if (res.status === 200) {
+    const lines = res.body.split('\n');
+    for (const line of lines) {
+      if (line.includes('cache_hit_ratio') && line.includes('cache="L1"')) {
+        const match = line.match(/cache_hit_ratio\{.*\}\s+([\d.]+)/);
+        if (match) {
+          const hitRate = parseFloat(match[1]);
+          cacheHitRate.add(hitRate);
+        }
+      }
+    }
+  }
+}
+
 export function teardown(data) {
   if (!data?.startTime) return;
   const elapsed = Math.round((Date.now() - data.startTime) / 1000);
@@ -254,11 +282,19 @@ export function handleSummary(data) {
   const pureTPS = totalReqs / TEST_DURATION_SEC;
   const tpsHit = pureTPS >= TARGET_TPS ? '✅' : '❌';
 
+  const p95 = data.metrics.http_req_duration?.values?.['p(95)'] || 0;
+  const p99 = data.metrics.http_req_duration?.values?.['p(99)'] || 0;
+  const avgCacheHitRate = data.metrics.cache_hit_rate?.values?.value || 0;
+
   console.log('\n===== 10K TPS Summary =====');
   console.log(`Target TPS: ${TARGET_TPS}`);
   console.log(`Pure Test TPS: ${pureTPS.toFixed(2)} ${tpsHit}`);
   console.log(`Total Requests: ${totalReqs}`);
   console.log(`Total Errors: ${totalErrs} (${((totalErrs / Math.max(totalReqs, 1)) * 100).toFixed(2)}%)`);
+  console.log('\n--- Performance Metrics ---');
+  console.log(`P95 Latency: ${p95.toFixed(2)}ms ${p95 < 500 ? '✅' : '❌'}`);
+  console.log(`P99 Latency: ${p99.toFixed(2)}ms ${p99 < 1000 ? '✅' : '❌'}`);
+  console.log(`Cache Hit Rate: ${(avgCacheHitRate * 100).toFixed(2)}%`);
   console.log('===========================\n');
 
   return {
@@ -269,6 +305,9 @@ export function handleSummary(data) {
       achievedTPS: pureTPS,
       totalRequests: totalReqs,
       totalErrors: totalErrs,
+      p95Latency: p95,
+      p99Latency: p99,
+      cacheHitRate: avgCacheHitRate,
       timestamp: new Date().toISOString(),
     }, null, 2),
   };
