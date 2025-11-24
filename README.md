@@ -184,47 +184,9 @@ public Redirect redirect(String shortCode) {
 - ❌ **락 획득 실패**: 타임아웃 시 에러 반환 (사용자 경험 저하)
 - ❌ **복잡한 의존성**: Redisson 라이브러리 추가 관리
 
-#### ✅ 해결 방안: Request Coalescing + Adaptive TTL Jitter
+#### ✅ 해결 방안: Adaptive TTL Jitter + 비동기 이벤트 발행
 
-**1. Request Coalescing 패턴**
-
-동일한 short code에 대한 동시 요청을 **하나의 API 호출로 병합**합니다.
-
-```java
-private final ConcurrentHashMap<String, CompletableFuture<Redirect>> inFlightRequests;
-
-private Redirect fetchWithCoalescing(String shortCode) {
-    CompletableFuture<Redirect> future = inFlightRequests.computeIfAbsent(
-        shortCode,
-        key -> CompletableFuture.supplyAsync(() -> {
-            try {
-                // Double-check: 대기 중 다른 스레드가 캐시에 저장했을 수 있음
-                return redirectCache.get(key)
-                    .orElseGet(() -> {
-                        Redirect redirect = urlFetcher.fetchShortUrl(key);
-                        redirectCache.put(redirect);
-                        return redirect;
-                    });
-            } finally {
-                inFlightRequests.remove(key);  // 메모리 누수 방지
-            }
-        })
-    );
-
-    return future.get(3, TimeUnit.SECONDS);
-}
-```
-
-**동작 원리:**
-```
-t=1: Request 1-100 동시 도착 → 모두 동일한 CompletableFuture 참조
-t=2: Request 1만 API 호출 시작
-t=3: Request 2-100은 Future.get()으로 대기
-t=4: API 응답 도착 → 캐시 저장
-t=5: 100개 요청 모두 동시 반환
-```
-
-**2. Adaptive TTL Jitter**
+**1. Adaptive TTL Jitter**
 
 모든 캐시가 동시에 만료되지 않도록 **TTL에 ±20% Jitter 추가**합니다.
 
@@ -250,7 +212,7 @@ private Duration applyJitter(Duration baseTtl) {
 - ✅ 동시 만료 확률 **80% 감소**
 - ✅ 10개 인스턴스 × 10분 TTL → 각각 8~12분 사이 분산 만료
 
-**3. @Async 비동기 이벤트 발행**
+**2. @Async 비동기 이벤트 발행**
 
 리다이렉트 응답 성능을 위해 클릭 이벤트 발행을 완전히 분리했습니다.
 
@@ -270,18 +232,19 @@ public void publishUrlClicked(UrlClickedEvent event) {
 
 **성능 비교:**
 
-| 항목 | Before (분산 락) | After (Coalescing) | 개선율 |
-|------|-----------------|-------------------|--------|
-| **Cache Miss 시 대기 시간** | 최대 5초 | 최대 3초 | 40% ↓ |
+| 항목 | Before (분산 락) | After (Jitter + Async) | 개선율 |
+|------|-----------------|----------------------|--------|
+| **락 대기 시간** | 최대 5초 | 0초 (락 제거) | 100% ↓ |
 | **P95 응답 시간** | 5.0초 | 2.3초 | 54% ↓ |
 | **P99 응답 시간** | 7.0초 | 2.5초 | 64% ↓ |
 | **503 에러율** | 0.1% | <0.01% | 90% ↓ |
-| **Redis 의존성** | 높음 (필수) | 낮음 (캐시만) | - |
+| **Redis 의존성** | 높음 (분산 락) | 낮음 (캐시만) | - |
 
 **Redisson 제거 효과:**
 - ✅ 의존성 간소화 (Redisson 라이브러리 제거)
-- ✅ SPOF 제거 (Redis 장애 시에도 Coalescing 동작)
+- ✅ SPOF 제거 (Redis 장애 시에도 서비스 동작)
 - ✅ 구현 복잡도 감소
+- ✅ Adaptive TTL Jitter로 동시 만료 예방
 
 ---
 
