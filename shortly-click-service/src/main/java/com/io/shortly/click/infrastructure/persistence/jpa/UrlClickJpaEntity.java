@@ -13,9 +13,7 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @Table(name = "url_clicks", indexes = {
-        @Index(name = "idx_short_code", columnList = "short_code"),
-        @Index(name = "idx_clicked_at", columnList = "clicked_at"),
-        @Index(name = "idx_short_code_clicked_at", columnList = "short_code,clicked_at")
+        @Index(name = "idx_short_code_clicked_at", columnList = "short_code, clicked_at DESC")
 })
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
