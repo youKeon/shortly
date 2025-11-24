@@ -20,6 +20,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     runtimeOnly 'com.mysql:mysql-connector-j'
 
+    // Redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
     // Swagger
     implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}"
 }

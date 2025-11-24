@@ -2,6 +2,7 @@ package com.io.shortly.url.integration;
 
 import com.io.shortly.url.UrlServiceApplication;
 import com.io.shortly.url.application.UrlService;
+import com.io.shortly.url.application.dto.ShortUrlCommand.FindCommand;
 import com.io.shortly.url.application.dto.ShortUrlCommand.ShortenCommand;
 import com.io.shortly.url.application.dto.ShortUrlResult.ShortenedResult;
 import com.io.shortly.url.domain.outbox.OutboxRepository;
@@ -17,20 +18,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.*;
 
-/**
- * URL Service Integration 테스트
- *
- * 로컬 Docker Compose 인프라(MySQL, Kafka)를 사용하여 통합 테스트를 수행합니다.
- *
- * 테스트 실행 전 필수 사항:
- * - docker-compose -f infra/compose/docker-compose-dev.yml up -d
- */
-@SpringBootTest(
-    classes = UrlServiceApplication.class,
-    properties = {
+@SpringBootTest(classes = UrlServiceApplication.class, properties = {
         "spring.jpa.hibernate.ddl-auto=update"
-    }
-)
+})
 @ActiveProfiles("local")
 @DisplayName("UrlService Integration 테스트")
 class UrlServiceIntegrationTest {
@@ -157,7 +147,7 @@ class UrlServiceIntegrationTest {
             ShortenedResult shortened = urlService.shortenUrl(new ShortenCommand(originalUrl));
 
             // when
-            ShortenedResult found = urlService.findByShortCode(shortened.shortCode());
+            ShortenedResult found = urlService.findByShortCode(new FindCommand(shortened.shortCode()));
 
             // then
             assertThat(found).isNotNull();
@@ -173,9 +163,9 @@ class UrlServiceIntegrationTest {
             String nonExistingCode = "NOTFND";
 
             // when & then
-            assertThatThrownBy(() -> urlService.findByShortCode(nonExistingCode))
-                .isInstanceOf(ShortCodeNotFoundException.class)
-                .hasMessageContaining(nonExistingCode);
+            assertThatThrownBy(() -> urlService.findByShortCode(new FindCommand(nonExistingCode)))
+                    .isInstanceOf(ShortCodeNotFoundException.class)
+                    .hasMessageContaining(nonExistingCode);
         }
 
         @Test
@@ -188,7 +178,7 @@ class UrlServiceIntegrationTest {
             String shortCode = shortened.shortCode();
 
             // when
-            ShortenedResult found = urlService.findByShortCode(shortCode);
+            ShortenedResult found = urlService.findByShortCode(new FindCommand(shortCode));
 
             // then
             assertThat(found.shortCode()).isEqualTo(shortCode);
@@ -198,8 +188,8 @@ class UrlServiceIntegrationTest {
                 // 소문자만 있는 경우 대문자로 조회 시 실패
                 String upperCode = shortCode.toUpperCase();
                 if (!upperCode.equals(shortCode)) {
-                    assertThatThrownBy(() -> urlService.findByShortCode(upperCode))
-                        .isInstanceOf(ShortCodeNotFoundException.class);
+                    assertThatThrownBy(() -> urlService.findByShortCode(new FindCommand(upperCode)))
+                            .isInstanceOf(ShortCodeNotFoundException.class);
                 }
             }
         }
@@ -217,7 +207,8 @@ class UrlServiceIntegrationTest {
             int urlsPerThread = 10;
             java.util.Set<String> generatedCodes = java.util.concurrent.ConcurrentHashMap.newKeySet();
             java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(threadCount);
-            java.util.concurrent.ExecutorService executor = java.util.concurrent.Executors.newFixedThreadPool(threadCount);
+            java.util.concurrent.ExecutorService executor = java.util.concurrent.Executors
+                    .newFixedThreadPool(threadCount);
 
             // when
             for (int i = 0; i < threadCount; i++) {

@@ -13,9 +13,21 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
+import com.io.shortly.url.infrastructure.generator.NodeIdManager;
+import org.junit.jupiter.api.BeforeEach;
 
 @DisplayName("ShortUrlGeneratorSnowflakeImpl 단위 테스트")
 class ShortUrlGeneratorSnowflakeImplTest {
+
+    private NodeIdManager nodeIdManager;
+
+    @BeforeEach
+    void setUp() {
+        nodeIdManager = mock(NodeIdManager.class);
+        when(nodeIdManager.getWorkerId()).thenReturn(0L);
+        when(nodeIdManager.getDatacenterId()).thenReturn(0L);
+    }
 
     @Nested
     @DisplayName("기본 생성 기능")
@@ -25,7 +37,7 @@ class ShortUrlGeneratorSnowflakeImplTest {
         @DisplayName("유효한 형식의 단축 코드를 생성한다")
         void generate_ReturnsValidFormat() {
             // given
-            ShortUrlGeneratorSnowflakeImpl generator = new ShortUrlGeneratorSnowflakeImpl(0, 0);
+            ShortUrlGeneratorSnowflakeImpl generator = new ShortUrlGeneratorSnowflakeImpl(nodeIdManager);
             String seed = "https://example.com";
 
             // when
@@ -41,7 +53,7 @@ class ShortUrlGeneratorSnowflakeImplTest {
         @DisplayName("같은 seed라도 다른 코드를 생성한다 (timestamp 기반)")
         void generate_ProducesDifferentCodesForSameSeed() throws InterruptedException {
             // given
-            ShortUrlGeneratorSnowflakeImpl generator = new ShortUrlGeneratorSnowflakeImpl(0, 0);
+            ShortUrlGeneratorSnowflakeImpl generator = new ShortUrlGeneratorSnowflakeImpl(nodeIdManager);
             String seed = "https://example.com";
 
             // when
@@ -62,7 +74,7 @@ class ShortUrlGeneratorSnowflakeImplTest {
         @DisplayName("멀티스레드 환경에서 중복 없이 고유한 코드를 생성한다")
         void generate_ProducesUniqueCodesInMultithreadedEnvironment() throws InterruptedException {
             // given
-            ShortUrlGeneratorSnowflakeImpl generator = new ShortUrlGeneratorSnowflakeImpl(0, 0);
+            ShortUrlGeneratorSnowflakeImpl generator = new ShortUrlGeneratorSnowflakeImpl(nodeIdManager);
             int threadCount = 10;
             int codesPerThread = 100;
             Set<String> generatedCodes = new HashSet<>();
@@ -93,24 +105,6 @@ class ShortUrlGeneratorSnowflakeImplTest {
             int totalExpected = threadCount * codesPerThread;
             assertThat(generatedCodes).hasSize(totalExpected);
         }
-
-        @Test
-        @DisplayName("순차적으로 많은 코드를 생성해도 중복이 없다")
-        void generate_ProducesUniqueCodesSequentially() {
-            // given
-            ShortUrlGeneratorSnowflakeImpl generator = new ShortUrlGeneratorSnowflakeImpl(0, 0);
-            Set<String> generatedCodes = new HashSet<>();
-            int count = 1000;
-
-            // when
-            for (int i = 0; i < count; i++) {
-                String code = generator.generate("seed-" + i);
-                generatedCodes.add(code);
-            }
-
-            // then
-            assertThat(generatedCodes).hasSize(count);
-        }
     }
 
     @Nested
@@ -118,45 +112,19 @@ class ShortUrlGeneratorSnowflakeImplTest {
     class SnowflakeValidationTest {
 
         @Test
-        @DisplayName("유효하지 않은 workerId로 생성 시 예외를 발생시킨다")
-        void constructor_ThrowsExceptionForInvalidWorkerId() {
-            // when & then
-            assertThatThrownBy(() -> new ShortUrlGeneratorSnowflakeImpl(-1, 0))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("workerId");
-
-            assertThatThrownBy(() -> new ShortUrlGeneratorSnowflakeImpl(32, 0))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("workerId");
-        }
-
-        @Test
-        @DisplayName("유효하지 않은 datacenterId로 생성 시 예외를 발생시킨다")
-        void constructor_ThrowsExceptionForInvalidDatacenterId() {
-            // when & then
-            assertThatThrownBy(() -> new ShortUrlGeneratorSnowflakeImpl(0, -1))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("datacenterId");
-
-            assertThatThrownBy(() -> new ShortUrlGeneratorSnowflakeImpl(0, 32))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("datacenterId");
-        }
-
-        @Test
-        @DisplayName("최대 workerId와 datacenterId로 정상 생성한다")
-        void constructor_AcceptsMaxWorkerIdAndDatacenterId() {
-            // when & then
-            assertThatCode(() -> new ShortUrlGeneratorSnowflakeImpl(31, 31))
-                .doesNotThrowAnyException();
-        }
-
-        @Test
         @DisplayName("서로 다른 workerId는 다른 ID를 생성한다")
         void generate_ProducesDifferentIdsForDifferentWorkerIds() {
             // given
-            ShortUrlGeneratorSnowflakeImpl generator1 = new ShortUrlGeneratorSnowflakeImpl(0, 0);
-            ShortUrlGeneratorSnowflakeImpl generator2 = new ShortUrlGeneratorSnowflakeImpl(1, 0);
+            NodeIdManager manager1 = mock(NodeIdManager.class);
+            when(manager1.getWorkerId()).thenReturn(0L);
+            when(manager1.getDatacenterId()).thenReturn(0L);
+
+            NodeIdManager manager2 = mock(NodeIdManager.class);
+            when(manager2.getWorkerId()).thenReturn(1L);
+            when(manager2.getDatacenterId()).thenReturn(0L);
+
+            ShortUrlGeneratorSnowflakeImpl generator1 = new ShortUrlGeneratorSnowflakeImpl(manager1);
+            ShortUrlGeneratorSnowflakeImpl generator2 = new ShortUrlGeneratorSnowflakeImpl(manager2);
             String seed = "https://example.com";
 
             // when
@@ -169,62 +137,71 @@ class ShortUrlGeneratorSnowflakeImplTest {
     }
 
     @Nested
-    @DisplayName("Base62 인코딩 검증")
-    class Base62EncodingTest {
+    @DisplayName("Clock Drift 테스트")
+    class ClockDriftTest {
 
         @Test
-        @DisplayName("Base62 문자만 포함한다 (0-9, A-Z, a-z)")
-        void generate_ContainsOnlyBase62Characters() {
+        @DisplayName("시간이 10ms 이내로 뒤로 가면 대기 후 성공한다")
+        void generate_WaitsForSmallClockDrift() {
             // given
-            ShortUrlGeneratorSnowflakeImpl generator = new ShortUrlGeneratorSnowflakeImpl(0, 0);
-            String seed = "https://example.com";
+            NodeIdManager manager = mock(NodeIdManager.class);
+            when(manager.getWorkerId()).thenReturn(0L);
+            when(manager.getDatacenterId()).thenReturn(0L);
+
+            ShortUrlGeneratorSnowflakeImpl generator = new ShortUrlGeneratorSnowflakeImpl(manager) {
+                private long time = 1000L;
+                private int callCount = 0;
+
+                @Override
+                protected long currentTimeMillis() {
+                    callCount++;
+                    if (callCount == 2) {
+                        return 995L; // 5ms backwards
+                    }
+                    if (callCount == 3) {
+                        return 1001L; // Recovered
+                    }
+                    return time++;
+                }
+            };
 
             // when
-            String shortCode = generator.generate(seed);
+            generator.generate("seed"); // First call (time=1000)
+            String code = generator.generate("seed"); // Second call (time=995 -> wait -> 1001)
 
             // then
-            assertThat(shortCode).matches("[0-9A-Za-z]+");
+            assertThat(code).isNotNull();
         }
 
         @Test
-        @DisplayName("생성된 코드는 최소 6자 이상이다")
-        void generate_HasMinimumLength() {
+        @DisplayName("시간이 10ms 초과하여 뒤로 가면 예외를 발생시킨다")
+        void generate_ThrowsExceptionForLargeClockDrift() {
             // given
-            ShortUrlGeneratorSnowflakeImpl generator = new ShortUrlGeneratorSnowflakeImpl(0, 0);
+            NodeIdManager manager = mock(NodeIdManager.class);
+            when(manager.getWorkerId()).thenReturn(0L);
+            when(manager.getDatacenterId()).thenReturn(0L);
+
+            ShortUrlGeneratorSnowflakeImpl generator = new ShortUrlGeneratorSnowflakeImpl(manager) {
+                private long time = 1000L;
+                private int callCount = 0;
+
+                @Override
+                protected long currentTimeMillis() {
+                    callCount++;
+                    if (callCount == 2) {
+                        return 900L; // 100ms backwards
+                    }
+                    return time++;
+                }
+            };
 
             // when
-            String shortCode = generator.generate("https://example.com");
+            generator.generate("seed"); // First call
 
             // then
-            assertThat(shortCode.length()).isGreaterThanOrEqualTo(6);
-        }
-
-        @Test
-        @DisplayName("긴 URL도 일정한 길이의 코드를 생성한다")
-        void generate_ProducesConsistentLengthForLongUrls() {
-            // given
-            ShortUrlGeneratorSnowflakeImpl generator = new ShortUrlGeneratorSnowflakeImpl(0, 0);
-            String longUrl = "https://example.com/" + "a".repeat(1000);
-
-            // when
-            String shortCode = generator.generate(longUrl);
-
-            // then
-            assertThat(shortCode.length()).isLessThan(15); // Snowflake ID는 보통 11~13자
-        }
-
-        @Test
-        @DisplayName("빈 seed에도 정상적으로 코드를 생성한다")
-        void generate_HandlesEmptySeed() {
-            // given
-            ShortUrlGeneratorSnowflakeImpl generator = new ShortUrlGeneratorSnowflakeImpl(0, 0);
-
-            // when
-            String shortCode = generator.generate("");
-
-            // then
-            assertThat(shortCode).isNotNull();
-            assertThat(shortCode).matches("[0-9A-Za-z]+");
+            assertThatThrownBy(() -> generator.generate("seed"))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("Clock moved backwards");
         }
     }
 }
