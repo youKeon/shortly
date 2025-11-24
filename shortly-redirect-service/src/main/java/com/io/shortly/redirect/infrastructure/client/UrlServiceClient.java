@@ -32,17 +32,15 @@ public class UrlServiceClient implements UrlFetcher {
 
         try {
             UrlLookupResponse response = urlServiceRestClient.get()
-                .uri(GET_SHORT_CODE_URI, shortCode)
-                .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, (request, responseEntity) ->
-                    log.warn("[API Fallback] 4xx 에러: status={}, shortCode={}",
-                        responseEntity.getStatusCode(), shortCode)
-                )
-                .onStatus(HttpStatusCode::is5xxServerError, (request, responseEntity) ->
-                    log.error("[API Fallback] 5xx 에러: status={}, shortCode={}",
-                        responseEntity.getStatusCode(), shortCode)
-                )
-                .body(UrlLookupResponse.class);
+                    .uri(GET_SHORT_CODE_URI, shortCode)
+                    .retrieve()
+                    .onStatus(HttpStatusCode::is4xxClientError,
+                            (request, responseEntity) -> log.debug("[API Fallback] 4xx 에러: status={}, shortCode={}",
+                                    responseEntity.getStatusCode(), shortCode))
+                    .onStatus(HttpStatusCode::is5xxServerError,
+                            (request, responseEntity) -> log.debug("[API Fallback] 5xx 에러: status={}, shortCode={}",
+                                    responseEntity.getStatusCode(), shortCode))
+                    .body(UrlLookupResponse.class);
 
             if (response == null) {
                 log.warn("[API Fallback] 응답이 null: shortCode={}", shortCode);
@@ -50,13 +48,13 @@ public class UrlServiceClient implements UrlFetcher {
             }
 
             log.info("[API Fallback] 조회 성공: shortCode={}, url={}",
-                response.shortCode(), response.originalUrl());
+                    response.shortCode(), response.originalUrl());
 
             return Redirect.create(response.shortCode(), response.originalUrl());
 
         } catch (RestClientException e) {
             log.error("[API Fallback] 호출 실패: shortCode={}, error={}",
-                shortCode, e.getMessage());
+                    shortCode, e.getMessage());
             throw new ShortCodeNotFoundException(shortCode);
         } catch (Exception e) {
             log.error("[API Fallback] 예상치 못한 오류: shortCode={}", shortCode, e);
