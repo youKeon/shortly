@@ -21,6 +21,9 @@ const shortenRate = Math.round(TARGET_TPS * TRAFFIC_RATIO.shorten);
 const statsRate = Math.max(1, Math.round(TARGET_TPS * TRAFFIC_RATIO.stats));
 const redirectRate = TARGET_TPS - shortenRate - statsRate;
 
+// VU Multiplier for scaling (default: 1.0, can be set via environment variable)
+const VU_MULTIPLIER = parseFloat(__ENV.K6_VU_MULTIPLIER || '1.0');
+
 const shortenSuccessRate = new Rate('shorten_success_rate');
 const redirectSuccessRate = new Rate('redirect_success_rate');
 const statsSuccessRate = new Rate('stats_success_rate');
@@ -33,14 +36,19 @@ const totalRequests = new Counter('total_requests');
 const totalErrors = new Counter('total_errors');
 
 export const options = {
+  // HTTP Keep-Alive 활성화 (연결 재사용으로 TCP handshake 오버헤드 제거)
+  // 예상 효과: http_req_connecting 140ms -> 5ms, 포트 고갈 방지
+  insecureSkipTLSVerify: true,
+  noConnectionReuse: false,  // Keep-Alive 활성화 (기본값이지만 명시)
+
   scenarios: {
     url_creation: {
       executor: 'constant-arrival-rate',
       rate: shortenRate,
       timeUnit: '1s',
       duration: '6m',
-      preAllocatedVUs: 150,
-      maxVUs: 600,
+      preAllocatedVUs: Math.ceil(100 * VU_MULTIPLIER),        // Keep-Alive로 VU 수 대폭 감소
+      maxVUs: Math.ceil(200 * VU_MULTIPLIER),                 // 150 → 200 (VU 부족 해결)
       exec: 'shortenUrl',
     },
     redirection: {
@@ -48,8 +56,8 @@ export const options = {
       rate: redirectRate,
       timeUnit: '1s',
       duration: '6m',
-      preAllocatedVUs: 1200,
-      maxVUs: 6000,
+      preAllocatedVUs: Math.ceil(800 * VU_MULTIPLIER),        // Keep-Alive로 VU 수 대폭 감소 (6000 -> 800)
+      maxVUs: Math.ceil(1200 * VU_MULTIPLIER),                // 동적 확장 여유분
       exec: 'redirect',
       startTime: '10s',
     },
@@ -58,8 +66,8 @@ export const options = {
       rate: statsRate,
       timeUnit: '1s',
       duration: '6m',
-      preAllocatedVUs: 80,
-      maxVUs: 300,
+      preAllocatedVUs: Math.ceil(50 * VU_MULTIPLIER),         // Keep-Alive로 VU 수 감소
+      maxVUs: Math.ceil(100 * VU_MULTIPLIER),                 // 동적 확장 여유분
       exec: 'getStats',
       startTime: '20s',
     },
@@ -77,9 +85,10 @@ export const options = {
   summaryTrendStats: ['avg', 'min', 'med', 'max', 'p(90)', 'p(95)', 'p(99)'],
 };
 
-const URL_SERVICE = __ENV.URL_SERVICE || 'http://localhost:8081';
-const REDIRECT_SERVICE = __ENV.REDIRECT_SERVICE || 'http://localhost:8082';
-const CLICK_SERVICE = __ENV.CLICK_SERVICE || 'http://localhost:8083';
+const TARGET_HOST = __ENV.TARGET_HOST || 'http://localhost';
+const URL_SERVICE = __ENV.URL_SERVICE || `${TARGET_HOST}:8081`;
+const REDIRECT_SERVICE = __ENV.REDIRECT_SERVICE || `${TARGET_HOST}:8082`;
+const CLICK_SERVICE = __ENV.CLICK_SERVICE || `${TARGET_HOST}:8083`;
 
 const POPULAR_SITES = [
   'https://github.com',
@@ -129,7 +138,7 @@ export function setup() {
         if (body.shortCode) {
           codes.push(body.shortCode);
         }
-      } catch (e) {}
+      } catch (e) { }
     }
   }
 
@@ -177,7 +186,7 @@ export function shortenUrl(data) {
       try {
         const code = JSON.parse(res.body).shortCode;
         globalShortCodes.push(code);
-      } catch (e) {}
+      } catch (e) { }
     }
   });
 }
@@ -194,7 +203,10 @@ export function redirect(data) {
   group('Redirect', () => {
     const shortCode = globalShortCodes[Math.floor(Math.random() * globalShortCodes.length)];
     const start = Date.now();
-    const res = http.get(`${REDIRECT_SERVICE}/r/${shortCode}`, { redirects: 0 });
+    const res = http.get(`${REDIRECT_SERVICE}/r/${shortCode}`, {
+      redirects: 0,
+      timeout: '5s'
+    });
     const duration = Date.now() - start;
 
     const success = check(res, {
