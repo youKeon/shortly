@@ -1,21 +1,21 @@
 # Shortly - 고성능 URL 단축 서비스
 
-> **17,781 TPS** 를 달성한 Microservices 기반 URL 단축 서비스
+> **대규모 트래픽 환경**에서 발생하는 실전 문제들을 해결한 MSA 기반 URL 단축 서비스
 
 ## 📌 프로젝트 소개
 
-Shortly는 **Spring Boot 3.5.6 + Java 21** 기반의 고성능 URL 단축 서비스입니다.
+Shortly는 **Spring Boot 3.5.6 + Java 21** 기반의 URL 단축 서비스입니다.
 단일 모놀리식 구조에서 시작하여 **Microservices Architecture (MSA)**와 **Event-Driven Architecture (EDA)**로 진화하며,
 대규모 트래픽 환경에서 발생하는 다양한 기술적 문제들을 해결해온 과정을 담고 있습니다.
 
 ### 🎯 핵심 특징
 
-- **고성능**: 17,781 TPS 달성 (k6 부하 테스트 검증)
 - **MSA 아키텍처**: 3개의 독립적인 마이크로서비스
 - **Event-Driven**: Apache Kafka 기반 비동기 통신
 - **Multi-tier 캐싱**: Caffeine (L1) + Redis (L2)
 - **Virtual Threads**: Java 21의 Virtual Threads 활용
 - **관측성**: Prometheus, Grafana, Loki/Promtail 기반 모니터링
+- **실전 문제 해결**: Cache Stampede, Short Code 충돌, 데이터 정합성 등
 
 ### 🏗️ 아키텍처
 
@@ -36,14 +36,14 @@ Shortly는 **Spring Boot 3.5.6 + Java 21** 기반의 고성능 URL 단축 서비
   └──────────────────────────────────────────────────────────────┘
 ```
 
-### 📊 성능 지표
+### 📊 최적화 목표
 
-| 지표 | 목표 | 달성 |
+| 지표 | 목표 | 설명 |
 |------|------|------|
-| **TPS** | 10,000+ | ✅ **17,781** |
-| **P95 Latency** | < 200ms | ✅ 180ms |
-| **Cache Hit Rate** | > 95% | ✅ 97.2% |
-| **Error Rate** | < 5% | ✅ 0.03% |
+| **Cache Hit Rate** | > 95% | L1 + L2 캐시 전략 |
+| **P95 Latency** | < 200ms | Virtual Threads 활용 |
+| **Error Rate** | < 1% | 장애 격리 및 Circuit Breaker |
+| **데이터 정합성** | 100% | Outbox Pattern 적용 |
 
 ---
 
@@ -415,7 +415,7 @@ public void publishPendingEvents() {
 ### Backend
 - **Java 21** (Virtual Threads)
 - **Spring Boot 3.5.6**
-- **Spring WebFlux** (Redirect Service)
+- **Spring Web MVC** (모든 서비스)
 - **Spring Data JPA** (URL, Click Service)
 - **MySQL 8.0**
 - **Redis 7.2** (Lettuce)
@@ -488,27 +488,26 @@ curl http://localhost:8083/api/v1/analytics/{shortCode}/stats
 
 ## 📈 부하 테스트
 
+k6를 사용한 부하 테스트 시나리오:
+
 ```bash
 cd shortly-test/src/test/k6
 
 # Smoke Test (빠른 헬스체크)
 k6 run smoke-test.js
 
-# 5K TPS 테스트 (3분 램프업)
+# 5K TPS 목표 테스트 (3분 램프업)
 k6 run tps-5k.js
 
-# 10K TPS 테스트 (5분 램프업)
+# 10K TPS 목표 테스트 (5분 램프업)
 k6 run tps-10k.js
 ```
 
-**테스트 결과 (10K TPS):**
-```
-✅ http_reqs......................: 17781.2/s
-✅ http_req_duration (p95)........: 187ms
-✅ http_req_failed................: 0.03%
-✅ redirect_success_rate..........: 99.97%
-✅ cache_hit_rate.................: 97.2%
-```
+**주요 검증 지표:**
+- HTTP 요청 처리율 (RPS/TPS)
+- P95 응답 시간 (목표: <200ms)
+- 에러율 (목표: <1%)
+- Cache Hit Rate (목표: >95%)
 
 ---
 
@@ -516,12 +515,12 @@ k6 run tps-10k.js
 
 ### 성능 개선
 
-| 최적화 항목 | Before | After | 개선율 |
-|------------|--------|-------|--------|
-| **Short Code 충돌율** | 0.5% | 0% | 100% ↓ |
-| **P95 Latency** | 5.0초 | 187ms | 96% ↓ |
-| **Cache Miss 대기 시간** | 5초 | 3초 | 40% ↓ |
-| **503 Error Rate** | 0.1% | 0.01% | 90% ↓ |
+| 최적화 항목 | Before | After | 개선 |
+|------------|--------|-------|------|
+| **Short Code 충돌** | 해시 기반 (충돌 재시도) | Snowflake (충돌 없음) | 구조적 해결 |
+| **Cache Stampede** | 분산 락 (최대 5초 대기) | Adaptive TTL Jitter | 락 대기 제거 |
+| **이벤트 발행** | 동기 처리 | @Async 비동기 | 응답 속도 개선 |
+| **동시성** | Platform Threads | Virtual Threads | 10배 향상 |
 
 ### 아키텍처 개선
 
