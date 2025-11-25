@@ -41,10 +41,12 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       acks: 0
+      buffer-memory: 33554432 # 32MB
       properties:
-        batch.size: 32768
+        batch.size: 32768 # 32KB
         compression.type: lz4
         linger.ms: 10
+        spring.json.add.type.headers: false
     listener:
       ack-mode: batch
 

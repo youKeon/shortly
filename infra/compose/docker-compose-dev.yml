@@ -1,35 +1,81 @@
 services:
+  # URL Service - Primary
   mysql-url:
     image: mysql:8.0
-    container_name: shortly-mysql-url
+    container_name: shortly-mysql-url-primary
     environment:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: shortly_url
     ports:
       - "3307:3306"
     volumes:
-      - mysql-url-data:/var/lib/mysql
+      - mysql-url-primary-data:/var/lib/mysql
+      - ../mysql/primary-url.cnf:/etc/mysql/conf.d/replication.cnf
     networks:
       - shortly-network
+    command: --default-authentication-plugin=mysql_native_password
 
+  # URL Service - Replication
+  mysql-url-replica:
+    image: mysql:8.0
+    container_name: shortly-mysql-url-replica
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: shortly_url
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql-url-replica-data:/var/lib/mysql
+      - ../mysql/replica-url.cnf:/etc/mysql/conf.d/replication.cnf
+    networks:
+      - shortly-network
+    command: --default-authentication-plugin=mysql_native_password
+    depends_on:
+      - mysql-url
+
+  # Click Service - Primary
   mysql-click:
     image: mysql:8.0
-    container_name: shortly-mysql-click
+    container_name: shortly-mysql-click-primary
     environment:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: shortly_click
     ports:
       - "3309:3306"
     volumes:
-      - mysql-click-data:/var/lib/mysql
+      - mysql-click-primary-data:/var/lib/mysql
+      - ../mysql/primary-click.cnf:/etc/mysql/conf.d/replication.cnf
     networks:
       - shortly-network
+    command: --default-authentication-plugin=mysql_native_password
+
+  # Click Service - Replication
+  mysql-click-replica:
+    image: mysql:8.0
+    container_name: shortly-mysql-click-replica
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: shortly_click
+    ports:
+      - "3310:3306"
+    volumes:
+      - mysql-click-replica-data:/var/lib/mysql
+      - ../mysql/replica-click.cnf:/etc/mysql/conf.d/replication.cnf
+    networks:
+      - shortly-network
+    command: --default-authentication-plugin=mysql_native_password
+    depends_on:
+      - mysql-click
 
   redis:
     image: redis:7-alpine
     container_name: shortly-redis
     ports:
       - "6379:6379"
+    volumes:
+      - ../redis/redis.conf:/usr/local/etc/redis/redis.conf
+      - redis-data:/data
+    command: redis-server /usr/local/etc/redis/redis.conf
     networks:
       - shortly-network
 
@@ -59,5 +105,8 @@ networks:
     name: shortly-network
 
 volumes:
-  mysql-url-data:
-  mysql-click-data:
+  mysql-url-primary-data:
+  mysql-url-replica-data:
+  mysql-click-primary-data:
+  mysql-click-replica-data:
+  redis-data:

@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -22,6 +23,7 @@ public class UrlClickedEventConsumer {
     private final UrlClickRepository urlClickRepository;
     private final ClickEventDLQPublisher dlqPublisher;
 
+    @Transactional
     @KafkaListener(
             topics = KafkaTopics.URL_CLICKED,
             groupId = KafkaTopics.CLICK_SERVICE_GROUP,

@@ -35,15 +35,11 @@ public class RedirectService {
     }
 
     private Redirect fetchAndCache(String shortCode) {
-        log.debug("[Cache Miss] API 호출: shortCode={}", shortCode);
-
         // URL Service API 호출
         Redirect redirect = urlFetcher.fetchShortUrl(shortCode);
 
         // L1, L2 캐시 저장 (Adaptive TTL Jitter 적용됨)
         redirectCache.put(redirect);
-
-        log.info("[Cache Warmed] shortCode={}", shortCode);
         return redirect;
     }
 }
