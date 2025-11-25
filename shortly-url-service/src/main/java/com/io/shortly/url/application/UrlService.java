@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.Assert;
 
@@ -72,6 +73,7 @@ public class UrlService {
         throw new ShortCodeGenerationFailedException(MAX_ATTEMPTS);
     }
 
+    @Transactional(readOnly = true)
     public ShortenedResult findByShortCode(FindCommand command) {
         Assert.notNull(command, "Command must not be null");
         Assert.hasText(command.shortCode(), "Short code must not be blank");
