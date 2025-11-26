@@ -8,17 +8,16 @@ dependencies {
     // Kafka
     api 'org.springframework.kafka:spring-kafka'
 
-    // Jackson
-    api 'com.fasterxml.jackson.core:jackson-databind'
-    api 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+    // Spring Boot
+    api 'org.springframework.boot:spring-boot-starter-web'
+    api 'org.springframework.boot:spring-boot-starter-actuator'
+    api 'org.springframework.boot:spring-boot-starter-validation'
 
-    // Spring Web
-    compileOnly 'org.springframework.boot:spring-boot-starter-web'
-    compileOnly 'org.springframework.boot:spring-boot-starter-webflux'
+    // Monitoring
+    api 'io.micrometer:micrometer-registry-prometheus'
 
-    // Micrometer
-    api 'io.micrometer:micrometer-tracing'
-    api 'io.micrometer:micrometer-tracing-bridge-brave'
+    // Swagger
+    api "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}"
 
     // Test
     testImplementation 'org.springframework.kafka:spring-kafka-test'
