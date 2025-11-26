@@ -23,7 +23,7 @@
 ## 아키텍처
 
 ### 시스템 아키텍처
-<img width="2360" height="1072" alt="Image" src="https://github.com/user-attachments/assets/ea6599e3-154b-467f-bb00-b99c802a24e1" />
+<img width="2360" height="1071" alt="arch" src="https://github.com/user-attachments/assets/25b3645b-df59-42bf-bfdc-651ea3386a0e" />
 
 ### 워크플로우
 
