@@ -1,6 +1,6 @@
 package com.io.shortly.url.api.support;
 
-import com.io.shortly.shared.exception.ErrorCode;
+import com.io.shortly.shared.api.support.error.ErrorCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
