@@ -1,68 +1,28 @@
 package com.io.shortly.redirect.api.support;
 
-import com.io.shortly.redirect.domain.ShortCodeNotFoundException;
+import com.io.shortly.shared.api.support.BaseGlobalExceptionHandler;
+import com.io.shortly.shared.api.support.error.CommonErrorCode;
+import com.io.shortly.shared.api.support.error.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-@Slf4j
 @RestControllerAdvice
-public class GlobalExceptionHandler {
+public class GlobalExceptionHandler extends BaseGlobalExceptionHandler {
 
-    @ExceptionHandler(ShortCodeNotFoundException.class)
+    @ExceptionHandler(com.io.shortly.redirect.domain.ShortCodeNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleShortCodeNotFound(
-        ShortCodeNotFoundException ex,
-        HttpServletRequest request
-    ) {
-        log.warn("[Exception] 단축 코드를 찾을 수 없음: {}", ex.getShortCode());
-
-        ErrorResponse response = ErrorResponse.of(
-            RedirectErrorCode.SHORT_CODE_NOT_FOUND,
-            request.getRequestURI()
-        );
-
-        return ResponseEntity
-            .status(HttpStatus.NOT_FOUND)
-            .body(response);
+            com.io.shortly.redirect.domain.ShortCodeNotFoundException ex,
+            HttpServletRequest request) {
+        return createErrorResponse(ex, ex.getErrorCode(), request);
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<ErrorResponse> handleConstraintViolation(
-        ConstraintViolationException ex,
-        HttpServletRequest request
-    ) {
-        log.warn("[Exception] 유효성 검증 실패: {}", ex.getMessage());
-
-        ErrorResponse response = ErrorResponse.of(
-            RedirectErrorCode.INVALID_SHORT_CODE.getCode(),
-            ex.getMessage(),
-            request.getRequestURI()
-        );
-
-        return ResponseEntity
-            .status(HttpStatus.BAD_REQUEST)
-            .body(response);
-    }
-
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGenericException(
-        Exception ex,
-        HttpServletRequest request
-    ) {
-        log.error("[Exception] 예상치 못한 오류 발생", ex);
-
-        ErrorResponse response = ErrorResponse.of(
-            "INTERNAL_ERROR",
-            "An unexpected error occurred",
-            request.getRequestURI()
-        );
-
-        return ResponseEntity
-            .status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body(response);
+    public ResponseEntity<ErrorResponse> handleConstraintViolation(ConstraintViolationException ex,
+            HttpServletRequest request) {
+        return createErrorResponse(ex, CommonErrorCode.VALIDATION_FAILED, request);
     }
 }

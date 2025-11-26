@@ -1,4 +1,4 @@
-package com.io.shortly.shared.exception;
+package com.io.shortly.shared.api.support.error;
 
 import lombok.Getter;
 
