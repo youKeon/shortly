@@ -80,7 +80,7 @@ public class UrlService {
 
         String shortCode = command.shortCode();
         ShortUrl shortUrl = shortUrlRepository.findByShortCode(shortCode)
-            .orElseThrow(() -> new ShortCodeNotFoundException(shortCode));
+                .orElseThrow(() -> new ShortCodeNotFoundException(shortCode));
 
         log.debug("URL found: {} -> {}", shortCode, shortUrl.getOriginalUrl());
 
@@ -90,17 +90,15 @@ public class UrlService {
     private void saveEvent(ShortUrl shortUrl) {
         try {
             UrlCreatedEvent event = UrlCreatedEvent.of(
-                shortUrl.getShortCode(),
-                shortUrl.getOriginalUrl()
-            );
+                    shortUrl.getShortCode(),
+                    shortUrl.getOriginalUrl());
 
             String payload = objectMapper.writeValueAsString(event);
 
             Outbox outbox = Outbox.create(
-                Aggregate.URL,
-                shortUrl.getShortCode(),
-                payload
-            );
+                    Aggregate.URL,
+                    shortUrl.getShortCode(),
+                    payload);
 
             outboxRepository.save(outbox);
 

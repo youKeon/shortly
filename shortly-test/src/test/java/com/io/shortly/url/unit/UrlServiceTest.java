@@ -328,7 +328,8 @@ class UrlServiceTest {
         public <T> T execute(TransactionCallback<T> action) {
             callCount++;
             if (callCount == 1) {
-                throw new DataIntegrityViolationException("Duplicate entry 'abc123'");
+                throw new DataIntegrityViolationException("Duplicate entry 'abc123'",
+                        new SQLException("Duplicate", "23000"));
             }
             return action.doInTransaction(null);
         }
@@ -337,7 +338,7 @@ class UrlServiceTest {
     static class AlwaysFailTransactionTemplate extends TransactionTemplate {
         @Override
         public <T> T execute(TransactionCallback<T> action) {
-            throw new DataIntegrityViolationException("Duplicate entry");
+            throw new DataIntegrityViolationException("Duplicate entry", new SQLException("Duplicate", "23000"));
         }
     }
 
