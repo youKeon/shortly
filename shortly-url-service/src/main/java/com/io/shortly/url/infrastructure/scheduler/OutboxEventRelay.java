@@ -38,7 +38,7 @@ public class OutboxEventRelay {
     @Scheduled(fixedDelay = ONE_SECOND)
     public void relayPendingEvents() {
         List<OutboxJpaEntity> events = outboxJpaRepository.findPendingEvents(
-            PageRequest.of(0, BATCH_SIZE)
+                PageRequest.of(0, BATCH_SIZE)
         );
 
         if (events.isEmpty()) {
@@ -53,23 +53,22 @@ public class OutboxEventRelay {
             executor.submit(() -> {
                 try {
                     UrlCreatedEvent urlCreatedEvent = objectMapper.readValue(
-                        event.getPayload(),
-                        UrlCreatedEvent.class
+                            event.getPayload(),
+                            UrlCreatedEvent.class
                     );
 
                     kafkaTemplate.send(
-                        KafkaTopics.URL_CREATED,
-                        event.getAggregateId(),
-                        urlCreatedEvent
-                    ).whenComplete((result, ex) -> {
-                        if (ex == null) {
-                            event.markAsPublished();
-                            outboxJpaRepository.save(event);
-                        } else {
-                            event.markAsPending();
-                            outboxJpaRepository.save(event);
-                        }
-                    });
+                            KafkaTopics.URL_CREATED,
+                            event.getAggregateId(),
+                            urlCreatedEvent).whenComplete((result, ex) -> {
+                                if (ex == null) {
+                                    event.markAsPublished();
+                                    outboxJpaRepository.save(event);
+                                } else {
+                                    event.markAsPending();
+                                    outboxJpaRepository.save(event);
+                                }
+                            });
 
                 } catch (Exception e) {
                     event.markAsPending();
