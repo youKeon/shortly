@@ -7,21 +7,7 @@ group = 'com.io.shortly'
 dependencies {
   implementation project(':shortly-shared-kernel')
 
-  // Spring Boot
-  implementation 'org.springframework.boot:spring-boot-starter-web'
-  implementation 'org.springframework.boot:spring-boot-starter-actuator'
-  implementation 'org.springframework.boot:spring-boot-starter-validation'
-
-  // Micrometer
-  runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
-
   // Cache
   implementation 'org.springframework.boot:spring-boot-starter-data-redis'
   implementation 'com.github.ben-manes.caffeine:caffeine'
-
-  // Swagger (MVC)
-  implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}"
-
-  // Kafka
-  implementation 'org.springframework.kafka:spring-kafka'
 }
