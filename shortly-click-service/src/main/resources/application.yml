@@ -1,3 +1,12 @@
+server:
+  port: 8083
+  tomcat:
+    threads:
+      max: 300
+      min-spare: 30
+    accept-count: 300
+    max-connections: 1000
+
 spring:
   application:
     name: shortly-click-service
@@ -31,20 +40,14 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       auto-offset-reset: earliest
+      max-poll-records: 1000
+      max-poll-interval: 300000 # 5분
       properties:
         spring.json.trusted.packages: "com.io.shortly.shared.event"
+        max.poll.interval.ms: 300000
     listener:
       ack-mode: batch
       concurrency: 3
-
-server:
-  port: 8083
-  tomcat:
-    threads:
-      max: 300
-      min-spare: 30
-    accept-count: 300
-    max-connections: 1000
 
 logging:
   file:
