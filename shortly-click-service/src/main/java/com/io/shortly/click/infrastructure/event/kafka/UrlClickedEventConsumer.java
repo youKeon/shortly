@@ -5,13 +5,11 @@ import com.io.shortly.click.domain.UrlClick;
 import com.io.shortly.click.domain.UrlClickRepository;
 import com.io.shortly.shared.event.UrlClickedEvent;
 import com.io.shortly.shared.kafka.KafkaTopics;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -23,7 +21,11 @@ public class UrlClickedEventConsumer {
     private final ClickEventDLQPublisher dlqPublisher;
 
     @Transactional
-    @KafkaListener(topics = KafkaTopics.URL_CLICKED, groupId = KafkaTopics.CLICK_SERVICE_GROUP, containerFactory = "kafkaListenerContainerFactory")
+    @KafkaListener(
+        topics = KafkaTopics.URL_CLICKED,
+        groupId = KafkaTopics.CLICK_SERVICE_GROUP,
+        containerFactory = "kafkaListenerContainerFactory"
+    )
     public void consumeUrlClickedBatch(List<UrlClickedEvent> events) {
         if (events.isEmpty()) {
             return;
@@ -31,11 +33,11 @@ public class UrlClickedEventConsumer {
 
         try {
             List<UrlClick> urlClicks = events.stream()
-                    .map(event -> UrlClick.create(
-                            event.getShortCode(),
-                            event.getOriginalUrl())
-                    )
-                    .toList();
+                .map(event -> UrlClick.create(
+                    event.getShortCode(),
+                    event.getOriginalUrl())
+                )
+                .toList();
 
             urlClickRepository.saveAll(urlClicks);
         } catch (Exception e) {
