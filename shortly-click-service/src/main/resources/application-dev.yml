@@ -1,0 +1,33 @@
+spring:
+  datasource:
+    # Primary DataSource (쓰기 전용)
+    primary:
+      jdbc-url: jdbc:mysql://mysql-click:3306/shortly_click?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
+      username: root
+      password: password
+      hikari:
+        maximum-pool-size: 50
+        minimum-idle: 20
+        connection-timeout: 20000
+        idle-timeout: 300000
+        max-lifetime: 1800000
+        leak-detection-threshold: 60000
+        pool-name: ClickPrimaryHikariPool
+
+    # Replica DataSource (읽기 전용)
+    replica:
+      jdbc-url: jdbc:mysql://mysql-click-replica:3306/shortly_click?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
+      username: root
+      password: password
+      hikari:
+        maximum-pool-size: 40
+        minimum-idle: 15
+        connection-timeout: 20000
+        idle-timeout: 300000
+        max-lifetime: 1800000
+        leak-detection-threshold: 60000
+        read-only: true
+        pool-name: ClickReplicaHikariPool
+
+  kafka:
+    bootstrap-servers: kafka:9092

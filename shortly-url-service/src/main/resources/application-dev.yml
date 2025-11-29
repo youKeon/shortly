@@ -1,0 +1,31 @@
+spring:
+  datasource:
+    primary:
+      jdbc-url: jdbc:mysql://mysql-url:3306/shortly_url?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
+      username: root
+      password: password
+      hikari:
+        maximum-pool-size: 100
+        minimum-idle: 40
+        connection-timeout: 20000
+        idle-timeout: 300000
+        max-lifetime: 1800000
+        leak-detection-threshold: 60000
+        pool-name: UrlPrimaryHikariPool
+
+    replica:
+      jdbc-url: jdbc:mysql://mysql-url-replica:3306/shortly_url?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
+      username: root
+      password: password
+      hikari:
+        maximum-pool-size: 80
+        minimum-idle: 30
+        connection-timeout: 20000
+        idle-timeout: 300000
+        max-lifetime: 1800000
+        leak-detection-threshold: 60000
+        read-only: true
+        pool-name: UrlReplicaHikariPool
+
+  kafka:
+    bootstrap-servers: kafka:9092
