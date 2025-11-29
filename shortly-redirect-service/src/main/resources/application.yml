@@ -1,6 +1,4 @@
 shortly:
-  url-service:
-    base-url: ${URL_SERVICE_URL:http://localhost:8081}
   cache:
     l1:
       max-size: 100000
@@ -28,8 +26,28 @@ spring:
     virtual:
       enabled: true
 
+  data:
+    redis:
+      lettuce:
+        pool:
+          # 최대 연결 수 (Tomcat max threads와 동일하게 설정)
+          max-active: 300
+          # 유휴 연결 최대 수
+          max-idle: 100
+          # 유휴 연결 최소 수 (사전 할당)
+          min-idle: 50
+          # 연결 대기 최대 시간 (밀리초)
+          max-wait: 1000ms
+          # 유휴 연결 제거 주기
+          time-between-eviction-runs: 60s
+        # 연결 타임아웃
+        shutdown-timeout: 100ms
+      # 커맨드 타임아웃 (Redis 명령 실행 제한 시간)
+      timeout: 1000ms
+      # 연결 타임아웃
+      connect-timeout: 2000ms
+
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9093}
     consumer:
       group-id: ${KAFKA_CONSUMER_GROUP:redirect-service-group}
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
@@ -38,6 +56,7 @@ spring:
       max-poll-records: 1000
       properties:
         spring.json.trusted.packages: "com.io.shortly.shared.event"
+        spring.json.value.default.type: "com.io.shortly.shared.event.UrlCreatedEvent"
         max.poll.interval.ms: 300000
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
@@ -51,11 +70,6 @@ spring:
         spring.json.add.type.headers: false
     listener:
       ack-mode: batch
-
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
 
 logging:
   file:
