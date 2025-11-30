@@ -21,11 +21,10 @@ public class RedirectCacheRedisImpl implements RedirectCache {
     private final double jitterMax;
 
     public RedirectCacheRedisImpl(
-        RedisTemplate<String, CachedRedirect> redisTemplate,
-        @Value("${shortly.cache.l2.ttl:30m}") Duration l2Ttl,
-        @Value("${shortly.cache.l2.jitter-min:0.8}") double jitterMin,
-        @Value("${shortly.cache.l2.jitter-max:1.2}") double jitterMax
-    ) {
+            RedisTemplate<String, CachedRedirect> redisTemplate,
+            @Value("${shortly.cache.l2.ttl:30m}") Duration l2Ttl,
+            @Value("${shortly.cache.l2.jitter-min:0.8}") double jitterMin,
+            @Value("${shortly.cache.l2.jitter-max:1.2}") double jitterMax) {
         this.redisTemplate = redisTemplate;
         this.l2Ttl = l2Ttl;
         this.jitterMin = jitterMin;
@@ -39,16 +38,16 @@ public class RedirectCacheRedisImpl implements RedirectCache {
             CachedRedirect cached = redisTemplate.opsForValue().get(key);
 
             if (cached != null) {
-                log.debug("[Cache:L2] 히트: shortCode={}", shortCode);
+                log.info("[Cache:L2] HIT - shortCode={}, targetUrl={}", shortCode, cached.targetUrl());
                 return Optional.of(cached.toDomain());
             }
 
-            log.debug("[Cache:L2] 미스: shortCode={}", shortCode);
+            log.info("[Cache:L2] MISS - shortCode={}", shortCode);
             return Optional.empty();
 
         } catch (Exception e) {
             log.warn("[Cache:L2] 조회 실패: shortCode={}, error={}",
-                shortCode, e.getMessage());
+                    shortCode, e.getMessage());
             return Optional.empty();
         }
     }
@@ -63,12 +62,23 @@ public class RedirectCacheRedisImpl implements RedirectCache {
             redisTemplate.opsForValue().set(key, cached, ttlWithJitter);
 
             log.debug("[Cache:L2] 저장 완료: shortCode={}, ttl={}",
-                redirect.getShortCode(), ttlWithJitter);
+                    redirect.getShortCode(), ttlWithJitter);
 
         } catch (Exception e) {
             log.warn("[Cache:L2] 저장 실패: shortCode={}, error={}",
-                redirect.getShortCode(), e.getMessage());
+                    redirect.getShortCode(), e.getMessage());
         }
+    }
+
+    @Override
+    public Redirect get(String shortCode, java.util.function.Function<String, Redirect> loader) {
+        return get(shortCode).orElseGet(() -> {
+            Redirect loaded = loader.apply(shortCode);
+            if (loaded != null) {
+                put(loaded);
+            }
+            return loaded;
+        });
     }
 
     private Duration applyJitter(Duration baseTtl) {
