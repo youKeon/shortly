@@ -6,7 +6,6 @@ import com.io.shortly.shared.event.UrlCreatedEvent;
 import com.io.shortly.shared.kafka.KafkaTopics;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.data.redis.RedisSystemException;
 import org.springframework.kafka.annotation.KafkaListener;

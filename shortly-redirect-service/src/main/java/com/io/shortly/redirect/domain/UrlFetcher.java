@@ -1,6 +1,4 @@
-package com.io.shortly.redirect.application;
-
-import com.io.shortly.redirect.domain.Redirect;
+package com.io.shortly.redirect.domain;
 
 public interface UrlFetcher {
 
