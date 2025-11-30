@@ -102,3 +102,16 @@ springdoc:
   api-docs:
     path: /api-docs
 
+resilience4j:
+  circuitbreaker:
+    instances:
+      url-service:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 10s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+
