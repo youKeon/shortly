@@ -1,14 +1,13 @@
 package com.io.shortly.url.api;
 
+import static com.io.shortly.url.api.dto.ShortUrlRequest.ShortenRequest;
 import static com.io.shortly.url.application.dto.ShortUrlCommand.FindCommand;
 import static com.io.shortly.url.application.dto.ShortUrlCommand.ShortenCommand;
 import static com.io.shortly.url.application.dto.ShortUrlResult.ShortenedResult;
 
-import com.io.shortly.url.api.dto.ShortUrlRequest;
 import com.io.shortly.url.api.dto.ShortUrlResponse.GetShortUrlResponse;
 import com.io.shortly.url.api.dto.ShortUrlResponse.ShortenedResponse;
 import com.io.shortly.url.application.UrlService;
-import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -34,9 +33,7 @@ public class UrlController {
     @PostMapping("/shorten")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "URL 단축", description = "긴 URL을 짧은 코드로 변환합니다")
-    @RateLimiter(name = "shorten-api")
-    public ShortenedResponse shortenUrl(
-            @Valid @RequestBody ShortUrlRequest.ShortenRequest request) {
+    public ShortenedResponse shortenUrl(@Valid @RequestBody ShortenRequest request) {
         ShortenedResult result = urlService.shortenUrl(ShortenCommand.of(request.originalUrl()));
         return ShortenedResponse.of(result);
     }

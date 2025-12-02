@@ -64,11 +64,3 @@ springdoc:
     path: /swagger-ui
   api-docs:
     path: /api-docs
-
-resilience4j:
-  ratelimiter:
-    instances:
-      shorten-api:
-        limitForPeriod: 100
-        limitRefreshPeriod: 1s
-        timeoutDuration: 0

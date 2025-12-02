@@ -1,4 +1,4 @@
-package com.io.shortly.e2e;
+package com.io.shortly.url.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -19,9 +19,14 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 /**
- * URL Service E2E 테스트
+ * URL Service Web Integration 테스트
  *
- * TestContainers를 사용하여 실제 MySQL 환경에서 URL 서비스를 테스트합니다.
+ * TestContainers와 EmbeddedKafka를 사용하여 실제 인프라와 통합된
+ * URL Service의 HTTP API를 테스트합니다.
+ *
+ * 이 테스트는 단일 서비스(URL Service)의 전체 레이어를 검증합니다:
+ * - Controller → Service → Repository → Database (TestContainers MySQL)
+ * - Kafka Event Publishing (EmbeddedKafka)
  */
 @Testcontainers
 @SpringBootTest(
@@ -39,8 +44,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
         "port=9092"
     }
 )
-@DisplayName("URL Service E2E 테스트")
-class UrlServiceE2ETest {
+@DisplayName("URL Service Web Integration 테스트")
+class UrlServiceWebIntegrationTest {
 
     @Container
     static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0")
