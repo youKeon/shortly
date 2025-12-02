@@ -30,21 +30,13 @@ spring:
     redis:
       lettuce:
         pool:
-          # 최대 연결 수 (Tomcat max threads와 동일하게 설정)
           max-active: 300
-          # 유휴 연결 최대 수
           max-idle: 100
-          # 유휴 연결 최소 수 (사전 할당)
           min-idle: 50
-          # 연결 대기 최대 시간 (밀리초)
           max-wait: 1000ms
-          # 유휴 연결 제거 주기
           time-between-eviction-runs: 60s
-        # 연결 타임아웃
         shutdown-timeout: 100ms
-      # 커맨드 타임아웃 (Redis 명령 실행 제한 시간)
       timeout: 1000ms
-      # 연결 타임아웃
       connect-timeout: 2000ms
 
   kafka:
@@ -101,17 +93,4 @@ springdoc:
     path: /swagger-ui
   api-docs:
     path: /api-docs
-
-resilience4j:
-  circuitbreaker:
-    instances:
-      url-service:
-        registerHealthIndicator: true
-        slidingWindowSize: 10
-        minimumNumberOfCalls: 5
-        permittedNumberOfCallsInHalfOpenState: 3
-        automaticTransitionFromOpenToHalfOpenEnabled: true
-        waitDurationInOpenState: 10s
-        failureRateThreshold: 50
-        eventConsumerBufferSize: 10
 
