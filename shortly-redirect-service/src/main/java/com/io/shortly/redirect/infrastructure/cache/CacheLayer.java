@@ -1,4 +1,4 @@
-package com.io.shortly.redirect.infrastructure.redis.cache;
+package com.io.shortly.redirect.infrastructure.cache;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package com.io.shortly.redirect.infrastructure.redis.cache;
+package com.io.shortly.redirect.infrastructure.cache;
 
 import com.io.shortly.redirect.domain.Redirect;
 import java.io.Serializable;
