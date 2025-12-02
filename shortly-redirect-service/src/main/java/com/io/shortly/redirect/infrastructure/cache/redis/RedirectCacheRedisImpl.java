@@ -1,12 +1,16 @@
-package com.io.shortly.redirect.infrastructure.redis.cache;
+package com.io.shortly.redirect.infrastructure.cache.redis;
 
-import static com.io.shortly.redirect.infrastructure.redis.cache.CacheLayer.L2;
+import static com.io.shortly.redirect.infrastructure.cache.CacheLayer.L2;
 
 import com.io.shortly.redirect.domain.Redirect;
 import com.io.shortly.redirect.domain.RedirectCache;
+import com.io.shortly.redirect.infrastructure.cache.CacheKeyGenerator;
+import com.io.shortly.redirect.infrastructure.cache.CachedRedirect;
 import java.time.Duration;
 import java.util.Optional;
+
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
@@ -17,18 +21,13 @@ public class RedirectCacheRedisImpl implements RedirectCache {
 
     private final RedisTemplate<String, CachedRedirect> redisTemplate;
     private final Duration l2Ttl;
-    private final double jitterMin;
-    private final double jitterMax;
 
     public RedirectCacheRedisImpl(
             RedisTemplate<String, CachedRedirect> redisTemplate,
-            @Value("${shortly.cache.l2.ttl:30m}") Duration l2Ttl,
-            @Value("${shortly.cache.l2.jitter-min:0.8}") double jitterMin,
-            @Value("${shortly.cache.l2.jitter-max:1.2}") double jitterMax) {
+            @Value("${shortly.cache.l2.ttl:30m}") Duration l2Ttl
+    ) {
         this.redisTemplate = redisTemplate;
         this.l2Ttl = l2Ttl;
-        this.jitterMin = jitterMin;
-        this.jitterMax = jitterMax;
     }
 
     @Override
@@ -58,32 +57,14 @@ public class RedirectCacheRedisImpl implements RedirectCache {
             String key = CacheKeyGenerator.generateCacheKey(L2, redirect.getShortCode());
             CachedRedirect cached = CachedRedirect.from(redirect);
 
-            Duration ttlWithJitter = applyJitter(l2Ttl);
-            redisTemplate.opsForValue().set(key, cached, ttlWithJitter);
+            redisTemplate.opsForValue().set(key, cached, l2Ttl);
 
             log.debug("[Cache:L2] 저장 완료: shortCode={}, ttl={}",
-                    redirect.getShortCode(), ttlWithJitter);
+                    redirect.getShortCode(), l2Ttl);
 
         } catch (Exception e) {
             log.warn("[Cache:L2] 저장 실패: shortCode={}, error={}",
                     redirect.getShortCode(), e.getMessage());
         }
-    }
-
-    @Override
-    public Redirect get(String shortCode, java.util.function.Function<String, Redirect> loader) {
-        return get(shortCode).orElseGet(() -> {
-            Redirect loaded = loader.apply(shortCode);
-            if (loaded != null) {
-                put(loaded);
-            }
-            return loaded;
-        });
-    }
-
-    private Duration applyJitter(Duration baseTtl) {
-        double jitter = jitterMin + (Math.random() * (jitterMax - jitterMin));
-        long jitteredMillis = (long) (baseTtl.toMillis() * jitter);
-        return Duration.ofMillis(jitteredMillis);
     }
 }
