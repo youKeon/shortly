@@ -1,8 +1,8 @@
 package com.io.shortly.redirect.infrastructure.client;
 
-import com.io.shortly.redirect.application.UrlFetcher;
 import com.io.shortly.redirect.domain.Redirect;
 import com.io.shortly.redirect.domain.ShortCodeNotFoundException;
+import com.io.shortly.redirect.domain.UrlFetcher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatusCode;
@@ -19,13 +19,6 @@ public class UrlServiceClient implements UrlFetcher {
 
     private static final String GET_SHORT_CODE_URI = "/api/v1/urls/{shortCode}";
 
-    /**
-     * URL Service에서 단축 코드 조회
-     *
-     * @param shortCode 조회할 단축 코드
-     * @return Redirect 도메인 객체
-     * @throws ShortCodeNotFoundException 단축 코드를 찾을 수 없거나 API 호출 실패 시
-     */
     @Override
     public Redirect fetchShortUrl(String shortCode) {
         log.info("[API Fallback] URL Service 호출 시작: shortCode={}", shortCode);
