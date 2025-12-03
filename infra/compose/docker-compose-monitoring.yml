@@ -1,62 +1,27 @@
 services:
   prometheus:
-    image: prom/prometheus:v2.48.0
+    image: prom/prometheus:v2.53.0
     container_name: shortly-prometheus
     ports:
       - "9090:9090"
     volumes:
-      - ../monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus-data:/prometheus
+      - ../monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     networks:
-      - shortly-network
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - monitoring-network
 
   grafana:
-    image: grafana/grafana:10.2.2
+    image: grafana/grafana:10.4.2
     container_name: shortly-grafana
+    depends_on:
+      - prometheus
     ports:
       - "3000:3000"
     environment:
-      - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
-    volumes:
-      - ../monitoring/grafana/provisioning:/etc/grafana/provisioning
-      - grafana-data:/var/lib/grafana
+      - GF_SECURITY_ADMIN_USER=admin
     networks:
-      - shortly-network
-
-  loki:
-    image: grafana/loki:2.9.3
-    container_name: shortly-loki
-    user: "0:0"
-    ports:
-      - "3100:3100"
-    volumes:
-      - ../monitoring/loki-config.yml:/etc/loki/local-config.yaml
-      - loki-data:/tmp/loki
-    command: -config.file=/etc/loki/local-config.yaml
-    networks:
-      - shortly-network
-
-  promtail:
-    image: grafana/promtail:2.9.3
-    container_name: shortly-promtail
-    volumes:
-      - ../monitoring/promtail-config.yml:/etc/promtail/config.yml
-      - ../../logs:/var/log/shortly:ro
-    command: -config.file=/etc/promtail/config.yml
-    networks:
-      - shortly-network
-    depends_on:
-      - loki
+      - monitoring-network
 
 networks:
-  shortly-network:
-    external: true
-    name: shortly-network
-
-volumes:
-  prometheus-data:
-  grafana-data:
-  loki-data:
+  monitoring-network:
+    name: monitoring-network

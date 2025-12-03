@@ -3,6 +3,7 @@ package com.io.shortly.redirect.infrastructure.client;
 import com.io.shortly.redirect.domain.Redirect;
 import com.io.shortly.redirect.domain.ShortCodeNotFoundException;
 import com.io.shortly.redirect.domain.UrlFetcher;
+import io.micrometer.core.annotation.Counted;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatusCode;
@@ -20,6 +21,10 @@ public class UrlServiceClient implements UrlFetcher {
     private static final String GET_SHORT_CODE_URI = "/api/v1/urls/{shortCode}";
 
     @Override
+    @Counted(
+            value = "redirect.cache.l2.db.calls",
+            extraTags = {"layer", "L2"}
+    )
     public Redirect fetchShortUrl(String shortCode) {
         log.info("[API Fallback] URL Service 호출 시작: shortCode={}", shortCode);
 

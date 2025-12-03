@@ -53,12 +53,12 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      acks: 0
+      acks: 1
       buffer-memory: 33554432 # 32MB
       properties:
-        batch.size: 32768 # 32KB
-        compression.type: lz4
-        linger.ms: 10
+        # batch.size: 32768 # 32KB
+        # compression.type: lz4
+        linger.ms: 0
         spring.json.add.type.headers: false
     listener:
       ack-mode: batch
@@ -87,10 +87,28 @@ management:
       process: true
       system: true
       http: true
+      kafka.producer: true
+      kafka.consumer: true
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      percentiles:
+        http.server.requests: 0.95, 0.99
+  observations:
+    http:
+      server:
+        requests:
+          name: http.server.requests
+  server:
+    request:
+      autotime:
+        enabled: true
+        percentiles: 0.95, 0.99
+    tags:
+      status: true
 
 springdoc:
   swagger-ui:
     path: /swagger-ui
   api-docs:
     path: /api-docs
-

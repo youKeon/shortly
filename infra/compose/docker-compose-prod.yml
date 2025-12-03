@@ -408,46 +408,7 @@ services:
       timeout: 10s
       retries: 3
 
-  prometheus:
-    image: prom/prometheus:v2.48.0
-    container_name: shortly-prometheus
-    depends_on:
-      - url-service
-      - redirect-service
-      - click-service
-    ports:
-      - "9090:9090"
-    volumes:
-      - ../monitoring/prometheus-prod.yml:/etc/prometheus/prometheus.yml
-      - prometheus-data:/prometheus
-    networks:
-      - shortly-network
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
-  grafana:
-    image: grafana/grafana:10.2.2
-    container_name: shortly-grafana
-    depends_on:
-      - prometheus
-    ports:
-      - "3000:3000"
-    environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-    volumes:
-      - ../monitoring/grafana/provisioning:/etc/grafana/provisioning
-      - grafana-data:/var/lib/grafana
-    networks:
-      - shortly-network
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
 networks:
   shortly-network:
@@ -456,8 +417,7 @@ networks:
 volumes:
   mysql-url-data:
   mysql-click-data:
-  prometheus-data:
-  grafana-data:
+
   redis-node-0-data:
   redis-node-1-data:
   redis-node-2-data:

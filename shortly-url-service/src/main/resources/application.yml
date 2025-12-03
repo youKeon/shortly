@@ -16,9 +16,9 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       properties:
-        batch.size: 32768
-        compression.type: lz4
-        linger.ms: 10
+        # batch.size: 32768
+        # compression.type: lz4
+        # linger.ms: 10
         spring.json.add.type.headers: false
 
 server:
@@ -55,9 +55,22 @@ management:
       system: true
       hikaricp: true
       http: true
+      kafka.producer: true
     distribution:
       percentiles-histogram:
         http.server.requests: true
+  observations:
+    http:
+      server:
+        requests:
+          name: http.server.requests
+  server:
+    request:
+      autotime:
+        enabled: true
+        percentiles: 0.95, 0.99
+    tags:
+      status: true
 
 springdoc:
   swagger-ui:
