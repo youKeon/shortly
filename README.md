@@ -105,3 +105,4 @@ sequenceDiagram
 - [Snowflake Algorithm으로 URL 충돌률 1.3%→0%, 생성속도 3.2배 개선](docs/01_SNOWFLAKE_ALGORITHM.md)
 - [Transactional Outbox Pattern으로 Kafka 장애 시 이벤트 유실 방지 (24만건 무손실)](docs/02_TRANSACTIONAL_OUTBOX_PATTERN.md)
 - [2-Layer Cache (Redis+Caffeine) 전략으로 캐시 히트율 99.996%, P95 90ms 달성](docs/03_TWO_LAYER_CACHE_STRATEGY.md)
+- [초당 5,000건 이상의 클릭 이벤트 처리를 위한 Kafka 설정 과정](docs/04_KAFKA_CLICK_EVENT.md)
