@@ -37,16 +37,15 @@ spring:
       group-id: ${KAFKA_CONSUMER_GROUP:click-service-group}
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      auto-offset-reset: earliest
-      max-poll-records: 1000
-      max-poll-interval: 300000 # 5분
+#      auto-offset-reset: latest
+#      max-poll-records: 1000
+#      max-poll-interval: 300000 # 5분
       properties:
         spring.json.trusted.packages: "com.io.shortly.shared.event"
         spring.json.value.default.type: "com.io.shortly.shared.event.UrlClickedEvent"
-        max.poll.interval.ms: 300000
-    listener:
-      ack-mode: batch
-      concurrency: 3
+#    listener:
+#      ack-mode: batch
+#      concurrency: 3
 
 logging:
   file:
@@ -73,9 +72,22 @@ management:
       system: true
       hikaricp: true
       http: true
+      kafka.consumer: true
     distribution:
       percentiles-histogram:
         http.server.requests: true
+  observations:
+    http:
+      server:
+        requests:
+          name: http.server.requests
+  server:
+    request:
+      autotime:
+        enabled: true
+        percentiles: 0.95, 0.99
+    tags:
+      status: true
 
 springdoc:
   swagger-ui:
