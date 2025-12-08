@@ -14,14 +14,6 @@ public interface UrlClickJpaRepository extends JpaRepository<UrlClickJpaEntity, 
 
     long countByShortCode(String shortCode);
 
-    List<UrlClickJpaEntity> findByShortCode(String shortCode);
-
-    @Query("SELECT u FROM UrlClickJpaEntity u WHERE u.shortCode = :shortCode ORDER BY u.clickedAt DESC")
-    List<UrlClickJpaEntity> findByShortCodeWithLimit(
-            @Param("shortCode") String shortCode,
-            Pageable pageable
-    );
-
     List<UrlClickJpaEntity> findByShortCodeAndClickedAtBetween(
             String shortCode,
             LocalDateTime start,

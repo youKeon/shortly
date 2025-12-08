@@ -4,7 +4,6 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.io.shortly.redirect.domain.Redirect;
 import com.io.shortly.redirect.domain.RedirectCache;
-import com.io.shortly.redirect.domain.RedirectCacheService;
 import com.io.shortly.redirect.domain.UrlFetcher;
 import com.io.shortly.redirect.infrastructure.cache.CacheKeyGenerator;
 import com.io.shortly.redirect.infrastructure.cache.CacheLayer;
@@ -15,14 +14,15 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class CacheConfig {
+public class CaffeineConfig {
 
     private final long l1MaxSize;
     private final Duration l1Ttl;
 
-    public CacheConfig(
+    public CaffeineConfig(
             @Value("${shortly.cache.l1.max-size:100000}") long l1MaxSize,
-            @Value("${shortly.cache.l1.ttl:10m}") Duration l1Ttl) {
+            @Value("${shortly.cache.l1.ttl:10m}") Duration l1Ttl
+    ) {
         this.l1MaxSize = l1MaxSize;
         this.l1Ttl = l1Ttl;
     }
@@ -45,12 +45,5 @@ public class CacheConfig {
                                 return redirect;
                             });
                 });
-    }
-
-    @Bean
-    public RedirectCacheService redirectCacheService(
-            @Qualifier("caffeineRedirectCache") RedirectCacheCaffeineImpl l1Cache,
-            @Qualifier("redisCache") RedirectCache l2Cache) {
-        return new RedirectCacheService(l1Cache, l2Cache);
     }
 }

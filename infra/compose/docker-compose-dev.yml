@@ -1,71 +1,33 @@
 services:
-  # URL Service - Primary
+  # URL Service Database
   mysql-url:
     image: mysql:8.0
-    container_name: shortly-mysql-url-primary
+    container_name: shortly-mysql-url
     environment:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: shortly_url
     ports:
       - "3307:3306"
     volumes:
-      - mysql-url-primary-data:/var/lib/mysql
-      - ../mysql/primary-url.cnf:/etc/mysql/conf.d/replication.cnf
+      - mysql-url-data:/var/lib/mysql
     networks:
       - shortly-network
     command: --default-authentication-plugin=mysql_native_password
 
-  # URL Service - Replication
-  mysql-url-replica:
-    image: mysql:8.0
-    container_name: shortly-mysql-url-replica
-    environment:
-      MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: shortly_url
-    ports:
-      - "3308:3306"
-    volumes:
-      - mysql-url-replica-data:/var/lib/mysql
-      - ../mysql/replica-url.cnf:/etc/mysql/conf.d/replication.cnf
-    networks:
-      - shortly-network
-    command: --default-authentication-plugin=mysql_native_password
-    depends_on:
-      - mysql-url
-
-  # Click Service - Primary
+  # Click Service Database
   mysql-click:
     image: mysql:8.0
-    container_name: shortly-mysql-click-primary
+    container_name: shortly-mysql-click
     environment:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: shortly_click
     ports:
       - "3309:3306"
     volumes:
-      - mysql-click-primary-data:/var/lib/mysql
-      - ../mysql/primary-click.cnf:/etc/mysql/conf.d/replication.cnf
+      - mysql-click-data:/var/lib/mysql
     networks:
       - shortly-network
     command: --default-authentication-plugin=mysql_native_password
-
-  # Click Service - Replication
-  mysql-click-replica:
-    image: mysql:8.0
-    container_name: shortly-mysql-click-replica
-    environment:
-      MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: shortly_click
-    ports:
-      - "3310:3306"
-    volumes:
-      - mysql-click-replica-data:/var/lib/mysql
-      - ../mysql/replica-click.cnf:/etc/mysql/conf.d/replication.cnf
-    networks:
-      - shortly-network
-    command: --default-authentication-plugin=mysql_native_password
-    depends_on:
-      - mysql-click
 
   redis:
     image: redis:7-alpine
@@ -82,21 +44,46 @@ services:
   kafka:
     image: apache/kafka:3.7.0
     container_name: shortly-kafka
+    cap_add:
+      - NET_ADMIN
     ports:
       - "9092:9092"
+      - "9093:9093"
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:19092,CONTROLLER://0.0.0.0:9093,EXTERNAL://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:19092,EXTERNAL://localhost:9092
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+      KAFKA_HEAP_OPTS: "-Xmx512M -Xms512M"
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+        reservations:
+          memory: 512M
+    networks:
+      - shortly-network
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: shortly-kafka-ui
+    ports:
+      - "8090:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: shortly-kafka
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:19092
+      DYNAMIC_CONFIG_ENABLED: "true"
+    depends_on:
+      - kafka
     networks:
       - shortly-network
 
@@ -105,8 +92,6 @@ networks:
     name: shortly-network
 
 volumes:
-  mysql-url-primary-data:
-  mysql-url-replica-data:
-  mysql-click-primary-data:
-  mysql-click-replica-data:
+  mysql-url-data:
+  mysql-click-data:
   redis-data:

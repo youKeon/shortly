@@ -14,16 +14,17 @@ public class UrlCreatedEvent extends BaseEvent {
     private final Instant createdAt;
 
     public UrlCreatedEvent(
+        final long eventId,
         final String shortCode,
         final String originalUrl,
         final Instant createdAt
     ) {
-        this(null, EventType.URL_CREATED, null, shortCode, originalUrl, createdAt);
+        this(eventId, EventType.URL_CREATED, null, shortCode, originalUrl, createdAt);
     }
 
     @JsonCreator
     public UrlCreatedEvent(
-        @JsonProperty("eventId") final String eventId,
+        @JsonProperty("eventId") final long eventId,
         @JsonProperty("eventType") final EventType eventType,
         @JsonProperty("timestamp") final Instant timestamp,
         @JsonProperty("shortCode") final String shortCode,
@@ -36,7 +37,7 @@ public class UrlCreatedEvent extends BaseEvent {
         this.createdAt = createdAt != null ? createdAt : Instant.now();
     }
 
-    public static UrlCreatedEvent of(String shortCode, String originalUrl) {
-        return new UrlCreatedEvent(shortCode, originalUrl, Instant.now());
+    public static UrlCreatedEvent of(long eventId, String shortCode, String originalUrl) {
+        return new UrlCreatedEvent(eventId, shortCode, originalUrl, Instant.now());
     }
 }

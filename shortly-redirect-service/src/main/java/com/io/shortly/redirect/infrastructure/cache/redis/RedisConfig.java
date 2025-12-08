@@ -44,15 +44,12 @@ public class RedisConfig {
     private ObjectMapper createObjectMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
 
-        // 필수 모듈
         objectMapper.registerModule(new JavaTimeModule());
 
-        // 성능 최적화 설정
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
         objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
-        // 불필요한 기능 비활성화
         objectMapper.disable(SerializationFeature.INDENT_OUTPUT);
         objectMapper.disable(DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE);
 

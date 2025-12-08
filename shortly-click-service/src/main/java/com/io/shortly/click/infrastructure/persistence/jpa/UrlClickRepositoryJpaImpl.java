@@ -35,23 +35,6 @@ public class UrlClickRepositoryJpaImpl implements UrlClickRepository {
     }
 
     @Override
-    public List<UrlClick> findByShortCode(String shortCode) {
-        return jpaRepository.findByShortCode(shortCode).stream()
-                .map(UrlClickJpaEntity::toDomain)
-                .toList();
-    }
-
-    @Override
-    public List<UrlClick> findByShortCodeWithLimit(String shortCode, int limit) {
-        return jpaRepository.findByShortCodeWithLimit(
-                shortCode,
-                org.springframework.data.domain.PageRequest.of(0, limit)
-        ).stream()
-                .map(UrlClickJpaEntity::toDomain)
-                .toList();
-    }
-
-    @Override
     public List<UrlClick> findByShortCodeAndClickedAtBetween(
             String shortCode,
             LocalDateTime start,

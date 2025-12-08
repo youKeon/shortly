@@ -1,5 +1,6 @@
 package com.io.shortly.url.infrastructure.generator;
 
+import com.io.shortly.url.domain.url.GeneratedShortCode;
 import com.io.shortly.url.domain.url.ShortUrlGenerator;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
@@ -35,7 +36,7 @@ public class ShortUrlGeneratorSnowflakeImpl implements ShortUrlGenerator {
     }
 
     @Override
-    public synchronized String generate(String seed) {
+    public synchronized GeneratedShortCode generate(String seed) {
         long timestamp = currentTimeMillis();
 
         if (timestamp < lastTimestamp) {
@@ -73,7 +74,8 @@ public class ShortUrlGeneratorSnowflakeImpl implements ShortUrlGenerator {
                 | (workerId << WORKER_ID_SHIFT)
                 | sequence;
 
-        return encodeBase62(id);
+        String shortCode = encodeBase62(id);
+        return GeneratedShortCode.of(id, shortCode);
     }
 
     protected long currentTimeMillis() {

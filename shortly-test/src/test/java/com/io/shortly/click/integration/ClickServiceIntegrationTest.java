@@ -1,5 +1,7 @@
 package com.io.shortly.click.integration;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.io.shortly.click.ClickServiceApplication;
 import com.io.shortly.click.application.ClickService;
 import com.io.shortly.click.application.dto.ClickCommand.ClickDetailCommand;
@@ -8,6 +10,8 @@ import com.io.shortly.click.application.dto.ClickResult.ClickDetailResult;
 import com.io.shortly.click.application.dto.ClickResult.ClickStatsResult;
 import com.io.shortly.click.domain.UrlClick;
 import com.io.shortly.click.domain.UrlClickRepository;
+import java.time.LocalDateTime;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -15,11 +19,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.*;
 
 /**
  * Click Service Integration 테스트
@@ -45,6 +44,13 @@ class ClickServiceIntegrationTest {
     @Autowired
     private UrlClickRepository urlClickRepository;
 
+    // Helper: eventId를 포함한 테스트용 클릭 생성
+    private long eventIdSequence = 1L;
+
+    private UrlClick createClick(String shortCode, String url, LocalDateTime clickedAt) {
+        return UrlClick.restore(null, eventIdSequence++, shortCode, url, clickedAt);
+    }
+
     @Nested
     @DisplayName("클릭 통계 조회 기능")
     class GetClickStatsIntegrationTest {
@@ -57,11 +63,11 @@ class ClickServiceIntegrationTest {
             String shortCode = "stats1";
             LocalDateTime now = LocalDateTime.now();
 
-            urlClickRepository.save(UrlClick.restore(null, shortCode, "url", now.minusDays(30))); // 오래된 클릭
-            urlClickRepository.save(UrlClick.restore(null, shortCode, "url", now.minusDays(6)));  // 7일 내
-            urlClickRepository.save(UrlClick.restore(null, shortCode, "url", now.minusDays(3)));  // 7일 내
-            urlClickRepository.save(UrlClick.restore(null, shortCode, "url", now.minusHours(20))); // 24시간 내
-            urlClickRepository.save(UrlClick.restore(null, shortCode, "url", now.minusHours(10))); // 24시간 내
+            urlClickRepository.save(createClick(shortCode, "url", now.minusDays(30))); // 오래된 클릭
+            urlClickRepository.save(createClick(shortCode, "url", now.minusDays(6)));  // 7일 내
+            urlClickRepository.save(createClick(shortCode, "url", now.minusDays(3)));  // 7일 내
+            urlClickRepository.save(createClick(shortCode, "url", now.minusHours(20))); // 24시간 내
+            urlClickRepository.save(createClick(shortCode, "url", now.minusHours(10))); // 24시간 내
 
             ClickStatsCommand command = ClickStatsCommand.of(shortCode);
 
@@ -102,9 +108,9 @@ class ClickServiceIntegrationTest {
             String shortCode2 = "multi2";
             LocalDateTime now = LocalDateTime.now();
 
-            urlClickRepository.save(UrlClick.restore(null, shortCode1, "url1", now.minusHours(1)));
-            urlClickRepository.save(UrlClick.restore(null, shortCode1, "url1", now.minusHours(2)));
-            urlClickRepository.save(UrlClick.restore(null, shortCode2, "url2", now.minusHours(1)));
+            urlClickRepository.save(createClick(shortCode1, "url1", now.minusHours(1)));
+            urlClickRepository.save(createClick(shortCode1, "url1", now.minusHours(2)));
+            urlClickRepository.save(createClick(shortCode2, "url2", now.minusHours(1)));
 
             // when
             ClickStatsResult result1 = clickService.getClickStats(ClickStatsCommand.of(shortCode1));
@@ -130,9 +136,9 @@ class ClickServiceIntegrationTest {
             LocalDateTime time2 = LocalDateTime.now().minusHours(2);
             LocalDateTime time3 = LocalDateTime.now().minusHours(1);
 
-            urlClickRepository.save(UrlClick.restore(null, shortCode, "url", time1));
-            urlClickRepository.save(UrlClick.restore(null, shortCode, "url", time2));
-            urlClickRepository.save(UrlClick.restore(null, shortCode, "url", time3));
+            urlClickRepository.save(createClick(shortCode, "url", time1));
+            urlClickRepository.save(createClick(shortCode, "url", time2));
+            urlClickRepository.save(createClick(shortCode, "url", time3));
 
             ClickDetailCommand command = ClickDetailCommand.of(shortCode, null);
 
@@ -154,7 +160,7 @@ class ClickServiceIntegrationTest {
             LocalDateTime now = LocalDateTime.now();
 
             for (int i = 0; i < 150; i++) {
-                urlClickRepository.save(UrlClick.restore(null, shortCode, "url", now.minusMinutes(i)));
+                urlClickRepository.save(createClick(shortCode, "url", now.minusMinutes(i)));
             }
 
             ClickDetailCommand command = ClickDetailCommand.of(shortCode, null);
@@ -175,7 +181,7 @@ class ClickServiceIntegrationTest {
             LocalDateTime now = LocalDateTime.now();
 
             for (int i = 0; i < 50; i++) {
-                urlClickRepository.save(UrlClick.restore(null, shortCode, "url", now.minusMinutes(i)));
+                urlClickRepository.save(createClick(shortCode, "url", now.minusMinutes(i)));
             }
 
             ClickDetailCommand command = ClickDetailCommand.of(shortCode, 20);
@@ -215,7 +221,7 @@ class ClickServiceIntegrationTest {
             String shortCode = "db01";
             String originalUrl = "https://example.com/db/test";
             LocalDateTime clickTime = LocalDateTime.now();
-            UrlClick click = UrlClick.restore(null, shortCode, originalUrl, clickTime);
+            UrlClick click = createClick(shortCode, originalUrl, clickTime);
 
             // when
             UrlClick saved = urlClickRepository.save(click);
@@ -237,7 +243,7 @@ class ClickServiceIntegrationTest {
             List<UrlClick> clicks = new java.util.ArrayList<>();
 
             for (int i = 0; i < 500; i++) {
-                clicks.add(UrlClick.restore(null, shortCode, "url", now.minusMinutes(i)));
+                clicks.add(createClick(shortCode, "url", now.minusMinutes(i)));
             }
 
             // when
@@ -257,7 +263,7 @@ class ClickServiceIntegrationTest {
         void save_TransactionRollback_NotSaved() {
             // given
             String shortCode = "rollback1";
-            UrlClick click = UrlClick.restore(null, shortCode, "url", LocalDateTime.now());
+            UrlClick click = createClick(shortCode, "url", LocalDateTime.now());
 
             // when
             urlClickRepository.save(click);
@@ -285,8 +291,8 @@ class ClickServiceIntegrationTest {
             String shortCode = "inv01";
             LocalDateTime now = LocalDateTime.now();
 
-            urlClickRepository.save(UrlClick.restore(null, shortCode, "url", now.minusHours(12))); // 24h, 7d
-            urlClickRepository.save(UrlClick.restore(null, shortCode, "url", now.minusDays(5)));   // 7d only
+            urlClickRepository.save(createClick(shortCode, "url", now.minusHours(12))); // 24h, 7d
+            urlClickRepository.save(createClick(shortCode, "url", now.minusDays(5)));   // 7d only
 
             // when
             ClickStatsResult result = clickService.getClickStats(ClickStatsCommand.of(shortCode));
@@ -304,8 +310,8 @@ class ClickServiceIntegrationTest {
             String shortCode = "inv02";
             LocalDateTime now = LocalDateTime.now();
 
-            urlClickRepository.save(UrlClick.restore(null, shortCode, "url", now.minusDays(3)));  // 7d, total
-            urlClickRepository.save(UrlClick.restore(null, shortCode, "url", now.minusDays(10))); // total only
+            urlClickRepository.save(createClick(shortCode, "url", now.minusDays(3)));  // 7d, total
+            urlClickRepository.save(createClick(shortCode, "url", now.minusDays(10))); // total only
 
             // when
             ClickStatsResult result = clickService.getClickStats(ClickStatsCommand.of(shortCode));

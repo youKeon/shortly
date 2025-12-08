@@ -11,10 +11,6 @@ public interface UrlClickRepository {
 
     long countByShortCode(String shortCode);
 
-    List<UrlClick> findByShortCode(String shortCode);
-
-    List<UrlClick> findByShortCodeWithLimit(String shortCode, int limit);
-
     List<UrlClick> findByShortCodeAndClickedAtBetween(
             String shortCode,
             LocalDateTime start,

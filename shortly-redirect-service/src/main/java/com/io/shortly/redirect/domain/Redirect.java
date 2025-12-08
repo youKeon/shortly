@@ -6,11 +6,13 @@ import org.springframework.util.Assert;
 
 public class Redirect {
 
+    private final Long eventId;
     private final String shortCode;
     private final String targetUrl;
     private final LocalDateTime createdAt;
 
     private Redirect(
+        final Long eventId,
         final String shortCode,
         final String targetUrl,
         final LocalDateTime createdAt
@@ -19,17 +21,26 @@ public class Redirect {
         Assert.hasText(targetUrl, "Target URL must not be blank");
         Assert.notNull(createdAt, "Created at must not be null");
 
+        this.eventId = eventId;
         this.shortCode = shortCode;
         this.targetUrl = targetUrl;
         this.createdAt = createdAt;
     }
 
-    public static Redirect create(String shortCode, String targetUrl) {
-        return new Redirect(shortCode, targetUrl, LocalDateTime.now());
+    public static Redirect create(Long eventId, String shortCode, String targetUrl) {
+        return new Redirect(eventId, shortCode, targetUrl, LocalDateTime.now());
     }
 
-    public static Redirect of(String shortCode, String targetUrl, LocalDateTime createdAt) {
-        return new Redirect(shortCode, targetUrl, createdAt);
+    public static Redirect create(String shortCode, String targetUrl) {
+        return new Redirect(null, shortCode, targetUrl, LocalDateTime.now());
+    }
+
+    public static Redirect of(long eventId, String shortCode, String targetUrl, LocalDateTime createdAt) {
+        return new Redirect(eventId, shortCode, targetUrl, createdAt);
+    }
+
+    public long getEventId() {
+        return eventId;
     }
 
     public String getShortCode() {

@@ -1,6 +1,5 @@
 package com.io.shortly.url.generator;
 
-import com.io.shortly.url.infrastructure.generator.ShortUrlGeneratorBase62Impl;
 import com.io.shortly.url.infrastructure.generator.ShortUrlGeneratorSnowflakeImpl;
 import com.io.shortly.url.infrastructure.generator.NodeIdManager;
 import org.mockito.Mockito;
@@ -40,14 +39,8 @@ public class RealisticLoadTest {
         System.out.println("  - 인기 URL: " + popularUrl);
         System.out.println("  (같은 URL을 여러 명이 동시에 단축)\n");
 
-        // Base62 + SHA-256 테스트
-        System.out.println("【테스트 1】 Base62 + SHA-256");
-        System.out.println("----------------------------------------");
-        testBase62(threadCount, requestsPerUser, popularUrl);
-        System.out.println();
-
         // Snowflake Algorithm 테스트
-        System.out.println("【테스트 2】 Snowflake Algorithm");
+        System.out.println("【테스트】 Snowflake Algorithm");
         System.out.println("----------------------------------------");
         testSnowflake(threadCount, requestsPerUser, popularUrl);
         System.out.println();
@@ -55,59 +48,6 @@ public class RealisticLoadTest {
         System.out.println("========================================");
         System.out.println("테스트 완료");
         System.out.println("========================================");
-    }
-
-    private static void testBase62(int threadCount, int requestsPerUser, String url) {
-        ShortUrlGeneratorBase62Impl generator = new ShortUrlGeneratorBase62Impl();
-        Set<String> uniqueCodes = new HashSet<>();
-        AtomicInteger duplicateCount = new AtomicInteger(0);
-        CountDownLatch latch = new CountDownLatch(threadCount);
-        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
-
-        long startTime = System.currentTimeMillis();
-
-        for (int i = 0; i < threadCount; i++) {
-            executorService.submit(() -> {
-                try {
-                    for (int j = 0; j < requestsPerUser; j++) {
-                        String code = generator.generate(url);
-                        synchronized (uniqueCodes) {
-                            if (!uniqueCodes.add(code)) {
-                                duplicateCount.incrementAndGet();
-                            }
-                        }
-                    }
-                } finally {
-                    latch.countDown();
-                }
-            });
-        }
-
-        try {
-            latch.await(60, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-        executorService.shutdown();
-        long endTime = System.currentTimeMillis();
-
-        int totalRequests = threadCount * requestsPerUser;
-        int uniqueCount = uniqueCodes.size();
-        int duplicates = duplicateCount.get();
-
-        System.out.println("📊 결과:");
-        System.out.println("   총 요청: " + String.format("%,d", totalRequests) + "건");
-        System.out.println("   고유 코드: " + String.format("%,d", uniqueCount) + "건");
-        System.out.println("   중복 발생: " + String.format("%,d", duplicates) + "건");
-        System.out.println("   중복률: " + String.format("%.2f%%", (duplicates * 100.0 / totalRequests)));
-        System.out.println("   처리 시간: " + (endTime - startTime) + "ms");
-        System.out.println("   처리량: " + String.format("%,d", totalRequests * 1000L / (endTime - startTime)) + " 건/초");
-
-        if (duplicates > 0) {
-            System.out.println("\n   ⚠️  경고: 중복 발생!");
-            System.out.println("   → 같은 short code가 " + duplicates + "번 재사용됨");
-            System.out.println("   → 사용자가 다른 URL로 리다이렉트될 수 있음 (치명적 버그)");
-        }
     }
 
     private static void testSnowflake(int threadCount, int requestsPerUser, String url) {
@@ -127,7 +67,7 @@ public class RealisticLoadTest {
             executorService.submit(() -> {
                 try {
                     for (int j = 0; j < requestsPerUser; j++) {
-                        String code = generator.generate(url);
+                        String code = generator.generate(url).shortCode();
                         synchronized (uniqueCodes) {
                             if (!uniqueCodes.add(code)) {
                                 duplicateCount.incrementAndGet();

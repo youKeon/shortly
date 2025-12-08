@@ -12,9 +12,15 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@Table(name = "url_clicks", indexes = {
+@Table(
+    name = "url_clicks",
+    indexes = {
         @Index(name = "idx_short_code_clicked_at", columnList = "short_code, clicked_at DESC")
-})
+    },
+    uniqueConstraints = {
+        @UniqueConstraint(name = "uk_event_id", columnNames = "event_id")
+    }
+)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class UrlClickJpaEntity {
@@ -22,6 +28,9 @@ public class UrlClickJpaEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "event_id", nullable = false, unique = true)
+    private long eventId;
 
     @Column(name = "short_code", nullable = false, length = 10)
     private String shortCode;
@@ -34,12 +43,13 @@ public class UrlClickJpaEntity {
     private LocalDateTime clickedAt;
 
     public UrlClick toDomain() {
-        return UrlClick.restore(id, shortCode, originalUrl, clickedAt);
+        return UrlClick.restore(id, eventId, shortCode, originalUrl, clickedAt);
     }
 
     public static UrlClickJpaEntity fromDomain(UrlClick urlClick) {
         return new UrlClickJpaEntity(
                 urlClick.getId(),
+                urlClick.getEventId(),
                 urlClick.getShortCode(),
                 urlClick.getOriginalUrl(),
                 urlClick.getClickedAt()

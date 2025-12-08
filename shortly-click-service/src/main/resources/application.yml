@@ -31,21 +31,23 @@ spring:
       hibernate:
         jdbc:
           batch_size: 100
+        order_inserts: true        # INSERT 문 정렬로 배치 효율 향상
+        order_updates: true        # UPDATE 문 정렬
+        batch_versioned_data: true # @Version 있는 엔티티도 배치 처리
 
   kafka:
     consumer:
       group-id: ${KAFKA_CONSUMER_GROUP:click-service-group}
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-#      auto-offset-reset: latest
-#      max-poll-records: 1000
-#      max-poll-interval: 300000 # 5분
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      max-poll-records: 100
       properties:
         spring.json.trusted.packages: "com.io.shortly.shared.event"
         spring.json.value.default.type: "com.io.shortly.shared.event.UrlClickedEvent"
-#    listener:
-#      ack-mode: batch
-#      concurrency: 3
+    listener:
+      ack-mode: batch
 
 logging:
   file:

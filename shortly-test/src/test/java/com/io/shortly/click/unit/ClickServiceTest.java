@@ -13,6 +13,7 @@ import com.io.shortly.click.domain.UrlClickRepository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -162,7 +163,7 @@ class ClickServiceTest {
         Integer lastRequestedLimit = null;
 
         void addClick(String shortCode, LocalDateTime clickedAt) {
-            UrlClick click = UrlClick.restore(idSequence++, shortCode, "https://example.com", clickedAt);
+            UrlClick click = UrlClick.restore(idSequence++, System.currentTimeMillis(), shortCode, "https://example.com", clickedAt);
             clicks.add(click);
         }
 

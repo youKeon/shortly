@@ -1,26 +1,19 @@
 package com.io.shortly.url.application;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.io.shortly.shared.event.UrlCreatedEvent;
+import com.io.shortly.shared.kafka.TopicType;
 import com.io.shortly.url.application.dto.ShortUrlCommand.FindCommand;
 import com.io.shortly.url.application.dto.ShortUrlCommand.ShortenCommand;
 import com.io.shortly.url.application.dto.ShortUrlResult.ShortenedResult;
-import com.io.shortly.url.domain.outbox.Aggregate;
-import com.io.shortly.url.domain.outbox.Outbox;
-import com.io.shortly.url.domain.outbox.OutboxRepository;
-import com.io.shortly.url.domain.url.ShortCodeGenerationFailedException;
 import com.io.shortly.url.domain.url.ShortCodeNotFoundException;
 import com.io.shortly.url.domain.url.ShortUrl;
 import com.io.shortly.url.domain.url.ShortUrlGenerator;
 import com.io.shortly.url.domain.url.ShortUrlRepository;
-import java.sql.SQLException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.Assert;
 
 @Slf4j
@@ -28,49 +21,36 @@ import org.springframework.util.Assert;
 @RequiredArgsConstructor
 public class UrlService {
 
-    private static final int MAX_ATTEMPTS = 5;
-    private static final String UNIQUE_VIOLATION_SQL_STATE_PREFIX = "23";
-
-    private final TransactionTemplate transactionTemplate;
     private final ShortUrlRepository shortUrlRepository;
     private final ShortUrlGenerator shortUrlGenerator;
-    private final OutboxRepository outboxRepository;
-    private final ObjectMapper objectMapper;
+    private final RedisTemplate<String, UrlCreatedEvent> redisTemplate;
 
+    @Transactional
     public ShortenedResult shortenUrl(ShortenCommand command) {
         Assert.notNull(command, "Command must not be null");
         Assert.hasText(command.originalUrl(), "Original URL must not be blank");
 
-        for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-            String candidate = shortUrlGenerator.generate(command.originalUrl());
+        var generated = shortUrlGenerator.generate(command.originalUrl());
 
-            try {
-                return transactionTemplate.execute(status -> {
-                    // 단축 URL 저장
-                    ShortUrl shortUrl = ShortUrl.create(candidate, command.originalUrl());
-                    shortUrlRepository.save(shortUrl);
+        // 단축 URL 저장
+        ShortUrl shortUrl = ShortUrl.create(generated.shortCode(), command.originalUrl());
+        shortUrlRepository.save(shortUrl);
 
-                    log.info("URL shortened: {} -> {}", command.originalUrl(), shortUrl.getShortCode());
+        log.info("URL shortened: {} -> {} (snowflakeId: {})",
+            command.originalUrl(), shortUrl.getShortCode(), generated.snowflakeId());
 
-                    // 이벤트 저장
-                    saveEvent(shortUrl);
-
-                    return ShortenedResult.of(shortUrl.getShortCode(), shortUrl.getOriginalUrl());
-                });
-
-            } catch (DataIntegrityViolationException e) {
-
-                if (isDuplicatedException(e)) {
-                    log.debug("Duplicate short code '{}', retrying...", candidate);
-                    continue;
-                }
-
-                throw new IllegalStateException("Database constraint violation", e);
-            }
+        try {
+            UrlCreatedEvent event = UrlCreatedEvent.of(
+                generated.snowflakeId(),
+                shortUrl.getShortCode(),
+                shortUrl.getOriginalUrl()
+            );
+            redisTemplate.convertAndSend(TopicType.URL_CREATED.getTopicName(), event);
+        } catch (Exception e) {
+            log.warn("Failed to publish URL created event: {}", e.getMessage());
         }
 
-        log.error("Failed to generate unique short code");
-        throw new ShortCodeGenerationFailedException(MAX_ATTEMPTS);
+        return ShortenedResult.of(shortUrl.getShortCode(), shortUrl.getOriginalUrl());
     }
 
     @Transactional(readOnly = true)
@@ -85,39 +65,5 @@ public class UrlService {
         log.debug("URL found: {} -> {}", shortCode, shortUrl.getOriginalUrl());
 
         return ShortenedResult.of(shortUrl.getShortCode(), shortUrl.getOriginalUrl());
-    }
-
-    private void saveEvent(ShortUrl shortUrl) {
-        try {
-            UrlCreatedEvent event = UrlCreatedEvent.of(
-                    shortUrl.getShortCode(),
-                    shortUrl.getOriginalUrl());
-
-            String payload = objectMapper.writeValueAsString(event);
-
-            Outbox outbox = Outbox.create(
-                    Aggregate.URL,
-                    shortUrl.getShortCode(),
-                    payload);
-
-            outboxRepository.save(outbox);
-
-            log.debug("Outbox event saved for shortCode: {}", shortUrl.getShortCode());
-
-        } catch (JsonProcessingException e) {
-            log.error("Failed to serialize UrlCreatedEvent", e);
-            throw new IllegalStateException("Failed to create outbox event", e);
-        }
-    }
-
-    private boolean isDuplicatedException(DataIntegrityViolationException e) {
-        Throwable cause = e.getMostSpecificCause();
-        if (cause instanceof SQLException) {
-            String sqlState = ((SQLException) cause).getSQLState();
-            if (sqlState != null) {
-                return sqlState.startsWith(UNIQUE_VIOLATION_SQL_STATE_PREFIX);
-            }
-        }
-        return false;
     }
 }

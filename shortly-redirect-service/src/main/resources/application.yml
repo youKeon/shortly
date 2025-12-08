@@ -40,28 +40,18 @@ spring:
       connect-timeout: 2000ms
 
   kafka:
-    consumer:
-      group-id: ${KAFKA_CONSUMER_GROUP:redirect-service-group}
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      auto-offset-reset: earliest
-      max-poll-records: 1000
-      properties:
-        spring.json.trusted.packages: "com.io.shortly.shared.event"
-        spring.json.value.default.type: "com.io.shortly.shared.event.UrlCreatedEvent"
-        max.poll.interval.ms: 300000
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      acks: 1
-      buffer-memory: 33554432 # 32MB
+      buffer-memory: 16777216
+      batch-size: 8192
+      acks: 1  # Leader만 확인 (At-Least-Once, 30-50% latency 개선)
+      retries: 3  # 네트워크 장애 재시도
       properties:
-        # batch.size: 32768 # 32KB
-        # compression.type: lz4
-        linger.ms: 0
+        enable.idempotence: true  # Kafka 내부 중복 방지 (Producer-level)
         spring.json.add.type.headers: false
-    listener:
-      ack-mode: batch
+        delivery.timeout.ms: 120000
+        request.timeout.ms: 30000
 
 logging:
   file:
@@ -88,12 +78,13 @@ management:
       system: true
       http: true
       kafka.producer: true
-      kafka.consumer: true
     distribution:
       percentiles-histogram:
         http.server.requests: true
+        spring.kafka.template: true
       percentiles:
         http.server.requests: 0.95, 0.99
+        spring.kafka.template: 0.95, 0.99
   observations:
     http:
       server:

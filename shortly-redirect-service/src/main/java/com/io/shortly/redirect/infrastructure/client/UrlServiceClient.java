@@ -45,7 +45,7 @@ public class UrlServiceClient implements UrlFetcher {
                 throw new ShortCodeNotFoundException(shortCode);
             }
 
-            log.info("[API Fallback] 조회 성공: shortCode={}, url={}",
+            log.info("[API Fallback] 조회 성공: shortCode={}, url={} (eventId=0 fallback)",
                     response.shortCode(), response.originalUrl());
 
             return Redirect.create(response.shortCode(), response.originalUrl());

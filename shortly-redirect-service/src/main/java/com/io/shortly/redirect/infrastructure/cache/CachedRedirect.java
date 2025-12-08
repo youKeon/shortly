@@ -5,6 +5,7 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 public record CachedRedirect(
+    long eventId,
     String shortCode,
     String targetUrl,
     LocalDateTime createdAt
@@ -14,6 +15,7 @@ public record CachedRedirect(
 
     public static CachedRedirect from(Redirect redirect) {
         return new CachedRedirect(
+            redirect.getEventId(),
             redirect.getShortCode(),
             redirect.getTargetUrl(),
             redirect.getCreatedAt()
@@ -22,6 +24,7 @@ public record CachedRedirect(
 
     public Redirect toDomain() {
         return Redirect.of(
+            this.eventId,
             this.shortCode,
             this.targetUrl,
             this.createdAt

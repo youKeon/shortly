@@ -25,7 +25,7 @@ class RedirectTest {
             LocalDateTime before = LocalDateTime.now();
 
             // when
-            Redirect redirect = Redirect.create(shortCode, targetUrl);
+            Redirect redirect = Redirect.create(1L, shortCode, targetUrl);
 
             // then
             LocalDateTime after = LocalDateTime.now();
@@ -44,7 +44,7 @@ class RedirectTest {
             LocalDateTime createdAt = LocalDateTime.of(2024, 1, 1, 12, 0, 0);
 
             // when
-            Redirect redirect = Redirect.of(shortCode, targetUrl, createdAt);
+            Redirect redirect = Redirect.of(1L, shortCode, targetUrl, createdAt);
 
             // then
             assertThat(redirect.getShortCode()).isEqualTo(shortCode);
@@ -61,7 +61,7 @@ class RedirectTest {
         @DisplayName("shortCode가 null이면 예외를 발생시킨다")
         void create_NullShortCode_ThrowsException() {
             // when & then
-            assertThatThrownBy(() -> Redirect.create(null, "https://example.com"))
+            assertThatThrownBy(() -> Redirect.create(1L, null, "https://example.com"))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Short code must not be blank");
         }
@@ -70,7 +70,7 @@ class RedirectTest {
         @DisplayName("shortCode가 빈 문자열이면 예외를 발생시킨다")
         void create_EmptyShortCode_ThrowsException() {
             // when & then
-            assertThatThrownBy(() -> Redirect.create("", "https://example.com"))
+            assertThatThrownBy(() -> Redirect.create(1L, "", "https://example.com"))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Short code must not be blank");
         }
@@ -79,7 +79,7 @@ class RedirectTest {
         @DisplayName("shortCode가 공백만 있으면 예외를 발생시킨다")
         void create_BlankShortCode_ThrowsException() {
             // when & then
-            assertThatThrownBy(() -> Redirect.create("   ", "https://example.com"))
+            assertThatThrownBy(() -> Redirect.create(1L, "   ", "https://example.com"))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Short code must not be blank");
         }
@@ -88,7 +88,7 @@ class RedirectTest {
         @DisplayName("targetUrl이 null이면 예외를 발생시킨다")
         void create_NullTargetUrl_ThrowsException() {
             // when & then
-            assertThatThrownBy(() -> Redirect.create("abc123", null))
+            assertThatThrownBy(() -> Redirect.create(1L, "abc123", null))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Target URL must not be blank");
         }
@@ -97,7 +97,7 @@ class RedirectTest {
         @DisplayName("targetUrl이 빈 문자열이면 예외를 발생시킨다")
         void create_EmptyTargetUrl_ThrowsException() {
             // when & then
-            assertThatThrownBy(() -> Redirect.create("abc123", ""))
+            assertThatThrownBy(() -> Redirect.create(1L, "abc123", ""))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Target URL must not be blank");
         }
@@ -106,7 +106,7 @@ class RedirectTest {
         @DisplayName("targetUrl이 공백만 있으면 예외를 발생시킨다")
         void create_BlankTargetUrl_ThrowsException() {
             // when & then
-            assertThatThrownBy(() -> Redirect.create("abc123", "   "))
+            assertThatThrownBy(() -> Redirect.create(1L, "abc123", "   "))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Target URL must not be blank");
         }
@@ -115,7 +115,7 @@ class RedirectTest {
         @DisplayName("createdAt이 null이면 예외를 발생시킨다")
         void of_NullCreatedAt_ThrowsException() {
             // when & then
-            assertThatThrownBy(() -> Redirect.of("abc123", "https://example.com", null))
+            assertThatThrownBy(() -> Redirect.of(1L, "abc123", "https://example.com", null))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Created at must not be null");
         }
@@ -131,8 +131,8 @@ class RedirectTest {
             // given
             String shortCode = "abc123";
             String targetUrl = "https://example.com";
-            Redirect redirect1 = Redirect.create(shortCode, targetUrl);
-            Redirect redirect2 = Redirect.create(shortCode, targetUrl);
+            Redirect redirect1 = Redirect.create(1L, shortCode, targetUrl);
+            Redirect redirect2 = Redirect.create(1L, shortCode, targetUrl);
 
             // when & then
             assertThat(redirect1).isEqualTo(redirect2);
@@ -143,8 +143,8 @@ class RedirectTest {
         @DisplayName("다른 shortCode를 가진 객체는 동등하지 않다")
         void equals_DifferentShortCode_ReturnsFalse() {
             // given
-            Redirect redirect1 = Redirect.create("abc123", "https://example.com");
-            Redirect redirect2 = Redirect.create("xyz789", "https://example.com");
+            Redirect redirect1 = Redirect.create(1L, "abc123", "https://example.com");
+            Redirect redirect2 = Redirect.create(2L, "xyz789", "https://example.com");
 
             // when & then
             assertThat(redirect1).isNotEqualTo(redirect2);
@@ -154,8 +154,8 @@ class RedirectTest {
         @DisplayName("다른 targetUrl을 가진 객체는 동등하지 않다")
         void equals_DifferentTargetUrl_ReturnsFalse() {
             // given
-            Redirect redirect1 = Redirect.create("abc123", "https://example.com");
-            Redirect redirect2 = Redirect.create("abc123", "https://different.com");
+            Redirect redirect1 = Redirect.create(1L, "abc123", "https://example.com");
+            Redirect redirect2 = Redirect.create(2L, "abc123", "https://different.com");
 
             // when & then
             assertThat(redirect1).isNotEqualTo(redirect2);
@@ -170,8 +170,8 @@ class RedirectTest {
             LocalDateTime time1 = LocalDateTime.of(2024, 1, 1, 12, 0, 0);
             LocalDateTime time2 = LocalDateTime.of(2024, 12, 31, 23, 59, 59);
 
-            Redirect redirect1 = Redirect.of(shortCode, targetUrl, time1);
-            Redirect redirect2 = Redirect.of(shortCode, targetUrl, time2);
+            Redirect redirect1 = Redirect.of(1L, shortCode, targetUrl, time1);
+            Redirect redirect2 = Redirect.of(1L, shortCode, targetUrl, time2);
 
             // when & then
             assertThat(redirect1).isEqualTo(redirect2);
@@ -182,7 +182,7 @@ class RedirectTest {
         @DisplayName("자기 자신과 비교하면 동등하다")
         void equals_SameInstance_ReturnsTrue() {
             // given
-            Redirect redirect = Redirect.create("abc123", "https://example.com");
+            Redirect redirect = Redirect.create(1L, "abc123", "https://example.com");
 
             // when & then
             assertThat(redirect).isEqualTo(redirect);
@@ -192,7 +192,7 @@ class RedirectTest {
         @DisplayName("null과 비교하면 동등하지 않다")
         void equals_Null_ReturnsFalse() {
             // given
-            Redirect redirect = Redirect.create("abc123", "https://example.com");
+            Redirect redirect = Redirect.create(1L, "abc123", "https://example.com");
 
             // when & then
             assertThat(redirect).isNotEqualTo(null);
@@ -210,7 +210,7 @@ class RedirectTest {
             String shortCode = "abc123";
             String targetUrl = "https://example.com";
             LocalDateTime createdAt = LocalDateTime.of(2024, 1, 1, 12, 0, 0);
-            Redirect redirect = Redirect.of(shortCode, targetUrl, createdAt);
+            Redirect redirect = Redirect.of(1L, shortCode, targetUrl, createdAt);
 
             // when
             String result = redirect.toString();
@@ -231,7 +231,7 @@ class RedirectTest {
         @DisplayName("생성 후 shortCode를 변경할 수 없다")
         void redirect_ShortCodeIsImmutable() {
             // given
-            Redirect redirect = Redirect.create("abc123", "https://example.com");
+            Redirect redirect = Redirect.create(1L, "abc123", "https://example.com");
             String originalShortCode = redirect.getShortCode();
 
             // when
@@ -245,7 +245,7 @@ class RedirectTest {
         @DisplayName("생성 후 targetUrl을 변경할 수 없다")
         void redirect_TargetUrlIsImmutable() {
             // given
-            Redirect redirect = Redirect.create("abc123", "https://example.com");
+            Redirect redirect = Redirect.create(1L, "abc123", "https://example.com");
             String originalTargetUrl = redirect.getTargetUrl();
 
             // when
@@ -260,7 +260,7 @@ class RedirectTest {
         void redirect_CreatedAtIsImmutable() {
             // given
             LocalDateTime createdAt = LocalDateTime.of(2024, 1, 1, 12, 0, 0);
-            Redirect redirect = Redirect.of("abc123", "https://example.com", createdAt);
+            Redirect redirect = Redirect.of(1L, "abc123", "https://example.com", createdAt);
 
             // when
             // createdAt은 final이므로 setter가 없음

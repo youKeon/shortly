@@ -13,15 +13,16 @@ public final class UrlClickedEvent extends BaseEvent {
     private final String originalUrl;
 
     public UrlClickedEvent(
+        final long eventId,
         final String shortCode,
         final String originalUrl
     ) {
-        this(null, EventType.URL_CLICKED, null, shortCode, originalUrl);
+        this(eventId, EventType.URL_CLICKED, null, shortCode, originalUrl);
     }
 
     @JsonCreator
     public UrlClickedEvent(
-        @JsonProperty("eventId") final String eventId,
+        @JsonProperty("eventId") final long eventId,
         @JsonProperty("eventType") final EventType eventType,
         @JsonProperty("timestamp") final Instant timestamp,
         @JsonProperty("shortCode") final String shortCode,
@@ -32,7 +33,7 @@ public final class UrlClickedEvent extends BaseEvent {
         this.originalUrl = Objects.requireNonNull(originalUrl, "originalUrl must not be null");
     }
 
-    public static UrlClickedEvent of(String shortCode, String originalUrl) {
-        return new UrlClickedEvent(shortCode, originalUrl);
+    public static UrlClickedEvent of(long eventId, String shortCode, String originalUrl) {
+        return new UrlClickedEvent(eventId, shortCode, originalUrl);
     }
 }

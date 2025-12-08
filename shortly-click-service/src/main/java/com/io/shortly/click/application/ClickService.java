@@ -1,8 +1,6 @@
 package com.io.shortly.click.application;
 
-import com.io.shortly.click.application.dto.ClickCommand.ClickDetailCommand;
 import com.io.shortly.click.application.dto.ClickCommand.ClickStatsCommand;
-import com.io.shortly.click.application.dto.ClickResult.ClickDetailResult;
 import com.io.shortly.click.application.dto.ClickResult.ClickStatsResult;
 import com.io.shortly.click.domain.UrlClick;
 import com.io.shortly.click.domain.UrlClickRepository;
@@ -18,8 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class ClickService {
-
-    private static final int DEFAULT_LIMIT = 100;
 
     private final UrlClickRepository urlClickRepository;
 
@@ -46,19 +42,5 @@ public class ClickService {
             clicksLast24Hours,
             clicksLast7Days
         );
-    }
-
-    public List<ClickDetailResult> getClickDetails(ClickDetailCommand command) {
-
-        int effectiveLimit = command.limit() != null ? command.limit() : DEFAULT_LIMIT;
-
-        List<UrlClick> clicks = urlClickRepository.findByShortCodeWithLimit(
-                command.shortCode(),
-                effectiveLimit
-        );
-
-        return clicks.stream()
-                .map(click -> ClickDetailResult.of(click.getClickedAt()))
-                .toList();
     }
 }

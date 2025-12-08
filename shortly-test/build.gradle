@@ -14,9 +14,9 @@ dependencies {
     testImplementation project(':shortly-redirect-service')
     testImplementation project(':shortly-click-service')
 
-    // Reactive testing
+    // Spring Boot
+    testImplementation 'org.springframework.boot:spring-boot-starter-jdbc'
     testImplementation 'org.springframework.boot:spring-boot-starter-webflux'
-    testImplementation 'io.projectreactor:reactor-test'
 
     // Kafka Test
     testImplementation 'org.springframework.kafka:spring-kafka-test'
@@ -27,11 +27,12 @@ dependencies {
     testImplementation 'org.testcontainers:mysql:1.19.3'
     testImplementation 'org.testcontainers:kafka:1.19.3'
 
-    // Awaitility for async testing
-    testImplementation 'org.awaitility:awaitility:4.2.0'
-
     // Redisson
     testImplementation 'org.redisson:redisson-spring-boot-starter:3.24.3'
+
+    // JMH
+    testImplementation 'org.openjdk.jmh:jmh-core:1.37'
+    testAnnotationProcessor 'org.openjdk.jmh:jmh-generator-annprocess:1.37'
 }
 
 bootJar {
