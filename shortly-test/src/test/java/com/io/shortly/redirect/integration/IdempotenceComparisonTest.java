@@ -61,12 +61,9 @@ class IdempotenceComparisonTest {
         @DynamicPropertySource
         static void overrideProperties(DynamicPropertyRegistry registry) {
                 registry.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers);
-                registry.add("spring.datasource.primary.jdbc-url", mysql::getJdbcUrl);
-                registry.add("spring.datasource.primary.username", mysql::getUsername);
-                registry.add("spring.datasource.primary.password", mysql::getPassword);
-                registry.add("spring.datasource.replica.jdbc-url", mysql::getJdbcUrl);
-                registry.add("spring.datasource.replica.username", mysql::getUsername);
-                registry.add("spring.datasource.replica.password", mysql::getPassword);
+                registry.add("spring.datasource.url", mysql::getJdbcUrl);
+                registry.add("spring.datasource.username", mysql::getUsername);
+                registry.add("spring.datasource.password", mysql::getPassword);
         }
 
         @Autowired
