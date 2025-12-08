@@ -1,82 +1,69 @@
 package com.io.shortly.click.infrastructure.event.kafka;
 
-import com.io.shortly.click.domain.ClickEventDLQPublisher;
 import com.io.shortly.click.domain.UrlClick;
 import com.io.shortly.click.domain.UrlClickRepository;
 import com.io.shortly.shared.event.UrlClickedEvent;
-import com.io.shortly.shared.kafka.KafkaTopics;
-import java.util.List;
+import com.io.shortly.shared.kafka.TopicType;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class UrlClickedEventConsumer {
 
-    private static final int MAX_INDIVIDUAL_RETRIES = 3;
-
     private final UrlClickRepository urlClickRepository;
-    private final ClickEventDLQPublisher dlqPublisher;
 
     @Transactional
-    @KafkaListener(
-        topics = KafkaTopics.URL_CLICKED,
-        groupId = KafkaTopics.CLICK_SERVICE_GROUP,
-        containerFactory = "kafkaListenerContainerFactory"
-    )
-    public void consumeUrlClickedBatch(List<UrlClickedEvent> events) {
+    @KafkaListener(topics = "#{T(com.io.shortly.shared.kafka.TopicType).URL_CLICKED.getTopicName()}", groupId = TopicType.ConsumerGroups.CLICK_SERVICE, containerFactory = "kafkaListenerContainerFactory", batch = "true")
+    public void consumeUrlClicked(List<UrlClickedEvent> events) {
         if (events.isEmpty()) {
             return;
         }
 
-        try {
-            List<UrlClick> urlClicks = events.stream()
+        log.debug("[Kafka Batch Consumer] 배치 처리 시작 - size={}", events.size());
+
+        List<UrlClick> urlClicks = events.stream()
                 .map(event -> UrlClick.create(
-                    event.getShortCode(),
-                    event.getOriginalUrl())
-                )
+                        event.getEventId(),
+                        event.getShortCode(),
+                        event.getOriginalUrl()))
                 .toList();
 
+        try {
             urlClickRepository.saveAll(urlClicks);
-        } catch (Exception e) {
-            processBatchIndividually(events);
+        } catch (DataIntegrityViolationException e) {
+            log.warn("[Kafka Batch Consumer] 배치 저장 실패, 개별 처리로 폴백 - size={}", events.size());
+            processFallback(events);
         }
     }
 
-    private void processBatchIndividually(List<UrlClickedEvent> events) {
+    private void processFallback(List<UrlClickedEvent> events) {
+        int successCount = 0;
+        int duplicateCount = 0;
+
         for (UrlClickedEvent event : events) {
-            processWithRetry(event);
-        }
-    }
-
-    private void processWithRetry(UrlClickedEvent event) {
-        Exception exception = null;
-
-        for (int attempt = 1; attempt <= MAX_INDIVIDUAL_RETRIES; attempt++) {
             try {
                 UrlClick urlClick = UrlClick.create(
+                        event.getEventId(),
                         event.getShortCode(),
                         event.getOriginalUrl());
 
                 urlClickRepository.save(urlClick);
-            } catch (Exception e) {
-                exception = e;
-                if (attempt < MAX_INDIVIDUAL_RETRIES) {
-                    // 지수 백오프: 100ms → 200ms → 400ms
-                    sleep(100 * (long) Math.pow(2, attempt - 1));
-                }
+                successCount++;
+
+            } catch (DataIntegrityViolationException e) {
+                duplicateCount++;
             }
         }
-        dlqPublisher.publishToDLQ(event, exception, MAX_INDIVIDUAL_RETRIES);
-    }
 
-    private void sleep(long millis) {
-        try {
-            Thread.sleep(millis);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+        log.debug("[Kafka Batch Consumer] 폴백 처리 완료 - total={}, success={}, duplicate={}",
+                events.size(), successCount, duplicateCount);
     }
 }
