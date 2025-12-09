@@ -8,8 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
-import java.util.concurrent.TimeUnit;
-
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -19,17 +17,16 @@ public class RedirectEventPublisherKafkaImpl implements RedirectEventPublisher {
 
     @Override
     public void publishUrlClicked(UrlClickedEvent event) {
-        try {
-            kafkaTemplate.send(TopicType.URL_CLICKED.getTopicName(), event.getShortCode(), event)
-                    .get(3, TimeUnit.SECONDS);
-
-            log.debug("[Event] 클릭 이벤트 발행 성공: eventId={}, shortCode={}",
-                    event.getEventId(), event.getShortCode());
-
-        } catch (Exception ex) {
-            log.error("[Event] 클릭 이벤트 발행 최종 실패 - eventId={}, shortCode={}, error={}",
-                    event.getEventId(), event.getShortCode(), ex.getMessage());
-        }
+        kafkaTemplate.send(TopicType.URL_CLICKED.getTopicName(), event.getShortCode(), event)
+                .whenComplete((result, ex) -> {
+                    if (ex == null) {
+                        log.debug("[Event] 클릭 이벤트 발행 성공: eventId={}, shortCode={}",
+                                event.getEventId(), event.getShortCode());
+                    } else {
+                        log.error("[Event] 클릭 이벤트 발행 실패 - eventId={}, shortCode={}, error={}",
+                                event.getEventId(), event.getShortCode(), ex.getMessage());
+                    }
+                });
     }
 
 }

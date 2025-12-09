@@ -47,11 +47,6 @@ export function setup() {
   const responses = http.batch(reqs);
 
   responses.forEach((res) => {
-    if (!res) {
-      console.error("Received undefined response in batch");
-      return;
-    }
-
     if (res.status === 200 || res.status === 201) {
       try {
         const body = JSON.parse(res.body);
@@ -79,7 +74,7 @@ export default function (data) {
 
   const code = codes[Math.floor(Math.random() * codes.length)];
   const res = http.get(`${REDIRECT_BASE_URL}/r/${code}`, { redirects: 0 });
-  console.log('res ::: ', res);
+
   check(res, {
     "status is 302": (r) => r.status === 302,
   });
