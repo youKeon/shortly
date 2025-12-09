@@ -1,6 +1,9 @@
 package com.io.shortly.url.infrastructure.redis;
 
 import com.io.shortly.shared.event.UrlCreatedEvent;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,8 +26,12 @@ public class RedisPubSubConfig {
         template.setKeySerializer(new StringRedisSerializer());
 
         // Value: JSON serializer for UrlCreatedEvent
-        Jackson2JsonRedisSerializer<UrlCreatedEvent> serializer =
-                new Jackson2JsonRedisSerializer<>(UrlCreatedEvent.class);
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+        Jackson2JsonRedisSerializer<UrlCreatedEvent> serializer = new Jackson2JsonRedisSerializer<>(objectMapper,
+                UrlCreatedEvent.class);
         template.setValueSerializer(serializer);
 
         return template;

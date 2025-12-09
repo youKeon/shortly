@@ -12,10 +12,10 @@ public class Redirect {
     private final LocalDateTime createdAt;
 
     private Redirect(
-        final Long eventId,
-        final String shortCode,
-        final String targetUrl,
-        final LocalDateTime createdAt
+            final Long eventId,
+            final String shortCode,
+            final String targetUrl,
+            final LocalDateTime createdAt
     ) {
         Assert.hasText(shortCode, "Short code must not be blank");
         Assert.hasText(targetUrl, "Target URL must not be blank");
@@ -39,7 +39,7 @@ public class Redirect {
         return new Redirect(eventId, shortCode, targetUrl, createdAt);
     }
 
-    public long getEventId() {
+    public Long getEventId() {
         return eventId;
     }
 
@@ -57,11 +57,13 @@ public class Redirect {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         Redirect redirect = (Redirect) o;
         return Objects.equals(shortCode, redirect.shortCode) &&
-            Objects.equals(targetUrl, redirect.targetUrl);
+                Objects.equals(targetUrl, redirect.targetUrl);
     }
 
     @Override
@@ -72,9 +74,9 @@ public class Redirect {
     @Override
     public String toString() {
         return "Redirect{" +
-            "shortCode='" + shortCode + '\'' +
-            ", targetUrl='" + targetUrl + '\'' +
-            ", createdAt=" + createdAt +
-            '}';
+                "shortCode='" + shortCode + '\'' +
+                ", targetUrl='" + targetUrl + '\'' +
+                ", createdAt=" + createdAt +
+                '}';
     }
 }

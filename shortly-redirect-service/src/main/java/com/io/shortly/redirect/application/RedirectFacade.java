@@ -23,16 +23,18 @@ public class RedirectFacade {
 
         Redirect redirect = cacheService.getRedirect(shortCode);
 
+        Long eventId = redirect.getEventId();
+
+        if (eventId == null) {
+            return RedirectLookupResult.of(redirect.getTargetUrl());
+        }
+
         UrlClickedEvent event = UrlClickedEvent.of(
-                redirect.getEventId(),
+                eventId,
                 redirect.getShortCode(),
                 redirect.getTargetUrl()
         );
         eventPublisher.publishUrlClicked(event);
-
-        log.debug("리다이렉트 및 클릭 이벤트 발행 - shortCode: {}, eventId: {}",
-            redirect.getShortCode(), redirect.getEventId()
-        );
 
         return RedirectLookupResult.of(redirect.getTargetUrl());
     }
