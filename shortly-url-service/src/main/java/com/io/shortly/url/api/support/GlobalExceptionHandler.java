@@ -2,8 +2,8 @@ package com.io.shortly.url.api.support;
 
 import com.io.shortly.shared.api.support.BaseGlobalExceptionHandler;
 import com.io.shortly.shared.api.support.error.ErrorResponse;
-import com.io.shortly.url.domain.url.ShortCodeGenerationFailedException;
-import com.io.shortly.url.domain.url.ShortCodeNotFoundException;
+import com.io.shortly.url.domain.ShortCodeGenerationFailedException;
+import com.io.shortly.url.domain.ShortCodeNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;

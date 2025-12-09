@@ -1,4 +1,4 @@
-package com.io.shortly.url.domain.url;
+package com.io.shortly.url.domain;
 
 public interface ShortUrlGenerator {
 

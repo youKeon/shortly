@@ -1,4 +1,4 @@
-package com.io.shortly.url.infrastructure.redis;
+package com.io.shortly.url.infrastructure.event.redis;
 
 import com.io.shortly.shared.event.UrlCreatedEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;

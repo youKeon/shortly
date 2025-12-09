@@ -1,6 +1,6 @@
 package com.io.shortly.url.infrastructure.persistence.jpa.url;
 
-import com.io.shortly.url.domain.url.ShortUrl;
+import com.io.shortly.url.domain.ShortUrl;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

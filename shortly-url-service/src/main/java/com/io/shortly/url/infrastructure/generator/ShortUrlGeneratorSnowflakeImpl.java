@@ -1,7 +1,7 @@
 package com.io.shortly.url.infrastructure.generator;
 
-import com.io.shortly.url.domain.url.GeneratedShortCode;
-import com.io.shortly.url.domain.url.ShortUrlGenerator;
+import com.io.shortly.url.domain.GeneratedShortCode;
+import com.io.shortly.url.domain.ShortUrlGenerator;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 @Primary
 public class ShortUrlGeneratorSnowflakeImpl implements ShortUrlGenerator {
 
-    private static final long CUSTOM_EPOCH = 1704067200000L; // 2024-01-01T00:00:00Z
+    private static final long CUSTOM_EPOCH = 1704067200000L;
 
     private static final long WORKER_ID_BITS = 5L;
     private static final long DATACENTER_ID_BITS = 5L;

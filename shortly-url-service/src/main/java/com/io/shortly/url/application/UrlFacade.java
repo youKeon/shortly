@@ -1,17 +1,16 @@
 package com.io.shortly.url.application;
 
 import com.io.shortly.shared.event.UrlCreatedEvent;
-import com.io.shortly.shared.kafka.TopicType;
 import com.io.shortly.url.application.dto.ShortUrlCommand.FindCommand;
 import com.io.shortly.url.application.dto.ShortUrlCommand.ShortenCommand;
 import com.io.shortly.url.application.dto.ShortUrlResult.ShortenedResult;
-import com.io.shortly.url.domain.url.ShortCodeNotFoundException;
-import com.io.shortly.url.domain.url.ShortUrl;
-import com.io.shortly.url.domain.url.ShortUrlGenerator;
-import com.io.shortly.url.domain.url.ShortUrlRepository;
+import com.io.shortly.url.domain.ShortCodeNotFoundException;
+import com.io.shortly.url.domain.ShortUrl;
+import com.io.shortly.url.domain.ShortUrlEventPublisher;
+import com.io.shortly.url.domain.ShortUrlGenerator;
+import com.io.shortly.url.domain.ShortUrlRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
@@ -19,11 +18,11 @@ import org.springframework.util.Assert;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class UrlService {
+public class UrlFacade {
 
     private final ShortUrlRepository shortUrlRepository;
     private final ShortUrlGenerator shortUrlGenerator;
-    private final RedisTemplate<String, UrlCreatedEvent> redisTemplate;
+    private final ShortUrlEventPublisher eventPublisher;
 
     @Transactional
     public ShortenedResult shortenUrl(ShortenCommand command) {
@@ -32,23 +31,18 @@ public class UrlService {
 
         var generated = shortUrlGenerator.generate(command.originalUrl());
 
-        // 단축 URL 저장
         ShortUrl shortUrl = ShortUrl.create(generated.shortCode(), command.originalUrl());
         shortUrlRepository.save(shortUrl);
 
-        log.info("URL shortened: {} -> {} (snowflakeId: {})",
-            command.originalUrl(), shortUrl.getShortCode(), generated.snowflakeId());
+        log.info("URL shortened: {} -> {} ", command.originalUrl(), shortUrl.getShortCode());
 
-        try {
-            UrlCreatedEvent event = UrlCreatedEvent.of(
-                generated.snowflakeId(),
-                shortUrl.getShortCode(),
-                shortUrl.getOriginalUrl()
-            );
-            redisTemplate.convertAndSend(TopicType.URL_CREATED.getTopicName(), event);
-        } catch (Exception e) {
-            log.warn("Failed to publish URL created event: {}", e.getMessage());
-        }
+        UrlCreatedEvent event = UrlCreatedEvent.of(
+            generated.snowflakeId(),
+            shortUrl.getShortCode(),
+            shortUrl.getOriginalUrl()
+        );
+
+        eventPublisher.publishUrlCreated(event);
 
         return ShortenedResult.of(shortUrl.getShortCode(), shortUrl.getOriginalUrl());
     }

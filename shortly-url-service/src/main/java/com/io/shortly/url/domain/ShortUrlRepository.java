@@ -1,4 +1,4 @@
-package com.io.shortly.url.domain.url;
+package com.io.shortly.url.domain;
 
 import java.util.Optional;
 
@@ -8,5 +8,4 @@ public interface ShortUrlRepository {
 
     Optional<ShortUrl> findByShortCode(String shortCode);
 
-    boolean existsByShortCode(String shortCode);
 }

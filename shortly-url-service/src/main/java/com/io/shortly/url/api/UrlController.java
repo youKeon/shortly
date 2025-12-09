@@ -7,7 +7,7 @@ import static com.io.shortly.url.application.dto.ShortUrlResult.ShortenedResult;
 
 import com.io.shortly.url.api.dto.ShortUrlResponse.GetShortUrlResponse;
 import com.io.shortly.url.api.dto.ShortUrlResponse.ShortenedResponse;
-import com.io.shortly.url.application.UrlService;
+import com.io.shortly.url.application.UrlFacade;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,13 +28,13 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "URL Service", description = "URL 단축 및 조회 API")
 public class UrlController {
 
-    private final UrlService urlService;
+    private final UrlFacade urlFacade;
 
     @PostMapping("/shorten")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "URL 단축", description = "긴 URL을 짧은 코드로 변환합니다")
     public ShortenedResponse shortenUrl(@Valid @RequestBody ShortenRequest request) {
-        ShortenedResult result = urlService.shortenUrl(ShortenCommand.of(request.originalUrl()));
+        ShortenedResult result = urlFacade.shortenUrl(ShortenCommand.of(request.originalUrl()));
         return ShortenedResponse.of(result);
     }
 
@@ -43,7 +43,7 @@ public class UrlController {
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @ApiResponse(responseCode = "404", description = "Short Code를 찾을 수 없음")
     public GetShortUrlResponse findUrl(@PathVariable String shortCode) {
-        ShortenedResult result = urlService.findByShortCode(FindCommand.of(shortCode));
+        ShortenedResult result = urlFacade.findByShortCode(FindCommand.of(shortCode));
         return GetShortUrlResponse.of(result.shortCode(), result.originalUrl());
     }
 }

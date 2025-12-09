@@ -1,11 +1,5 @@
-package com.io.shortly.url.domain.url;
+package com.io.shortly.url.domain;
 
-/**
- * Snowflake ID와 Short Code를 함께 담는 Value Object
- *
- * @param snowflakeId Snowflake ID (Event ID로 사용)
- * @param shortCode   Base62 인코딩된 Short Code
- */
 public record GeneratedShortCode(
     long snowflakeId,
     String shortCode
