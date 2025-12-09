@@ -36,29 +36,12 @@ sequenceDiagram
   participant US as URL Service
   participant DB as MySQL (Outbox)
   participant Kafka
-
-  Client->>US: URL 단축 요청
-  US->>US: Snowflake ID 생성
-  US->>US: Base62 Encode
-
-%% Transaction Boundary (URL Service + DB)
-  rect rgba(255, 230, 180, 0.35)
-    Note right of US: Transaction Start
-
-    US->>DB: 단축 URL 저장
-    US->>DB: 단축 URL 생성 이벤트 저장
-
-    Note right of US: Commit
-  end
-
-  US-->>Client: 단축 URL 반환
-
-  loop Scheduler
-    US->>DB: 이벤트 조회
-    US->>Kafka: Kafka 이벤트 발행
-    US->>DB: 이벤트 '발행' 처리
-  end
-
+  Client ->> US: URL 단축 요청
+  US ->> US: Snowflake ID 생성
+  US ->> US: Base62 Encode
+  US ->> DB: 단축 URL 저장
+  US ->> DB: 단축 URL 생성 이벤트 저장
+  US -->> Client: 단축 URL 반환
 ```
 
 #### 2. URL 리다이렉션
@@ -92,17 +75,12 @@ sequenceDiagram
             RS-->>Client: 302 Redirect
         end
     end
-
-    par 비동기 이벤트 발행
-        RS->>Kafka: 클릭 이벤트 발행
-        Kafka->>CS: 클릭 이벤트 소비
-        CS->>DB_C: 클릭 정보 저장
-    end
 ```
 
 ## 문제 해결 경험
 
+- [이벤트 특성을 고려한 MQ(RabbitMQ VS Kafka VS Redis(Stream)) 선택 과정](docs/01_SNOWFLAKE_ALGORITHM.md)
 - [Snowflake Algorithm으로 URL 충돌률 1.3%→0%, 생성속도 3.2배 개선](docs/01_SNOWFLAKE_ALGORITHM.md)
 - [Transactional Outbox Pattern으로 Kafka 장애 시 이벤트 유실 방지 (24만건 무손실)](docs/02_TRANSACTIONAL_OUTBOX_PATTERN.md)
 - [2-Layer Cache (Redis+Caffeine) 전략으로 캐시 히트율 99.996%, P95 90ms 달성](docs/03_TWO_LAYER_CACHE_STRATEGY.md)
-- [초당 5,000건 이상의 클릭 이벤트 처리를 위한 Kafka 설정 과정](docs/04_KAFKA_CLICK_EVENT.md)
+- [클릭 이벤트의 신뢰성을 보장하기 위한 Kafka 설정 과정](docs/04_KAFKA_CLICK_EVENT.md)
