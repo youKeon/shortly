@@ -7,7 +7,7 @@ services:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: shortly_url
     ports:
-      - "3307:3306"
+      - "3306:3306"
     volumes:
       - mysql-url-data:/var/lib/mysql
     networks:
@@ -22,7 +22,7 @@ services:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: shortly_click
     ports:
-      - "3309:3306"
+      - "3307:3306"
     volumes:
       - mysql-click-data:/var/lib/mysql
     networks:
@@ -53,7 +53,7 @@ services:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:19092,CONTROLLER://0.0.0.0:9093,EXTERNAL://0.0.0.0:9092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:19092,EXTERNAL://localhost:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:19092,EXTERNAL://${KAFKA_EXTERNAL_HOST:-localhost}:9092
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
@@ -63,27 +63,13 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
-      KAFKA_HEAP_OPTS: "-Xmx512M -Xms512M"
+      KAFKA_HEAP_OPTS: "-Xmx1g -Xms1g"
     deploy:
       resources:
         limits:
-          memory: 768M
+          memory: 1536M
         reservations:
-          memory: 512M
-    networks:
-      - shortly-network
-
-  kafka-ui:
-    image: provectuslabs/kafka-ui:latest
-    container_name: shortly-kafka-ui
-    ports:
-      - "8090:8080"
-    environment:
-      KAFKA_CLUSTERS_0_NAME: shortly-kafka
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:19092
-      DYNAMIC_CONFIG_ENABLED: "true"
-    depends_on:
-      - kafka
+          memory: 1024M
     networks:
       - shortly-network
 
