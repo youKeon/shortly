@@ -39,11 +39,16 @@
 
 ## 3. L1 Cache (Caffeine) 만료 정책: W-TinyLFU
 
-### 3.1 선택 사유
-- W-TinyLFU는 다양한 워크로드에서 최적에 가까운 적중률 제공([문서](https://github.com/ben-manes/caffeine/wiki/Efficiency))
+### 3.1 선택 이유
+- Caffeine Cache가 공식적으로 사용하는 만료 정책
+- 다양한 워크로드에서 최적에 가까운 적중률 제공([문서](https://github.com/ben-manes/caffeine/wiki/Efficiency))
   - ![img_12.png](img_12.png)
   - LRU 대비 최대 30% 이상 적중률 향상
 
 ## 4. L2 Cache (Redis) 만료 정책: LFU
-### 4.1 선택 사유
-- 인기 URL이 트래픽의 대부분을 차지하는 트래픽 특성을 고려
+
+### 4.1 선택 이유
+
+#### 트래픽 분포 특성 반영
+- 단축 URL 트래픽은 소수 인기 URL이 전체 트래픽의 대부분을 차지
+- LFU는 접근 빈도 기반으로 인기 URL을 캐시에 유지
