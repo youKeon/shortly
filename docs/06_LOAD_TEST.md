@@ -6,9 +6,9 @@
 
 ![img_15.png](img_15.png)
 
-- k6 부하 생성 서버: M3 Pro 8core 16GB RAM
-- API Server: M1 Air 8core 8GB RAM
-- Kafka, Redis, MySQL: Windows 4core 32GB RAM
+- `k6 부하 생성 서버`: 8core 16GB RAM
+- `API Server`: 8core 8GB RAM
+- `infrastructure`: 4core 32GB RAM
 
 ## 2. 테스트 개요
 
@@ -29,7 +29,6 @@
 
 - 에러율 1% 미만
 - P95 50ms 이하
-- P90 30ms 이하
 
 ## 3. 1차 개선
 
