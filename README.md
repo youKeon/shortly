@@ -79,8 +79,9 @@ sequenceDiagram
 
 ## 문제 해결 경험
 
-- [이벤트 특성을 고려한 MQ(RabbitMQ VS Kafka VS Redis(Stream)) 선택 과정](docs/01_SNOWFLAKE_ALGORITHM.md)
-- [Snowflake Algorithm으로 URL 충돌률 1.3%→0%, 생성속도 3.2배 개선](docs/01_SNOWFLAKE_ALGORITHM.md)
-- [Transactional Outbox Pattern으로 Kafka 장애 시 이벤트 유실 방지 (24만건 무손실)](docs/02_TRANSACTIONAL_OUTBOX_PATTERN.md)
-- [2-Layer Cache (Redis+Caffeine) 전략으로 캐시 히트율 99.996%, P95 90ms 달성](docs/03_TWO_LAYER_CACHE_STRATEGY.md)
-- [클릭 이벤트의 신뢰성을 보장하기 위한 Kafka 설정 과정](docs/04_KAFKA_CLICK_EVENT.md)
+- [메세지 큐 선택 과정(RabbitMQ VS Kafka VS Redis)](docs/01_SNOWFLAKE_ALGORITHM.md)
+- [단축 URL 특성을 고려한 캐시 만료 정책 선택(TinyLFU VS LFU VS LRU)](docs/02_CACHE_EVICTION.md)
+- [Caffeine Cache 동기화 메커니즘을 활용한 Cache Stampede 문제 해결](docs/03_CACHE_STAMPEDE.md)
+- [클릭 이벤트의 신뢰성을 보장하기 위한 Kafka 설정 최적화](docs/04_KAFKA_CLICK_EVENT.md)
+- [Snowflake Algorithm으로 URL 충돌률 1.3% → 0%, 생성속도 3.2배 개선](docs/05_SNOWFLAKE_ALGORITHM.md)
+- [k6 부하 테스트를 통한 성능 개선 과정](docs/06_LOAD_TEST.md)

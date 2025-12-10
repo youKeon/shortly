@@ -18,20 +18,20 @@ public class RedisPubSubConfig {
 
     @Bean
     public RedisTemplate<String, UrlCreatedEvent> urlCreatedEventRedisTemplate(
-            RedisConnectionFactory connectionFactory) {
+            RedisConnectionFactory connectionFactory
+    ) {
         RedisTemplate<String, UrlCreatedEvent> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
-
-        // Key: String serializer
         template.setKeySerializer(new StringRedisSerializer());
 
-        // Value: JSON serializer for UrlCreatedEvent
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-        Jackson2JsonRedisSerializer<UrlCreatedEvent> serializer = new Jackson2JsonRedisSerializer<>(objectMapper,
-                UrlCreatedEvent.class);
+        Jackson2JsonRedisSerializer<UrlCreatedEvent> serializer = new Jackson2JsonRedisSerializer<>(
+            objectMapper,
+            UrlCreatedEvent.class
+        );
         template.setValueSerializer(serializer);
 
         return template;

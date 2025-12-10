@@ -15,10 +15,10 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      acks: 1  # Leader만 확인 (At-Least-Once, 30-50% latency 개선)
-      retries: 3  # 네트워크 장애 재시도
+      acks: 1
+      retries: 3
       properties:
-        enable.idempotence: true  # Kafka 내부 중복 방지 (Producer-level)
+        enable.idempotence: true
         buffer.memory: 16777216
         spring.json.add.type.headers: false
         delivery.timeout.ms: 120000

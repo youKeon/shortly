@@ -26,8 +26,6 @@ public class RedirectController {
     @ApiResponse(responseCode = "302", description = "리다이렉션 성공", content = @Content)
     @ApiResponse(responseCode = "404", description = "단축 코드를 찾을 수 없음")
     public ResponseEntity<Void> redirect(@PathVariable String shortCode) {
-        log.debug("[Controller] 리디렉션 요청: shortCode={}", shortCode);
-
         RedirectLookupResult result = redirectFacade.getOriginalUrl(shortCode);
 
         return ResponseEntity
