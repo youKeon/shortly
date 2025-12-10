@@ -1,5 +1,10 @@
 package com.io.shortly.shared.kafka;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@Getter
+@AllArgsConstructor
 public enum TopicType {
 
     // Main Topics
@@ -11,15 +16,6 @@ public enum TopicType {
 
     private final String topicName;
 
-    TopicType(String topicName) {
-        this.topicName = topicName;
-    }
-
-    public String getTopicName() {
-        return topicName;
-    }
-
-    @Override
     public String toString() {
         return topicName;
     }
