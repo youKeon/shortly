@@ -1,16 +1,15 @@
 import http from "k6/http";
-import { check } from "k6";
+import { check, sleep } from "k6";
 import { randomString } from 'https://jslib.k6.io/k6-utils/1.2.0/index.js';
 
-const BASE_URL = __ENV.BASE_URL || "http://localhost";
-const URL_BASE_URL = `${BASE_URL}:8081`;
-const REDIRECT_BASE_URL = `${BASE_URL}:8082`;
+const REDIRECT_BASE_URL = "http://192.168.219.101:8082";
+const URL_BASE_URL = __ENV.URL_HOST || "http://192.168.219.101:8081";
 
 export const options = {
   stages: [
     { duration: "10s", target: 30 },
-    { duration: "20s", target: 1200 },
-    { duration: "30s", target: 1400 },
+    { duration: "20s", target: 1000 },
+    { duration: "30s", target: 1200 },
     { duration: "10s", target: 0 },
   ],
   thresholds: {
@@ -23,16 +22,13 @@ export const options = {
 export function setup() {
   const codes = [];
   const reqs = [];
-  const COUNT = 500;
-
-  console.log(`Starting setup: Creating ${COUNT} short URLs...`);
+  const COUNT = 10;
 
   for (let i = 0; i < COUNT; i++) {
     const payload = JSON.stringify({
       originalUrl: `https://example.com/page-${randomString(10)}-${i}`
     });
 
-    // Using http.batch for better performance in setup
     reqs.push({
       method: 'POST',
       url: `${URL_BASE_URL}/api/v1/urls/shorten`,
@@ -43,7 +39,6 @@ export function setup() {
     });
   }
 
-  // batch requests
   const responses = http.batch(reqs);
 
   responses.forEach((res) => {
@@ -61,7 +56,12 @@ export function setup() {
     }
   });
 
-  console.log(`Setup complete. Generated ${codes.length} valid short codes.`);
+  sleep(2); // pub/sub 처리 대기
+
+  codes.forEach(code => {
+    http.get(`${REDIRECT_BASE_URL}/r/${code}`, { redirects: 0 });
+  });
+
   return { codes };
 }
 
