@@ -8,6 +8,7 @@ import com.io.shortly.redirect.infrastructure.cache.CacheKeyGenerator;
 import com.io.shortly.redirect.infrastructure.cache.CachedRedirect;
 import java.time.Duration;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -49,6 +50,11 @@ public class RedirectCacheRedisImpl implements RedirectCache {
                     shortCode, e.getMessage());
             return Optional.empty();
         }
+    }
+
+    @Override
+    public Redirect getOrLoad(String shortCode, Supplier<Redirect> loader) {
+        return get(shortCode).orElseGet(loader);
     }
 
     @Override
