@@ -107,7 +107,9 @@
 - 분산 환경에서도 고유성 보장
 
 #### 검증
-> JMH 벤치마크로 테스트 진행 ([테스트 코드](/shortly-test/src/jmh/java/com/io/shortly/test/benchmark/IdGeneratorBenchmark.java))
+> JMH 벤치마크로 테스트 진행
+>- [테스트 코드](/shortly-test/src/jmh/java/com/io/shortly/test/benchmark/IdGeneratorBenchmark.java)
+>- [테스트 결과](/shortly-test/src/jmh/java/com/io/shortly/test/benchmark/results.txt)
 
 `처리량(Throughput)`:
 - UUID: 0.010 ops/ns -> 초당 1,000만개

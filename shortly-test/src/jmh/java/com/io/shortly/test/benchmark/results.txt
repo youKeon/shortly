@@ -1,0 +1,22 @@
+Benchmark                                                    Mode  Cnt    Score     Error   Units
+IdGeneratorBenchmark.generateSnowflake                      thrpt    5    0.004 ±   0.001  ops/ns
+IdGeneratorBenchmark.generateSnowflake:·gc.alloc.rate       thrpt    5   ≈ 10⁻³            MB/sec
+IdGeneratorBenchmark.generateSnowflake:·gc.alloc.rate.norm  thrpt    5   ≈ 10⁻⁴              B/op
+IdGeneratorBenchmark.generateSnowflake:·gc.count            thrpt    5      ≈ 0            counts
+
+IdGeneratorBenchmark.generateUuid                           thrpt    5    0.010 ±   0.003  ops/ns
+IdGeneratorBenchmark.generateUuid:·gc.alloc.rate            thrpt    5  920.377 ± 302.643  MB/sec
+IdGeneratorBenchmark.generateUuid:·gc.alloc.rate.norm       thrpt    5   96.000 ±   0.001    B/op
+IdGeneratorBenchmark.generateUuid:·gc.count                 thrpt    5    3.000            counts
+IdGeneratorBenchmark.generateUuid:·gc.time                  thrpt    5    3.000                ms
+
+IdGeneratorBenchmark.generateSnowflake                       avgt    5  243.993 ±   0.210   ns/op
+IdGeneratorBenchmark.generateSnowflake:·gc.alloc.rate        avgt    5   ≈ 10⁻³            MB/sec
+IdGeneratorBenchmark.generateSnowflake:·gc.alloc.rate.norm   avgt    5   ≈ 10⁻⁴              B/op
+IdGeneratorBenchmark.generateSnowflake:·gc.count             avgt    5      ≈ 0            counts
+
+IdGeneratorBenchmark.generateUuid                            avgt    5  100.803 ±  38.821   ns/op
+IdGeneratorBenchmark.generateUuid:·gc.alloc.rate             avgt    5  914.801 ± 322.334  MB/sec
+IdGeneratorBenchmark.generateUuid:·gc.alloc.rate.norm        avgt    5   96.000 ±   0.001    B/op
+IdGeneratorBenchmark.generateUuid:·gc.count                  avgt    5    3.000            counts
+IdGeneratorBenchmark.generateUuid:·gc.time                   avgt    5    3.000                ms
