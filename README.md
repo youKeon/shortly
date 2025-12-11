@@ -107,7 +107,7 @@ sequenceDiagram
 - Consumer DLQ로 영구 실패 메시지 보존
 - 멱등성 처리로 중복 제거 (Snowflake ID + DB Unique Constraint)
 
-**성과:** 10만 개 이벤트 발행 -> 유실 0건
+**성과:** 130만 개 이벤트 발행 -> 유실 0건
 
 [상세 보기: Kafka 설정 최적화](docs/04_KAFKA_CLICK_EVENT.md)
 

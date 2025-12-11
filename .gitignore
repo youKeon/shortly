@@ -48,6 +48,8 @@ coverage/
 
 # ==== Test ====
 **/api-test.http
+**/k6/scripts/result.json
+**/k6/scripts/*.json
 
 # ==== AI ====
 .claude/
