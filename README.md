@@ -42,7 +42,7 @@ Shortly는 Kafka와 Redis를 활용한 대규모 트래픽 처리에 최적화�
 
 <img width="2360" height="1071" alt="Image" src="https://github.com/user-attachments/assets/2bdf3a61-859c-43ac-bb60-324776ac4808" />
 
-<img width="1450" height="771" alt="aws_arch" src="https://github.com/user-attachments/assets/3d044dd3-948d-4a61-855a-60788eb8430b" />
+<img width="1430" height="771" alt="Group 25" src="https://github.com/user-attachments/assets/25febdd3-1bc0-4f9a-a958-1d2665b0c37c" />
 
 ### 2.2 워크플로우
 
