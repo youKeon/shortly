@@ -178,15 +178,14 @@
 ### 5.1 애플리케이션은 이미 최적화 상태
 #### 근거1: 요청 지연 시간 분포
 - 전체 요청의 99.7%가 서버 내부에서 1ms 이내로 처리
-  - ![img_17.png](img_17.png)
-
+  - <img width="662" height="363" alt="Image" src="https://github.com/user-attachments/assets/222aa588-bb28-426f-a6d5-c03aee7f50d9" />
 #### 근거2: JVM 메트릭
 - GC 횟수: 5.27번
-  - ![img_10.png](img_10.png)
+  - <img width="410" height="247" alt="Image" src="https://github.com/user-attachments/assets/ee2adca5-e0d2-4de4-933e-6f9299661185" />
 - Stop The World 시간: 8ms
-  - ![img_16.png](img_16.png)
+  - <img width="398" height="284" alt="Image" src="https://github.com/user-attachments/assets/864b3ddf-f542-418c-aee4-fe1333d7f34f" />
 - JVM Heap 메모리 사용량: 74.4MB
-  - ![img_20.png](img_20.png)
+  - <img width="325" height="322" alt="Image" src="https://github.com/user-attachments/assets/efe0698f-c702-4628-aa7f-7be9852f4797" />
 
 ### 5.2 P95, P90이 목표치에 미달되는 이유: WiFi
 - k6 부하 서버와 WAS는 동일한 WiFi를 사용하여 네트워크 지연이 발생
