@@ -1,10 +1,10 @@
 package com.io.shortly.redirect.infrastructure.event.kafka;
 
-import static com.io.shortly.shared.kafka.TopicType.URL_CLICKED;
+import static com.io.shortly.shared.event.TopicType.URL_CLICKED;
 
 import com.io.shortly.redirect.domain.RedirectEventPublisher;
 import com.io.shortly.shared.event.UrlClickedEvent;
-import com.io.shortly.shared.kafka.TopicType;
+import com.io.shortly.shared.event.TopicType;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -30,7 +30,6 @@ public class RedirectEventPublisherKafkaImpl implements RedirectEventPublisher {
 
     @Override
     public void publishUrlClicked(UrlClickedEvent event) {
-        // 별도 Virtual Thread에서 실행 → 메인 스레드 즉시 반환
         CompletableFuture.runAsync(() -> publish(event, producerBackOff.start()), ASYNC_EXECUTOR);
     }
 

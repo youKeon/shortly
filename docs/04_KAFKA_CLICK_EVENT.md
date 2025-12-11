@@ -106,28 +106,39 @@
 
 - 64bit로 메모리 효율적
 - Timestamp 기반이라 시간 순서 정렬 가능
-- Machine ID를 포함해 분산 환경에서도 고유성 보장
-- URL 단축에 사용 중이므로 재사용 가능
+- 분산 환경에서도 고유성 보장
 
 #### 검증
-- JMH 벤치마크로 100만 건 생성 테스트를 실행
-  - 생성 시간:
-      - UUID: 0.131μs
-      - Snowflake ID: 0.244μs (+0.113μs)
-  - 메모리 사용량:
-      - UUID: 104.2 bytes
-      - Snowflake ID: 10.3 bytes (10배 절감)
+> JMH 벤치마크로 테스트 진행 ([테스트 코드](/shortly-test/src/jmh/java/com/io/shortly/test/benchmark/IdGeneratorBenchmark.java))
+
+`처리량(Throughput)`:
+- UUID: 0.010 ops/ns -> 초당 1,000만개
+- Snowflake ID: 0.004 ops/ns -> 초당 400만개
+- 비고: UUID가 2.5배 빠르지만 둘 다 충분히 많음
+
+`지연 시간(Latency)`:
+- UUID: 100.803 ± 38.821 ns/op
+- Snowflake ID: 243.993 ± 0.210 ns/op
+- 비고: UUID가 2.5배 빠르지만 둘 다 충분히 빠름
+
+`메모리 할당(JVM)`:
+- ID 생성당 메모리 할당
+  - UUID: 96 bytes/op
+  - Snowflake ID: 0 bytes/op
+- 초당 메모리 할당
+  - UUID: 920 MB/sec
+  - Snowflake ID: 0 MB/sec
+- GC 횟수
+  - UUID: 3회
+  - Snowflake ID: 0회
+- 비고: Snowflake ID가 메모리 할당이 거의 없음
+
+
 
 #### 결정: Snowflake ID
 
-- Snowflake ID가 약 2배 느리지만, 절대적 시간 차이는 0.1μs로 실제 워크로드 영향은 미미
-- 클릭 이벤트의 대량 발생을 고려할 때, 메모리 효율성이 더 중요
-- Timestamp 기반 정렬 가능성은 DB 인덱스 성능에도 유리
-- URL 단축에 이미 사용 중이므로 재사용 가능
+- 처리량과 지연 시간 측면에서 Snowflake가 약 2배 낮은 성능이지만 충분한 성능
+- 메모리 효율성과 DB 인덱스 성능을 고려했을 때 `Snowflake ID`가 적합하다 판단
 
 ### 4.3 DB 유니크 제약
 - 애플리케이션 로직이 실패하더라도 DB 레벨에서 중복을 방어하기 위해 `event_id` 컬럼에 Unique 제약조건 추가
-- 처리 흐름:
-  - 중복 이벤트 저장 시도 → DB가 `DuplicateKeyException` 발생
-  - 예외를 catch하여 무시 처리 (이미 저장된 이벤트이므로)
-  - Kafka Offset 커밋 → 메시지 재처리 방지

@@ -1,7 +1,7 @@
 package com.io.shortly.click.infrastructure.event.kafka;
 
 import com.io.shortly.shared.event.UrlClickedEvent;
-import com.io.shortly.shared.kafka.TopicType;
+import com.io.shortly.shared.event.TopicType;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -9,6 +9,8 @@ import org.apache.kafka.common.TopicPartition;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
@@ -58,7 +60,15 @@ public class KafkaConsumerConfig {
         backOff.setMaxInterval(5000L); // 최대 대기 시간 (5초)
         backOff.setMaxElapsedTime(30000L); // 총 재시도 시간 (30초)
 
-        return new DefaultErrorHandler(recoverer, backOff);
+        DefaultErrorHandler errorHandler = new DefaultErrorHandler(recoverer, backOff);
+
+        // 복구 불가능한 예외는 바로 DLQ 전송
+        errorHandler.addNotRetryableExceptions(
+                DataIntegrityViolationException.class,
+                DuplicateKeyException.class
+        );
+
+        return errorHandler;
     }
 
     @Bean

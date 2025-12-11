@@ -1,4 +1,4 @@
-package com.io.shortly.shared.kafka;
+package com.io.shortly.shared.event;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -20,11 +20,7 @@ public enum TopicType {
         return topicName;
     }
 
-    /**
-     * Kafka Consumer Groups
-     */
     public static final class ConsumerGroups {
-        public static final String REDIRECT_SERVICE = "redirect-service-group";
         public static final String CLICK_SERVICE = "click-service-group";
 
         private ConsumerGroups() {

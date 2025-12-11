@@ -19,4 +19,7 @@ public interface UrlClickJpaRepository extends JpaRepository<UrlClickJpaEntity, 
             LocalDateTime start,
             LocalDateTime end
     );
+
+    @Query("SELECT u.eventId FROM UrlClickJpaEntity u WHERE u.eventId IN :eventIds")
+    List<Long> findExistingEventIds(@Param("eventIds") List<Long> eventIds);
 }
