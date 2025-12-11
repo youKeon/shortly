@@ -1,7 +1,7 @@
 package com.io.shortly.url.infrastructure.event.redis;
 
 import com.io.shortly.shared.event.UrlCreatedEvent;
-import com.io.shortly.shared.kafka.TopicType;
+import com.io.shortly.shared.event.TopicType;
 import com.io.shortly.url.domain.ShortUrlEventPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

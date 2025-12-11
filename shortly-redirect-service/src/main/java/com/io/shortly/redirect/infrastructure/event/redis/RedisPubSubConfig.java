@@ -1,6 +1,6 @@
 package com.io.shortly.redirect.infrastructure.event.redis;
 
-import com.io.shortly.shared.kafka.TopicType;
+import com.io.shortly.shared.event.TopicType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
