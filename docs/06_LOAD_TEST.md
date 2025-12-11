@@ -1,6 +1,6 @@
 ## 1. 테스트 환경
 
-![img_15.png](img_15.png)
+<img width="1579" height="635" alt="Image" src="https://github.com/user-attachments/assets/d2caea2c-87a8-42d7-8e56-4678b7d7edd5" />
 
 - `k6 부하 생성 서버`: 8core 16GB RAM
 - `API Server`: 8core 8GB RAM

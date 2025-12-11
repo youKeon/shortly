@@ -31,7 +31,7 @@
 - `Caffeine Cache`에서 사용하는 정책
 
 > 동작 원리:
-> ![img_11.png](img_11.png)
+> <img width="2003" height="509" alt="Image" src="https://github.com/user-attachments/assets/34d21785-1305-42cc-aa4d-3fa91d2fad80" />
 > - Window 영역: 새 항목이 진입하는 LRU 영역
 > - TinyLFU Filter: TinyLFU 빈도 기반으로 Main Cache 승격 여부 결정
 > - Probation: 검증 대기 영역
@@ -42,7 +42,7 @@
 ### 3.1 선택 이유
 - Caffeine Cache가 공식적으로 사용하는 만료 정책
 - 다양한 워크로드에서 최적에 가까운 적중률 제공([문서](https://github.com/ben-manes/caffeine/wiki/Efficiency))
-  - ![img_12.png](img_12.png)
+  - <img width="600" height="371" alt="Image" src="https://github.com/user-attachments/assets/915ba198-7dc0-461c-a6da-79768f4d0f42" />
   - LRU 대비 최대 30% 이상 적중률 향상
 
 ## 4. L2 Cache (Redis) 만료 정책: LFU

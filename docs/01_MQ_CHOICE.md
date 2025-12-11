@@ -31,7 +31,7 @@
 
 #### 이벤트 흐름
 
-![img_13.png](img_13.png)
+<img width="2150" height="477" alt="Image" src="https://github.com/user-attachments/assets/6336e66b-75f8-4c72-beef-aade276324c6" />
 
 ### 2.2 클릭 이벤트: Kafka
 
@@ -46,4 +46,4 @@
 - `장애 복구`: Offset 기반 메시지 보관으로 Consumer 재시작 시 재처리 가능
 
 #### 이벤트 흐름
-![img_14.png](img_14.png)
+<img width="2716" height="990" alt="Image" src="https://github.com/user-attachments/assets/10474928-0f2d-414b-adbc-b5a6f5da6c19" />
