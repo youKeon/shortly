@@ -1,4 +1,4 @@
-package com.io.shortly.url.infrastructure.generator;
+package com.io.shortly.shared.id.impl.snowflake;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -20,7 +20,7 @@ public class NodeIdManager {
     private static final String NODE_ID_KEY_PREFIX = "snowflake:node:";
     private static final long LEASE_DURATION_SECONDS = 30;
     private static final long RENEW_INTERVAL_SECONDS = 10;
-    private static final int MAX_NODE_ID = 1024; // 32 workers * 32 datacenters
+    private static final int MAX_NODE_ID = 1024;
 
     private final StringRedisTemplate redisTemplate;
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();

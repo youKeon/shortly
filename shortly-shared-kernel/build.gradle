@@ -13,6 +13,9 @@ dependencies {
     api 'org.springframework.boot:spring-boot-starter-actuator'
     api 'org.springframework.boot:spring-boot-starter-validation'
 
+    // Redis
+    api 'org.springframework.boot:spring-boot-starter-data-redis'
+
     // Monitoring
     api 'io.micrometer:micrometer-registry-prometheus'
 
