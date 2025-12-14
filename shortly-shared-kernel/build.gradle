@@ -21,7 +21,4 @@ dependencies {
 
     // Swagger
     api "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}"
-
-    // Test
-    testImplementation 'org.springframework.kafka:spring-kafka-test'
 }

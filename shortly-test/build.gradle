@@ -22,6 +22,7 @@ dependencies {
 
     // Kafka Test
     testImplementation 'org.springframework.kafka:spring-kafka-test'
+    testImplementation 'org.awaitility:awaitility:4.2.0'
 
     // Test Containers
     testImplementation 'org.testcontainers:testcontainers:1.19.3'
