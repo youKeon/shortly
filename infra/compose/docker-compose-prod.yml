@@ -37,160 +37,147 @@ services:
       retries: 5
       start_period: 30s
 
-  redis:
+  # Redis
+  redis-master:
     image: redis:7-alpine
-    container_name: shortly-redis
-    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    container_name: shortly-redis-master
     ports:
       - "6379:6379"
-      - "16379:16379"
     volumes:
-      - ../redis-cluster/conf/redis-node-0.conf:/usr/local/etc/redis/redis.conf:ro
-      - redis-node-0-data:/data
+      - ../redis/master/redis.conf:/usr/local/etc/redis/redis.conf
+      - redis-master-data:/data
+    command: redis-server /usr/local/etc/redis/redis.conf
     networks:
       - shortly-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "redis-cli", "-p", "6379", "ping"]
-      interval: 10s
-      timeout: 5s
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
       retries: 5
+      start_period: 10s
 
-  redis-node-1:
+  redis-replica-1:
     image: redis:7-alpine
-    container_name: shortly-redis-node-1
-    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    container_name: shortly-redis-replica-1
     ports:
-      - "6380:6380"
-      - "16380:16380"
+      - "6380:6379"
     volumes:
-      - ../redis-cluster/conf/redis-node-1.conf:/usr/local/etc/redis/redis.conf:ro
-      - redis-node-1-data:/data
-    networks:
-      - shortly-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "redis-cli", "-p", "6380", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  redis-node-2:
-    image: redis:7-alpine
-    container_name: shortly-redis-node-2
-    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
-    ports:
-      - "6381:6381"
-      - "16381:16381"
-    volumes:
-      - ../redis-cluster/conf/redis-node-2.conf:/usr/local/etc/redis/redis.conf:ro
-      - redis-node-2-data:/data
-    networks:
-      - shortly-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "redis-cli", "-p", "6381", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  redis-node-3:
-    image: redis:7-alpine
-    container_name: shortly-redis-node-3
-    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
-    ports:
-      - "6382:6382"
-      - "16382:16382"
-    volumes:
-      - ../redis-cluster/conf/redis-node-3.conf:/usr/local/etc/redis/redis.conf:ro
-      - redis-node-3-data:/data
-    networks:
-      - shortly-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "redis-cli", "-p", "6382", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  redis-node-4:
-    image: redis:7-alpine
-    container_name: shortly-redis-node-4
-    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
-    ports:
-      - "6383:6383"
-      - "16383:16383"
-    volumes:
-      - ../redis-cluster/conf/redis-node-4.conf:/usr/local/etc/redis/redis.conf:ro
-      - redis-node-4-data:/data
-    networks:
-      - shortly-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "redis-cli", "-p", "6383", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  redis-node-5:
-    image: redis:7-alpine
-    container_name: shortly-redis-node-5
-    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
-    ports:
-      - "6384:6384"
-      - "16384:16384"
-    volumes:
-      - ../redis-cluster/conf/redis-node-5.conf:/usr/local/etc/redis/redis.conf:ro
-      - redis-node-5-data:/data
-    networks:
-      - shortly-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "redis-cli", "-p", "6384", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  redis-cluster-init:
-    image: redis:7-alpine
-    container_name: shortly-redis-cluster-init
+      - ../redis/replica/redis-replica-1.conf:/usr/local/etc/redis/redis.conf
+      - redis-replica-1-data:/data
+    command: redis-server /usr/local/etc/redis/redis.conf
     depends_on:
-      redis:
-        condition: service_healthy
-      redis-node-1:
-        condition: service_healthy
-      redis-node-2:
-        condition: service_healthy
-      redis-node-3:
-        condition: service_healthy
-      redis-node-4:
-        condition: service_healthy
-      redis-node-5:
+      redis-master:
         condition: service_healthy
     networks:
       - shortly-network
-    entrypoint: ["/bin/sh", "-c"]
-    command: >
-      if redis-cli -h redis -p 6379 cluster info 2>/dev/null | grep -q "cluster_state:ok"; then
-        echo "Redis cluster already configured";
-      else
-        echo "Creating Redis cluster...";
-        yes yes | redis-cli --cluster create
-          redis:6379
-          redis-node-1:6380
-          redis-node-2:6381
-          redis-node-3:6382
-          redis-node-4:6383
-          redis-node-5:6384
-          --cluster-replicas 1;
-      fi;
-      touch /tmp/cluster-ready;
-      tail -f /tmp/cluster-ready
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli -h redis -p 6379 cluster info | grep -q 'cluster_state:ok'"]
-      interval: 10s
-      timeout: 5s
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
       retries: 5
+      start_period: 10s
+
+  redis-replica-2:
+    image: redis:7-alpine
+    container_name: shortly-redis-replica-2
+    ports:
+      - "6381:6379"
+    volumes:
+      - ../redis/replica/redis-replica-2.conf:/usr/local/etc/redis/redis.conf
+      - redis-replica-2-data:/data
+    command: redis-server /usr/local/etc/redis/redis.conf
+    depends_on:
+      redis-master:
+        condition: service_healthy
+    networks:
+      - shortly-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  redis-sentinel-1:
+    image: redis:7-alpine
+    container_name: shortly-redis-sentinel-1
+    ports:
+      - "26379:26379"
+    volumes:
+      - ../redis/sentinel/sentinel.conf:/usr/local/etc/redis/sentinel.conf
+      - redis-sentinel-1-data:/data
+    command: redis-sentinel /usr/local/etc/redis/sentinel.conf
+    depends_on:
+      redis-master:
+        condition: service_healthy
+      redis-replica-1:
+        condition: service_healthy
+      redis-replica-2:
+        condition: service_healthy
+    networks:
+      - shortly-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "26379", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+
+  redis-sentinel-2:
+    image: redis:7-alpine
+    container_name: shortly-redis-sentinel-2
+    ports:
+      - "26380:26379"
+    volumes:
+      - ../redis/sentinel/sentinel.conf:/usr/local/etc/redis/sentinel.conf
+      - redis-sentinel-2-data:/data
+    command: redis-sentinel /usr/local/etc/redis/sentinel.conf
+    depends_on:
+      redis-master:
+        condition: service_healthy
+      redis-replica-1:
+        condition: service_healthy
+      redis-replica-2:
+        condition: service_healthy
+    networks:
+      - shortly-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "26379", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+
+  redis-sentinel-3:
+    image: redis:7-alpine
+    container_name: shortly-redis-sentinel-3
+    ports:
+      - "26381:26379"
+    volumes:
+      - ../redis/sentinel/sentinel.conf:/usr/local/etc/redis/sentinel.conf
+      - redis-sentinel-3-data:/data
+    command: redis-sentinel /usr/local/etc/redis/sentinel.conf
+    depends_on:
+      redis-master:
+        condition: service_healthy
+      redis-replica-1:
+        condition: service_healthy
+      redis-replica-2:
+        condition: service_healthy
+    networks:
+      - shortly-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "26379", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
 
   kafka-1:
     image: apache/kafka:3.7.0
@@ -290,7 +277,11 @@ services:
         condition: service_started
       mysql-url:
         condition: service_healthy
-      redis-cluster-init:
+      redis-sentinel-1:
+        condition: service_healthy
+      redis-sentinel-2:
+        condition: service_healthy
+      redis-sentinel-3:
         condition: service_healthy
     ports:
       - "8081:8081"
@@ -300,11 +291,12 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql-url:3306/shortly_url
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: password
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      SPRING_DATA_REDIS_CLUSTER_NODES: redis:6379,redis-node-1:6380,redis-node-2:6381,redis-node-3:6382,redis-node-4:6383,redis-node-5:6384
+      # Redis Sentinel 설정
+      SPRING_DATA_REDIS_SENTINEL_MASTER: mymaster
+      SPRING_DATA_REDIS_SENTINEL_NODES: redis-sentinel-1:26379,redis-sentinel-2:26380,redis-sentinel-3:26381
     networks:
       - shortly-network
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
       interval: 30s
@@ -324,7 +316,11 @@ services:
         condition: service_started
       kafka-3:
         condition: service_started
-      redis-cluster-init:
+      redis-sentinel-1:
+        condition: service_healthy
+      redis-sentinel-2:
+        condition: service_healthy
+      redis-sentinel-3:
         condition: service_healthy
       url-service:
         condition: service_started
@@ -333,12 +329,13 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: prod
       KAFKA_BOOTSTRAP_SERVERS: kafka-1:9094,kafka-2:9094,kafka-3:9094
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      SPRING_DATA_REDIS_CLUSTER_NODES: redis:6379,redis-node-1:6380,redis-node-2:6381,redis-node-3:6382,redis-node-4:6383,redis-node-5:6384
+      # Redis Sentinel 설정
+      SPRING_DATA_REDIS_SENTINEL_MASTER: mymaster
+      SPRING_DATA_REDIS_SENTINEL_NODES: redis-sentinel-1:26379,redis-sentinel-2:26380,redis-sentinel-3:26381
       URL_SERVICE_URL: http://url-service:8081
     networks:
       - shortly-network
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
       interval: 30s
@@ -366,6 +363,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: password
     networks:
       - shortly-network
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
       interval: 30s
@@ -417,10 +415,9 @@ networks:
 volumes:
   mysql-url-data:
   mysql-click-data:
-
-  redis-node-0-data:
-  redis-node-1-data:
-  redis-node-2-data:
-  redis-node-3-data:
-  redis-node-4-data:
-  redis-node-5-data:
+  redis-master-data:
+  redis-replica-1-data:
+  redis-replica-2-data:
+  redis-sentinel-1-data:
+  redis-sentinel-2-data:
+  redis-sentinel-3-data:
