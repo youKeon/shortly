@@ -16,13 +16,13 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       acks: 1
-      retries: 3
       properties:
         enable.idempotence: true
         buffer.memory: 16777216
         spring.json.add.type.headers: false
         delivery.timeout.ms: 120000
         request.timeout.ms: 30000
+        retry.backoff.ms: 100
 
 server:
   port: 8081
