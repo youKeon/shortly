@@ -1,0 +1,97 @@
+version: '3.8'
+
+services:
+  # db-url
+  mysql-url:
+    image: mysql:8.0
+    container_name: mysql-url
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: shortly_url
+    ports:
+      - "3306:3306"
+    volumes:
+      - /data/mysql-url:/var/lib/mysql
+    command: >
+      --max-connections=300
+      --innodb-buffer-pool-size=4G
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+    networks:
+      - shortly-network
+
+  # db-click
+  mysql-click:
+    image: mysql:8.0
+    container_name: mysql-click
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: shortly_click
+    ports:
+      - "3307:3306"
+    volumes:
+      - /data/mysql-click:/var/lib/mysql
+    command: >
+      --max-connections=200
+      --innodb-buffer-pool-size=2G
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+    networks:
+      - shortly-network
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - /data/redis:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      - shortly-network
+
+  # Kafka
+  kafka:
+    image: apache/kafka:3.7.0
+    container_name: kafka
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:19092,CONTROLLER://0.0.0.0:9093,EXTERNAL://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:19092,EXTERNAL://${INFRA_PRIVATE_IP}:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+      KAFKA_HEAP_OPTS: "-Xmx2g -Xms2g"
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+    volumes:
+      - /data/kafka:/var/lib/kafka/data
+    networks:
+      - shortly-network
+
+networks:
+  shortly-network:
+    name: shortly-network
+
+volumes:
+  mysql-url-data:
+  mysql-click-data:
+  redis-data:
+  kafka-data:
