@@ -17,7 +17,6 @@ logs/
 
 # ==== Spring Boot ====
 *.env
-*.env.*
 backend/.gradle/
 backend/build/
 backend/out/
