@@ -29,12 +29,20 @@ Shortly는 Kafka와 Redis를 활용한 대규모 트래픽 처리에 최적화�
 
 ### 1.4 기술 스택
 
+**Backend:**
 - **Java 21**
 - **Spring Boot 3.5.6**
 - **Kafka**
 - **Redis**
 - **Caffeine**
 - **MySQL 8.0**
+
+**Frontend:**
+- **React 18**
+- **TypeScript**
+- **Vite**
+- **React Router**
+- **Axios**
 
 ## 2. 아키텍처
 
