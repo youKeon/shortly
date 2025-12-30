@@ -14,8 +14,8 @@ services:
     volumes:
       - /data/mysql-url:/var/lib/mysql
     command: >
-      --max-connections=300
-      --innodb-buffer-pool-size=4G
+      --max-connections=150
+      --innodb-buffer-pool-size=512M
       --character-set-server=utf8mb4
       --collation-server=utf8mb4_unicode_ci
     networks:
@@ -34,8 +34,8 @@ services:
     volumes:
       - /data/mysql-click:/var/lib/mysql
     command: >
-      --max-connections=200
-      --innodb-buffer-pool-size=2G
+      --max-connections=100
+      --innodb-buffer-pool-size=256M
       --character-set-server=utf8mb4
       --collation-server=utf8mb4_unicode_ci
     networks:
@@ -51,7 +51,7 @@ services:
     volumes:
       - /data/redis:/data
       - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
-    command: redis-server /usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf --maxmemory 256mb --maxmemory-policy allkeys-lru
     networks:
       - shortly-network
 
@@ -79,7 +79,7 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
       CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
-      KAFKA_HEAP_OPTS: "-Xmx2g -Xms2g"
+      KAFKA_HEAP_OPTS: "-Xmx512m -Xms512m"
       KAFKA_LOG_DIRS: /var/lib/kafka/data
     volumes:
       - /data/kafka:/var/lib/kafka/data

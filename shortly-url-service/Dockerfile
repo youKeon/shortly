@@ -2,7 +2,7 @@ FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
 
-COPY shortly-url-service/build/libs/*.jar app.jar
+COPY shortly-url-service/build/libs/shortly-url-service.jar app.jar
 
 EXPOSE 8081
 

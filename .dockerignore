@@ -1,0 +1,36 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+.vscode
+*.iml
+
+# Gradle
+.gradle
+**/build/classes
+**/build/generated
+**/build/resources
+**/build/tmp
+
+# Keep build/libs (needed for Docker)
+!**/build/libs
+
+# Node
+node_modules
+npm-debug.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docs
+docs
+*.md
+!README.md
+
+# Tests
+**/src/test
+*.test.js
+*.spec.js
