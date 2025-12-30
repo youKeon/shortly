@@ -13,6 +13,7 @@ services:
       - "3306:3306"
     volumes:
       - /data/mysql-url:/var/lib/mysql
+      - ./mysql-init/url-init.sql:/docker-entrypoint-initdb.d/init.sql
     command: >
       --max-connections=150
       --innodb-buffer-pool-size=512M
@@ -33,6 +34,7 @@ services:
       - "3307:3306"
     volumes:
       - /data/mysql-click:/var/lib/mysql
+      - ./mysql-init/click-init.sql:/docker-entrypoint-initdb.d/init.sql
     command: >
       --max-connections=100
       --innodb-buffer-pool-size=256M
