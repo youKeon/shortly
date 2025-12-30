@@ -15,7 +15,7 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: ${INFRA_PRIVATE_IP}:9092
       SPRING_DATA_REDIS_HOST: ${INFRA_PRIVATE_IP}
       SPRING_DATA_REDIS_PORT: 6379
-      JAVA_OPTS: "-Xmx512m -Xms512m"
+      JAVA_OPTS: "-Xmx256m -Xms256m"
     networks:
       - shortly-network
     healthcheck:
@@ -36,7 +36,7 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: ${INFRA_PRIVATE_IP}:9092
       SPRING_DATA_REDIS_HOST: ${INFRA_PRIVATE_IP}
       SPRING_DATA_REDIS_PORT: 6379
-      JAVA_OPTS: "-Xmx1g -Xms1g"
+      JAVA_OPTS: "-Xmx512m -Xms512m"
     networks:
       - shortly-network
     healthcheck:
@@ -58,7 +58,7 @@ services:
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: ${INFRA_PRIVATE_IP}:9092
-      JAVA_OPTS: "-Xmx512m -Xms512m"
+      JAVA_OPTS: "-Xmx256m -Xms256m"
     networks:
       - shortly-network
     healthcheck:
