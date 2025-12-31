@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Link as LinkIcon, Loader2, Copy, Check, CheckCircle, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,7 @@ type ValidationState = 'empty' | 'valid' | 'invalid';
 export function UrlShortener() {
   const [url, setUrl] = useState('');
   const [customCode, setCustomCode] = useState('');
+  const [showCustomCode, setShowCustomCode] = useState(false);
   const [customCodeValidation, setCustomCodeValidation] = useState<ValidationState>('empty');
   const [result, setResult] = useState<ShortenUrlResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -72,6 +73,7 @@ export function UrlShortener() {
       setUrl('');
       setCustomCode('');
       setCustomCodeValidation('empty');
+      setShowCustomCode(false);
     } catch (err: any) {
       console.error('URL 단축 실패:', err);
       const errorMessage = err.response?.data?.message || 'URL 단축에 실패했습니다.';
@@ -138,39 +140,65 @@ export function UrlShortener() {
             </Button>
           </div>
 
-          <div className="relative w-full">
-            <Input
-              type="text"
-              placeholder="Custom URL (optional)"
-              value={customCode}
-              onChange={(e) => handleCustomCodeChange(e.target.value)}
-              className={`h-14 text-base bg-background/50 shadow-sm transition-all focus:ring-2 focus:ring-primary/20 border-dashed border-2 rounded-xl pr-12 ${
-                customCodeValidation === 'valid' ? 'border-green-500/50' :
-                customCodeValidation === 'invalid' ? 'border-red-500/50' :
-                'border-border/50'
-              }`}
-              disabled={loading}
-              maxLength={20}
+          <div className="flex items-center gap-2 ml-1">
+            <input
+              type="checkbox"
+              id="customCodeToggle"
+              checked={showCustomCode}
+              onChange={(e) => setShowCustomCode(e.target.checked)}
+              className="w-4 h-4 rounded border-border/50 text-primary focus:ring-2 focus:ring-primary/20 cursor-pointer"
             />
-            {customCodeValidation !== 'empty' && (
-              <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                {customCodeValidation === 'valid' ? (
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                ) : (
-                  <XCircle className="w-5 h-5 text-red-600" />
-                )}
-              </div>
-            )}
-            <p className={`text-xs mt-1 ml-1 transition-colors ${
-              customCodeValidation === 'valid' ? 'text-green-600' :
-              customCodeValidation === 'invalid' ? 'text-red-600' :
-              'text-muted-foreground'
-            }`}>
-              {customCodeValidation === 'invalid'
-                ? '3-20자, 영문/숫자/하이픈/언더스코어만 허용'
-                : '3-20자, 영문/숫자/하이픈/언더스코어만 사용 가능'}
-            </p>
+            <label
+              htmlFor="customCodeToggle"
+              className="text-sm text-muted-foreground cursor-pointer select-none hover:text-foreground transition-colors"
+            >
+              커스텀 URL 사용
+            </label>
           </div>
+
+          <AnimatePresence>
+            {showCustomCode && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3, ease: 'easeInOut' }}
+                className="relative w-full overflow-hidden"
+              >
+                <Input
+                  type="text"
+                  placeholder="Custom URL (optional)"
+                  value={customCode}
+                  onChange={(e) => handleCustomCodeChange(e.target.value)}
+                  className={`h-14 text-base bg-background/50 shadow-sm transition-all focus:ring-2 focus:ring-primary/20 border-dashed border-2 rounded-xl pr-12 ${
+                    customCodeValidation === 'valid' ? 'border-green-500/50' :
+                    customCodeValidation === 'invalid' ? 'border-red-500/50' :
+                    'border-border/50'
+                  }`}
+                  disabled={loading}
+                  maxLength={20}
+                />
+                {customCodeValidation !== 'empty' && (
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                    {customCodeValidation === 'valid' ? (
+                      <CheckCircle className="w-5 h-5 text-green-600" />
+                    ) : (
+                      <XCircle className="w-5 h-5 text-red-600" />
+                    )}
+                  </div>
+                )}
+                <p className={`text-xs mt-1 ml-1 transition-colors ${
+                  customCodeValidation === 'valid' ? 'text-green-600' :
+                  customCodeValidation === 'invalid' ? 'text-red-600' :
+                  'text-muted-foreground'
+                }`}>
+                  {customCodeValidation === 'invalid'
+                    ? '3-20자, 영문/숫자/하이픈/언더스코어만 허용'
+                    : '3-20자, 영문/숫자/하이픈/언더스코어만 사용 가능'}
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
         {error && (
           <motion.p
