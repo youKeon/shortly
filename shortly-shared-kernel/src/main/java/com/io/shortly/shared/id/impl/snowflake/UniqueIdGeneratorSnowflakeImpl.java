@@ -44,7 +44,7 @@ public class UniqueIdGeneratorSnowflakeImpl implements UniqueIdGenerator {
                     Thread.sleep(offset + 1);
                     timestamp = currentTimeMillis();
                     if (timestamp < lastTimestamp) {
-                        throw new IllegalStateException("Clock moved backwards even after waiting");
+                        throw new IllegalStateException("Clock moved backwards even after waiting.");
                     }
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
