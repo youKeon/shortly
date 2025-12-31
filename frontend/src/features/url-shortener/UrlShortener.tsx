@@ -72,7 +72,6 @@ export function UrlShortener() {
       setUrl('');
       setCustomCode('');
       setCustomCodeValidation('empty');
-      showToast('URL이 성공적으로 단축되었습니다!', 'success');
     } catch (err: any) {
       console.error('URL 단축 실패:', err);
       const errorMessage = err.response?.data?.message || 'URL 단축에 실패했습니다.';
@@ -89,7 +88,6 @@ export function UrlShortener() {
     navigator.clipboard.writeText(shortUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-    showToast('클립보드에 복사되었습니다!', 'success');
   };
 
   return (
@@ -117,7 +115,7 @@ export function UrlShortener() {
               </div>
               <Input
                 type="text"
-                placeholder="Paste your long link here..."
+                placeholder="https://shortly.com"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 className="pl-12 h-16 text-lg bg-background/80 backdrop-blur-sm border-2 border-border/50 shadow-sm transition-all focus:ring-4 focus:ring-primary/20 focus:border-primary rounded-xl"
