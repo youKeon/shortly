@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { urlService } from '@/api/urlService';
 import type { ShortenUrlResponse } from '@/types';
-import { toast, Toaster } from 'sonner';
 
 export function UrlShortener() {
   const [url, setUrl] = useState('');
@@ -34,12 +33,10 @@ export function UrlShortener() {
       const response = await urlService.shortenUrl({ originalUrl: url });
       setResult(response);
       setUrl('');
-      toast.success('URL이 성공적으로 단축되었습니다!');
     } catch (err: any) {
       console.error('URL 단축 실패:', err);
       const errorMessage = err.response?.data?.message || 'URL 단축에 실패했습니다.';
       setError(errorMessage);
-      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -50,13 +47,12 @@ export function UrlShortener() {
     const shortUrl = urlService.getRedirectUrl(result.shortCode);
     navigator.clipboard.writeText(shortUrl);
     setCopied(true);
-    toast.success('URL이 클립보드에 복사되었습니다.');
     setTimeout(() => setCopied(false), 2000);
   };
 
   return (
     <div className="w-full max-w-2xl mx-auto">
-      <Toaster position="top-center" />
+
 
       <motion.form
         onSubmit={handleSubmit}

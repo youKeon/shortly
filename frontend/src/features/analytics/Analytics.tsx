@@ -85,7 +85,14 @@ export function Analytics() {
 
   return (
     <div className="w-full max-w-4xl mx-auto">
-      <Toaster position="top-center" />
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          style: {
+            zIndex: 9999,
+          },
+        }}
+      />
 
       <motion.form
         onSubmit={handleSearch}
