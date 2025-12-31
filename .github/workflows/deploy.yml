@@ -21,39 +21,39 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Configure SSH
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ap-northeast-2
+
+    - name: Deploy to App EC2 via SSM
       env:
-        SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-        BASTION_HOST: ${{ secrets.BASTION_HOST }}
-        APP_EC2_HOST: ${{ secrets.APP_EC2_HOST }}
+        INSTANCE_ID: ${{ secrets.APP_EC2_INSTANCE_ID }}
       run: |
-        mkdir -p ~/.ssh
-        echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -H $BASTION_HOST >> ~/.ssh/known_hosts
+        aws ssm send-command \
+          --instance-ids $INSTANCE_ID \
+          --document-name "AWS-RunShellScript" \
+          --parameters 'commands=[
+            "set -e",
+            "cd /home/ubuntu/shortly",
+            "docker-compose -f docker-compose-app.yml pull",
+            "docker-compose -f docker-compose-app.yml up -d --force-recreate",
+            "docker image prune -af --filter \"until=24h\""
+          ]' \
+          --output text \
+          --query "Command.CommandId" > /tmp/command_id.txt
 
-        # SSH config for ProxyJump
-        cat >> ~/.ssh/config << EOF
-        Host bastion
-          HostName $BASTION_HOST
-          User ubuntu
-          IdentityFile ~/.ssh/id_rsa
-          StrictHostKeyChecking no
+        COMMAND_ID=$(cat /tmp/command_id.txt)
+        echo "Command ID: $COMMAND_ID"
 
-        Host app-ec2
-          HostName $APP_EC2_HOST
-          User ubuntu
-          IdentityFile ~/.ssh/id_rsa
-          ProxyJump bastion
-          StrictHostKeyChecking no
-        EOF
+        aws ssm wait command-executed \
+          --command-id $COMMAND_ID \
+          --instance-id $INSTANCE_ID
 
-    - name: Deploy to App EC2
-      run: |
-        ssh app-ec2 bash << EOF
-          set -e
-          cd ~/shortly
-          docker-compose -f docker-compose-app.yml pull
-          docker-compose -f docker-compose-app.yml up -d --force-recreate
-          docker image prune -af --filter "until=24h"
-        EOF
+        aws ssm get-command-invocation \
+          --command-id $COMMAND_ID \
+          --instance-id $INSTANCE_ID \
+          --query "StandardOutputContent" \
+          --output text
