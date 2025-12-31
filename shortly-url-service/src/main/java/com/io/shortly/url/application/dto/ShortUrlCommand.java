@@ -5,9 +5,9 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class ShortUrlCommand {
 
-    public record ShortenCommand(String originalUrl) {
-        public static ShortenCommand of(String originalUrl) {
-            return new ShortenCommand(originalUrl);
+    public record ShortenCommand(String originalUrl, String customCode) {
+        public static ShortenCommand of(String originalUrl, String customCode) {
+            return new ShortenCommand(originalUrl, customCode);
         }
     }
 

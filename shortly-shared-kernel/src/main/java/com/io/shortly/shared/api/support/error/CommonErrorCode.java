@@ -12,6 +12,7 @@ public enum CommonErrorCode implements ErrorCode {
     INVALID_INPUT("COMMON-400-001", "Invalid input provided", HttpStatus.BAD_REQUEST),
     VALIDATION_FAILED("COMMON-400-002", "Validation failed", HttpStatus.BAD_REQUEST),
     RESOURCE_NOT_FOUND("COMMON-404-001", "Resource not found", HttpStatus.NOT_FOUND),
+    CONFLICT("COMMON-409-001", "Resource already exists", HttpStatus.CONFLICT),
 
     // 5xx Server Errors
     INTERNAL_SERVER_ERROR("COMMON-500-001", "Internal server error", HttpStatus.INTERNAL_SERVER_ERROR),

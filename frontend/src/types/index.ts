@@ -1,6 +1,7 @@
 // API Response types
 export interface ShortenUrlRequest {
   originalUrl: string;
+  customCode?: string;
 }
 
 export interface ShortenUrlResponse {

@@ -34,7 +34,7 @@ public class UrlController {
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "URL 단축", description = "긴 URL을 짧은 코드로 변환합니다")
     public ShortenedResponse shortenUrl(@Valid @RequestBody ShortenRequest request) {
-        ShortenedResult result = urlFacade.shortenUrl(ShortenCommand.of(request.originalUrl()));
+        ShortenedResult result = urlFacade.shortenUrl(ShortenCommand.of(request.originalUrl(), request.customCode()));
         return ShortenedResponse.of(result);
     }
 

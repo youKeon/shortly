@@ -9,6 +9,7 @@ import type { ShortenUrlResponse } from '@/types';
 
 export function UrlShortener() {
   const [url, setUrl] = useState('');
+  const [customCode, setCustomCode] = useState('');
   const [result, setResult] = useState<ShortenUrlResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -30,9 +31,13 @@ export function UrlShortener() {
     setLoading(true);
 
     try {
-      const response = await urlService.shortenUrl({ originalUrl: url });
+      const response = await urlService.shortenUrl({
+        originalUrl: url,
+        customCode: customCode || undefined
+      });
       setResult(response);
       setUrl('');
+      setCustomCode('');
     } catch (err: any) {
       console.error('URL 단축 실패:', err);
       const errorMessage = err.response?.data?.message || 'URL 단축에 실패했습니다.';
@@ -61,34 +66,51 @@ export function UrlShortener() {
         transition={{ duration: 0.5 }}
         className="relative mb-12"
       >
-        <div className="flex flex-col sm:flex-row gap-4 items-center">
-          <div className="relative w-full">
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-              <LinkIcon className="w-5 h-5" />
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row gap-4 items-center">
+            <div className="relative w-full">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                <LinkIcon className="w-5 h-5" />
+              </div>
+              <Input
+                type="text"
+                placeholder="https://shortly.com"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                className="pl-10 h-14 text-lg bg-background border-input shadow-sm transition-all focus:ring-2 focus:ring-primary/20"
+                disabled={loading}
+              />
             </div>
+            <Button
+              type="submit"
+              size="lg"
+              className="h-14 px-8 min-w-[140px] font-semibold text-lg shadow-lg transition-all hover:translate-y-[-2px] bg-blue-500 hover:bg-blue-600 text-white"
+              disabled={loading || !url}
+            >
+              {loading ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <>
+                  Shortly Now <ArrowRight className="ml-2 w-5 h-5" />
+                </>
+              )}
+            </Button>
+          </div>
+
+          <div className="relative w-full">
             <Input
               type="text"
-              placeholder="https://shortly.com"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              className="pl-10 h-14 text-lg bg-background border-input shadow-sm transition-all focus:ring-2 focus:ring-primary/20"
+              placeholder="커스텀 코드 (선택사항, 예: my-drama)"
+              value={customCode}
+              onChange={(e) => setCustomCode(e.target.value)}
+              className="h-12 text-base bg-background border-input shadow-sm transition-all focus:ring-2 focus:ring-primary/20"
               disabled={loading}
+              maxLength={20}
             />
+            <p className="text-xs text-muted-foreground mt-1 ml-1">
+              3-20자, 영문/숫자/하이픈/언더스코어만 사용 가능
+            </p>
           </div>
-          <Button
-            type="submit"
-            size="lg"
-            className="h-14 px-8 min-w-[140px] font-semibold text-lg shadow-lg transition-all hover:translate-y-[-2px] bg-blue-500 hover:bg-blue-600 text-white"
-            disabled={loading || !url}
-          >
-            {loading ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <>
-                Shortly Now <ArrowRight className="ml-2 w-5 h-5" />
-              </>
-            )}
-          </Button>
         </div>
         {error && (
           <motion.p

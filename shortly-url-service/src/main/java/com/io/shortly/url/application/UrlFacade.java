@@ -29,15 +29,34 @@ public class UrlFacade {
         Assert.notNull(command, "Command must not be null");
         Assert.hasText(command.originalUrl(), "Original URL must not be blank");
 
-        var generated = shortUrlGenerator.generate(command.originalUrl());
+        String shortCode;
+        long snowflakeId;
 
-        ShortUrl shortUrl = ShortUrl.create(generated.shortCode(), command.originalUrl());
+        if (command.customCode() != null && !command.customCode().isBlank()) {
+            // Custom code provided
+            shortCode = command.customCode();
+
+            // Check for duplicates
+            if (shortUrlRepository.findByShortCode(shortCode).isPresent()) {
+                throw new com.io.shortly.url.domain.DuplicateShortCodeException(shortCode);
+            }
+
+            // Generate Snowflake ID for custom code
+            snowflakeId = System.currentTimeMillis();
+        } else {
+            // Generate short code using Base62 algorithm
+            var generated = shortUrlGenerator.generate(command.originalUrl());
+            shortCode = generated.shortCode();
+            snowflakeId = generated.snowflakeId();
+        }
+
+        ShortUrl shortUrl = ShortUrl.create(shortCode, command.originalUrl());
         shortUrlRepository.save(shortUrl);
 
         log.info("URL shortened: {} -> {} ", command.originalUrl(), shortUrl.getShortCode());
 
         UrlCreatedEvent event = UrlCreatedEvent.of(
-            generated.snowflakeId(),
+            snowflakeId,
             shortUrl.getShortCode(),
             shortUrl.getOriginalUrl()
         );

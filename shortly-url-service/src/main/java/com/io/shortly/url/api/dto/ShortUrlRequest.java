@@ -13,6 +13,10 @@ public class ShortUrlRequest {
             @NotBlank(message = "Original URL must not be blank")
             @Size(max = 2048, message = "URL must not exceed 2048 characters")
             @Pattern(regexp = "^https?://.*", message = "URL must start with http:// or https://")
-            String originalUrl
+            String originalUrl,
+
+            @Size(min = 3, max = 20, message = "Custom code must be between 3 and 20 characters")
+            @Pattern(regexp = "^[a-zA-Z0-9_-]*$", message = "Custom code can only contain letters, numbers, hyphens, and underscores")
+            String customCode
     ) {}
 }
