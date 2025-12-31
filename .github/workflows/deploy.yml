@@ -1,0 +1,59 @@
+name: Deploy to EC2
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'prod'
+        type: choice
+        options:
+          - prod
+          - dev
+
+jobs:
+  deploy-app-ec2:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure SSH
+      env:
+        SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+        BASTION_HOST: ${{ secrets.BASTION_HOST }}
+        APP_EC2_HOST: ${{ secrets.APP_EC2_HOST }}
+      run: |
+        mkdir -p ~/.ssh
+        echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H $BASTION_HOST >> ~/.ssh/known_hosts
+
+        # SSH config for ProxyJump
+        cat >> ~/.ssh/config << EOF
+        Host bastion
+          HostName $BASTION_HOST
+          User ubuntu
+          IdentityFile ~/.ssh/id_rsa
+          StrictHostKeyChecking no
+
+        Host app-ec2
+          HostName $APP_EC2_HOST
+          User ubuntu
+          IdentityFile ~/.ssh/id_rsa
+          ProxyJump bastion
+          StrictHostKeyChecking no
+        EOF
+
+    - name: Deploy to App EC2
+      run: |
+        ssh app-ec2 bash << EOF
+          set -e
+          cd ~/shortly
+          docker-compose -f docker-compose-app.yml pull
+          docker-compose -f docker-compose-app.yml up -d --force-recreate
+          docker image prune -af --filter "until=24h"
+        EOF
