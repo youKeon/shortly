@@ -5,9 +5,9 @@ import java.util.Objects;
 
 public class ShortUrl {
 
-    private static final int MIN_SHORT_CODE_LENGTH = 6;
-    private static final int MAX_SHORT_CODE_LENGTH = 10;
-    private static final String SHORT_CODE_PATTERN = "^[a-zA-Z0-9]+$";
+    private static final int MIN_SHORT_CODE_LENGTH = 3;
+    private static final int MAX_SHORT_CODE_LENGTH = 20;
+    private static final String SHORT_CODE_PATTERN = "^[a-zA-Z0-9_-]+$";
     private static final int MAX_ORIGINAL_URL_LENGTH = 2048;
 
     private final Long id;
@@ -45,7 +45,7 @@ public class ShortUrl {
             throw new IllegalArgumentException("Short code must be " + MIN_SHORT_CODE_LENGTH + "-" + MAX_SHORT_CODE_LENGTH + " characters");
         }
         if (!shortCode.matches(SHORT_CODE_PATTERN)) {
-            throw new IllegalArgumentException("Short code must be alphanumeric");
+            throw new IllegalArgumentException("Short code can only contain letters, numbers, hyphens, and underscores");
         }
     }
 
