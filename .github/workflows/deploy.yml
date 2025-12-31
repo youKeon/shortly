@@ -39,7 +39,8 @@ jobs:
               "set -e",
               "cd /home/ubuntu/shortly",
               "docker-compose -f docker-compose-app.yml pull",
-              "docker-compose -f docker-compose-app.yml up -d --force-recreate",
+              "docker-compose -f docker-compose-app.yml down",
+              "docker-compose -f docker-compose-app.yml up -d",
               "docker image prune -af --filter \"until=24h\""
             ]' \
             --output text \
