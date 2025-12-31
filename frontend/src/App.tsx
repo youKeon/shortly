@@ -84,7 +84,7 @@ function App() {
 
         <footer className="py-8 text-center text-sm text-muted-foreground border-t mt-16">
           <p className="flex items-center justify-center gap-2">
-            <span>&copy; 2025</span>
+            <span>&copy; 20255</span>
             <span className="text-primary text-lg" style={{ fontFamily: 'Pacifico, cursive' }}>
               Shortly
             </span>
