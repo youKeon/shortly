@@ -38,8 +38,8 @@ jobs:
           --parameters 'commands=[
             "set -e",
             "cd /home/ubuntu/shortly",
-            "docker-compose -f docker-compose-app.yml pull",
-            "docker-compose -f docker-compose-app.yml up -d --force-recreate",
+            "docker compose -f docker-compose-app.yml pull",
+            "docker compose -f docker-compose-app.yml up -d --force-recreate",
             "docker image prune -af --filter \"until=24h\""
           ]' \
           --output text \
