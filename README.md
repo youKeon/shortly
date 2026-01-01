@@ -1,6 +1,9 @@
 # Shortly - 고성능 URL 단축 서비스
 > https://short-url.site
 
+<img width="1920" height="928" alt="스크린샷 2026-01-01 오후 7 09 57" src="https://github.com/user-attachments/assets/d8ab27b4-68bd-46cb-b7a1-17418115161a" />
+
+
 ## 1. 개요
 
 Shortly는 Kafka와 Redis를 활용한 대규모 트래픽 처리에 최적화된 URL 단축 서비스입니다.
