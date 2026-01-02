@@ -6,6 +6,7 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-password}
       MYSQL_DATABASE: shortly_url
+      MYSQL_ROOT_HOST: '%'
       MYSQL_INNODB_BUFFER_POOL_SIZE: 256M
       MYSQL_MAX_CONNECTIONS: 50
     ports:
@@ -17,6 +18,7 @@ services:
       --innodb-buffer-pool-size=256M
       --max-connections=50
       --innodb-log-file-size=64M
+      --bind-address=0.0.0.0
     networks:
       - shortly-network
     restart: unless-stopped
@@ -27,12 +29,6 @@ services:
           cpus: '0.5'
         reservations:
           memory: 256M
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-password}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
 
   mysql-click:
     image: mysql:8.0
@@ -40,10 +36,11 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-password}
       MYSQL_DATABASE: shortly_click
+      MYSQL_ROOT_HOST: '%'
       MYSQL_INNODB_BUFFER_POOL_SIZE: 256M
       MYSQL_MAX_CONNECTIONS: 50
     ports:
-      - "3308:3306"
+      - "3307:3306"
     volumes:
       - mysql-click-data:/var/lib/mysql
     command: >
@@ -51,6 +48,7 @@ services:
       --innodb-buffer-pool-size=256M
       --max-connections=50
       --innodb-log-file-size=64M
+      --bind-address=0.0.0.0
     networks:
       - shortly-network
     restart: unless-stopped
@@ -61,12 +59,6 @@ services:
           cpus: '0.5'
         reservations:
           memory: 256M
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-password}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
 
   redis:
     image: redis:7-alpine
@@ -91,12 +83,6 @@ services:
           cpus: '0.3'
         reservations:
           memory: 128M
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-      start_period: 10s
 
   kafka:
     image: apache/kafka:3.7.0
@@ -130,23 +116,14 @@ services:
           cpus: '0.5'
         reservations:
           memory: 384M
-    healthcheck:
-      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
 
   url-service:
     image: ${DOCKER_USERNAME:-username}/shortly-url-service:${IMAGE_TAG:-latest}
     container_name: shortly-url-service
     depends_on:
-      kafka:
-        condition: service_healthy
-      mysql-url:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - kafka
+      - mysql-url
+      - redis
     ports:
       - "8081:8081"
     environment:
@@ -174,23 +151,14 @@ services:
           cpus: '0.5'
         reservations:
           memory: 256M
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
 
   redirect-service:
     image: ${DOCKER_USERNAME:-username}/shortly-redirect-service:${IMAGE_TAG:-latest}
     container_name: shortly-redirect-service
     depends_on:
-      kafka:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      url-service:
-        condition: service_healthy
+      - kafka
+      - redis
+      - url-service
     ports:
       - "8082:8082"
     environment:
@@ -216,21 +184,13 @@ services:
           cpus: '0.5'
         reservations:
           memory: 256M
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
 
   click-service:
     image: ${DOCKER_USERNAME:-username}/shortly-click-service:${IMAGE_TAG:-latest}
     container_name: shortly-click-service
     depends_on:
-      kafka:
-        condition: service_healthy
-      mysql-click:
-        condition: service_healthy
+      - kafka
+      - mysql-click
     ports:
       - "8083:8083"
     environment:
@@ -256,29 +216,17 @@ services:
           cpus: '0.5'
         reservations:
           memory: 256M
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
 
   nginx:
-    image: nginx:alpine
+    image: ${DOCKER_USERNAME:-username}/shortly-nginx:${IMAGE_TAG:-latest}
     container_name: shortly-nginx
     depends_on:
-      url-service:
-        condition: service_healthy
-      redirect-service:
-        condition: service_healthy
-      click-service:
-        condition: service_healthy
+      - url-service
+      - redirect-service
+      - click-service
     ports:
       - "80:80"
       - "443:443"
-    volumes:
-      - ../nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./ssl:/etc/nginx/ssl:ro
     networks:
       - shortly-network
     restart: unless-stopped
@@ -289,11 +237,6 @@ services:
           cpus: '0.3'
         reservations:
           memory: 64M
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
 networks:
   shortly-network:

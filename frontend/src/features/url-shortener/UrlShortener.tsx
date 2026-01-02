@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Link as LinkIcon, Loader2, Copy, Check, CheckCircle, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,24 @@ import type { ToastType } from '@/components/Toast';
 import { urlService } from '@/api/urlService';
 import type { ShortenUrlResponse } from '@/types';
 
-type ValidationState = 'empty' | 'valid' | 'invalid';
+type ValidationState = 'empty' | 'valid' | 'invalid' | 'checking' | 'duplicate';
+
+// Debounce utility
+function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  delay: number
+): (...args: Parameters<T>) => void {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+  return (...args: Parameters<T>) => {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+    timeoutId = setTimeout(() => {
+      func(...args);
+    }, delay);
+  };
+}
 
 export function UrlShortener() {
   const [url, setUrl] = useState('');
@@ -34,7 +51,7 @@ export function UrlShortener() {
     setToast(prev => ({ ...prev, visible: false }));
   };
 
-  const validateCustomCode = (code: string): ValidationState => {
+  const validateFormat = (code: string): 'empty' | 'valid' | 'invalid' => {
     if (!code) return 'empty';
 
     const pattern = /^[a-zA-Z0-9_-]+$/;
@@ -44,9 +61,37 @@ export function UrlShortener() {
     return isValidLength && isValidPattern ? 'valid' : 'invalid';
   };
 
+  const checkDuplicate = useCallback(
+    debounce(async (code: string) => {
+      if (!code || validateFormat(code) !== 'valid') return;
+
+      setCustomCodeValidation('checking');
+
+      try {
+        const response = await fetch(`http://localhost:8081/api/v1/urls/check/${code}`);
+        const data = await response.json();
+
+        // exists = true → 존재함 → 중복
+        // exists = false → 존재하지 않음 → 사용 가능
+        setCustomCodeValidation(data.exists ? 'duplicate' : 'valid');
+      } catch (error) {
+        console.error('중복 확인 실패:', error);
+        setCustomCodeValidation('valid'); // 네트워크 에러 시 일단 진행 허용
+      }
+    }, 500),
+    []
+  );
+
   const handleCustomCodeChange = (value: string) => {
     setCustomCode(value);
-    setCustomCodeValidation(validateCustomCode(value));
+
+    const formatValidation = validateFormat(value);
+    if (formatValidation !== 'valid') {
+      setCustomCodeValidation(formatValidation);
+      return;
+    }
+
+    checkDuplicate(value);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -128,7 +173,7 @@ export function UrlShortener() {
                 type="submit"
                 size="lg"
                 className="h-16 px-10 min-w-[160px] font-bold text-lg shadow-xl shadow-primary/20 transition-all hover:translate-y-[-2px] active:translate-y-[0px] bg-primary hover:bg-primary/90 text-white rounded-xl"
-                disabled={loading || !url}
+                disabled={loading || !url || (showCustomCode && customCodeValidation !== 'valid' && customCodeValidation !== 'empty')}
               >
                 {loading ? (
                   <Loader2 className="w-6 h-6 animate-spin" />
@@ -176,9 +221,11 @@ export function UrlShortener() {
                       placeholder="custom"
                       value={customCode}
                       onChange={(e) => handleCustomCodeChange(e.target.value)}
-                      className={`h-14 text-base pl-[110px] bg-background/50 shadow-sm transition-all focus:ring-2 focus:ring-primary/20 border-2 rounded-xl border-border/50 ${customCodeValidation === 'valid' ? 'border-green-500/50 focus:border-green-500' :
-                        customCodeValidation === 'invalid' ? 'border-red-500/50 focus:border-red-500' :
-                          'hover:border-primary/30'
+                      className={`h-14 text-base pl-[110px] bg-background/50 shadow-sm transition-all focus:ring-2 focus:ring-primary/20 border-2 rounded-xl border-border/50 ${
+                        customCodeValidation === 'valid' ? 'border-green-500/50 focus:border-green-500' :
+                        customCodeValidation === 'invalid' || customCodeValidation === 'duplicate' ? 'border-red-500/50 focus:border-red-500' :
+                        customCodeValidation === 'checking' ? 'border-blue-500/50 focus:border-blue-500' :
+                        'hover:border-primary/30'
                       }`}
                       disabled={loading}
                       maxLength={20}
@@ -186,20 +233,28 @@ export function UrlShortener() {
                   </div>
                   {customCodeValidation !== 'empty' && (
                     <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                      {customCodeValidation === 'valid' ? (
+                      {customCodeValidation === 'checking' && (
+                        <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
+                      )}
+                      {customCodeValidation === 'valid' && (
                         <CheckCircle className="w-5 h-5 text-green-600" />
-                      ) : (
+                      )}
+                      {(customCodeValidation === 'invalid' || customCodeValidation === 'duplicate') && (
                         <XCircle className="w-5 h-5 text-red-600" />
                       )}
                     </div>
                   )}
-                  <p className={`text-xs mt-1 ml-1 transition-colors ${customCodeValidation === 'valid' ? 'text-green-600' :
-                    customCodeValidation === 'invalid' ? 'text-red-600' :
-                      'text-muted-foreground'
+                  <p className={`text-sm mt-2 ml-1 transition-colors ${
+                    customCodeValidation === 'valid' ? 'text-green-600' :
+                    customCodeValidation === 'checking' ? 'text-blue-600' :
+                    (customCodeValidation === 'invalid' || customCodeValidation === 'duplicate') ? 'text-red-600' :
+                    'text-muted-foreground'
                   }`}>
-                    {customCodeValidation === 'invalid'
-                      ? '3-20자, 영문/숫자/하이픈/언더스코어만 허용'
-                      : '3-20자, 영문/숫자/하이픈/언더스코어만 사용 가능'}
+                    {customCodeValidation === 'checking' && '중복 확인 중...'}
+                    {customCodeValidation === 'duplicate' && `${customCode}는 이미 사용 중이에요`}
+                    {customCodeValidation === 'invalid' && '3-20자, 영문/숫자/하이픈/언더스코어만 허용'}
+                    {(customCodeValidation === 'empty' || customCodeValidation === 'valid') &&
+                      '3-20자, 영문/숫자/하이픈/언더스코어만 사용 가능'}
                   </p>
                 </motion.div>
               )}
