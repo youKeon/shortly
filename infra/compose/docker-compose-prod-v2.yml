@@ -134,8 +134,8 @@ services:
       SPRING_PROFILES_ACTIVE: prod
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql-url:3306/shortly_url?useSSL=false&allowPublicKeyRetrieval=true
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD:-password}
+      SPRING_DATASOURCE_USERNAME: shortly
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_APP_PASSWORD:-shortly_password}
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       JAVA_OPTS: >
@@ -201,8 +201,8 @@ services:
       SPRING_PROFILES_ACTIVE: prod
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql-click:3306/shortly_click?useSSL=false&allowPublicKeyRetrieval=true
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD:-password}
+      SPRING_DATASOURCE_USERNAME: shortly
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_APP_PASSWORD:-shortly_password}
       JAVA_OPTS: >
         -Xmx256m
         -Xms256m
