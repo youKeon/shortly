@@ -138,7 +138,7 @@ services:
       start_period: 60s
 
   url-service:
-    image: ${DOCKER_USERNAME:-youkeon}/shortly-url-service:${IMAGE_TAG:-latest}
+    image: ${DOCKER_USERNAME:-username}/shortly-url-service:${IMAGE_TAG:-latest}
     container_name: shortly-url-service
     depends_on:
       kafka:
@@ -182,7 +182,7 @@ services:
       start_period: 40s
 
   redirect-service:
-    image: ${DOCKER_USERNAME:-youkeon}/shortly-redirect-service:${IMAGE_TAG:-latest}
+    image: ${DOCKER_USERNAME:-username}/shortly-redirect-service:${IMAGE_TAG:-latest}
     container_name: shortly-redirect-service
     depends_on:
       kafka:
@@ -224,7 +224,7 @@ services:
       start_period: 40s
 
   click-service:
-    image: ${DOCKER_USERNAME:-youkeon}/shortly-click-service:${IMAGE_TAG:-latest}
+    image: ${DOCKER_USERNAME:-username}/shortly-click-service:${IMAGE_TAG:-latest}
     container_name: shortly-click-service
     depends_on:
       kafka:
