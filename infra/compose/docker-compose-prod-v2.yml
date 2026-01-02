@@ -6,19 +6,21 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-password}
       MYSQL_DATABASE: shortly_url
-      MYSQL_ROOT_HOST: '%'
       MYSQL_INNODB_BUFFER_POOL_SIZE: 256M
       MYSQL_MAX_CONNECTIONS: 50
     ports:
       - "3306:3306"
     volumes:
       - mysql-url-data:/var/lib/mysql
+      - ./mysql-init/url-init.sql:/docker-entrypoint-initdb.d/init.sql
     command: >
       --default-authentication-plugin=mysql_native_password
       --innodb-buffer-pool-size=256M
       --max-connections=50
       --innodb-log-file-size=64M
       --bind-address=0.0.0.0
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
     networks:
       - shortly-network
     restart: unless-stopped
@@ -36,19 +38,21 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-password}
       MYSQL_DATABASE: shortly_click
-      MYSQL_ROOT_HOST: '%'
       MYSQL_INNODB_BUFFER_POOL_SIZE: 256M
       MYSQL_MAX_CONNECTIONS: 50
     ports:
       - "3307:3306"
     volumes:
       - mysql-click-data:/var/lib/mysql
+      - ./mysql-init/click-init.sql:/docker-entrypoint-initdb.d/init.sql
     command: >
       --default-authentication-plugin=mysql_native_password
       --innodb-buffer-pool-size=256M
       --max-connections=50
       --innodb-log-file-size=64M
       --bind-address=0.0.0.0
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
     networks:
       - shortly-network
     restart: unless-stopped
@@ -118,7 +122,7 @@ services:
           memory: 384M
 
   url-service:
-    image: ${DOCKER_USERNAME:-username}/shortly-url-service:${IMAGE_TAG:-latest}
+    image: ${DOCKER_USERNAME:-yukeon}/shortly-url-service:${IMAGE_TAG:-latest}
     container_name: shortly-url-service
     depends_on:
       - kafka
@@ -153,7 +157,7 @@ services:
           memory: 256M
 
   redirect-service:
-    image: ${DOCKER_USERNAME:-username}/shortly-redirect-service:${IMAGE_TAG:-latest}
+    image: ${DOCKER_USERNAME:-yukeon}/shortly-redirect-service:${IMAGE_TAG:-latest}
     container_name: shortly-redirect-service
     depends_on:
       - kafka
@@ -186,7 +190,7 @@ services:
           memory: 256M
 
   click-service:
-    image: ${DOCKER_USERNAME:-username}/shortly-click-service:${IMAGE_TAG:-latest}
+    image: ${DOCKER_USERNAME:-yukeon}/shortly-click-service:${IMAGE_TAG:-latest}
     container_name: shortly-click-service
     depends_on:
       - kafka
@@ -218,7 +222,7 @@ services:
           memory: 256M
 
   nginx:
-    image: ${DOCKER_USERNAME:-username}/shortly-nginx:${IMAGE_TAG:-latest}
+    image: ${DOCKER_USERNAME:-yukeon}/shortly-frontend:${IMAGE_TAG:-latest}
     container_name: shortly-nginx
     depends_on:
       - url-service
