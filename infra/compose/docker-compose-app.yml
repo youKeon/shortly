@@ -82,6 +82,8 @@ services:
       - click-service
     networks:
       - shortly-network
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80"]
       interval: 30s
