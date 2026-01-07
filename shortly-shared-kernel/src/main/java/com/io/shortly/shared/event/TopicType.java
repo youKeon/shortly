@@ -12,7 +12,9 @@ public enum TopicType {
     URL_CLICKED("url-clicked"),
 
     // Dead Letter Queue Topics
-    URL_CLICKED_DLQ("url-clicked-dlq");
+    URL_CLICKED_DLQ("url-clicked-dlq"),  // Deprecated: 호환성 유지용
+    URL_CLICKED_DLQ_PERMANENT("url-clicked-dlq-permanent"),  // 영구적 실패 (수동 처리)
+    URL_CLICKED_DLQ_TRANSIENT("url-clicked-dlq-transient");  // 일시적 실패 (자동 재처리)
 
     private final String topicName;
 
