@@ -69,7 +69,6 @@
 
 - 최대 부하 시점(사용자 1,500명)에 `tomcat_threads_current_threads`이 `max-connections(1,000)`에 도달
 - 신규 연결 대기로 타임 아웃 발생
-- Live Threads는 24개, Peak Threads는 26개로 Thread 리소스는 충분하다고 판단
 - 스레드 부족이 아닌 연결 제한이 원인으로, max-connections 증설 선택
 
 ### 3.3 개선 작업
