@@ -163,9 +163,9 @@ sequenceDiagram
 ---
 
 ## 4. 상세 문서
-- [TPS 85% 향상, P95 49% 개선 - k6 부하 테스트 과정](docs/부하테스트_과정.md)
 - [Cache Stampede 해결 - 캐시 히트율 91.8% 달성](docs/CacheStampede문제개선.md)
 - [캐시 정책 선택 - W-TinyLFU vs LFU vs LRU](docs/캐시_만료_정책.md)
 - [클릭 이벤트의 신뢰성을 보장하기 위한 Kafka 설정 최적화](docs/클릭_이벤트_처리.md)
 - [이벤트별 MQ 선택 - Redis Pub/Sub vs Kafka](docs/메세지_큐_선택.md)
 - [Snowflake Algorithm으로 URL 충돌률 1.3% → 0%, 생성속도 3.2배 개선](docs/고유ID생성.md)
+- [TPS 85% 향상, P95 49% 개선 - k6 부하 테스트 과정](docs/부하테스트_과정.md)
